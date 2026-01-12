@@ -1,330 +1,224 @@
-# 📌 Bill & Payment Reminder
+<div align="center">
 
-## 🧾 Overview
+# 💳 Card Manager
 
-Bill & Payment Reminder is a web-based personal finance tracker designed to help users stay on top of their recurring payments.  
-It consolidates all credit card dues, loan repayments, and regular bills into one simple dashboard—reducing missed deadlines and late fees.
+### Never Miss a Payment Again
 
----
+**A modern, lightweight personal finance tracker for managing credit cards, loans, and recurring bills**
 
-## ✨ Features
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
+[![TanStack](https://img.shields.io/badge/TanStack-FF4154?style=for-the-badge&logo=react&logoColor=white)](https://tanstack.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
-- **Add Credit Card Statement Due Dates**  
-  Track multiple cards and stay aware of upcoming billing cycles.
-- **Add Loan Payment Dates**  
-  Never miss monthly loan installments again.
-- **Add Monthly/Recurring Bills**  
-  Utilities, subscriptions, rent — log them all in one place.
-- **Dashboard View of Upcoming Payments**  
-  Clear timeline of what’s due soon.
-- **Total Amount Due**  
-  Auto-calculate combined dues across all active payments.
+[🚀 Quick Start](#-quick-start) • [✨ Features](#-features) • [🛠️ Tech Stack](#️-tech-stack) • [📖 Documentation](#-documentation)
+
+</div>
 
 ---
 
-## 🧰 Tech Stack
+## 🎯 Why Card Manager?
 
-| Layer        | Technology                            |
-| ------------ | ------------------------------------- |
-| Frontend     | **React** (with TanStack Start)       |
-| UI           | Tailwind CSS (optional)               |
-| Routing/Data | TanStack Router & TanStack Query      |
-| State Mgmt   | React state + TanStack Query          |
-| Storage      | LocalStorage (MVP) / Optional backend |
-| Build        | Vite                                  |
-| Language     | TypeScript                            |
+Tired of late fees and missed payment deadlines? **Card Manager** consolidates all your recurring payments into one intuitive dashboard. Track credit card statements, loan installments, and monthly bills—all in one place.
+
+### ✨ Features
+
+<table>
+<tr>
+<td width="50%">
+
+**📅 Payment Tracking**
+- Track multiple credit cards and their billing cycles
+- Monitor loan payment schedules
+- Manage recurring bills and subscriptions
+
+</td>
+<td width="50%">
+
+**💰 Financial Overview**
+- Dashboard view of upcoming payments
+- Automatic calculation of total dues
+- Visual timeline of payment deadlines
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**🎨 Modern UI**
+- Clean, intuitive interface
+- Responsive design for all devices
+- Built with Tailwind CSS
+
+</td>
+<td width="50%">
+
+**⚡ Performance**
+- Lightning-fast with React 19
+- Type-safe with TypeScript
+- Optimized with Vite
+
+</td>
+</tr>
+</table>
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
-### 1️⃣ Clone the repo
-
-````bash
-git clone https://github.com/your-username/bill-payment-reminder.git
-cd bill-payment-reminder
-
-
-To run this application:
+Get up and running in less than a minute:
 
 ```bash
+# Clone the repository
+git clone https://github.com/<your-username>/card-manager.git
+cd card-manager
+
+# Install dependencies
 npm install
+
+# Start development server
 npm run dev
-````
-
-# Building For Production
-
-To build this application for production:
-
-```bash
-npm run build
 ```
 
-## Testing
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser. 🎉
 
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+---
 
-```bash
-npm run test
+## 🛠️ Tech Stack
+
+Built with modern, cutting-edge technologies:
+
+| Category | Technologies |
+|----------|-------------|
+| **Frontend** | React 19, TypeScript |
+| **Routing** | TanStack Router (File-based) |
+| **State Management** | TanStack Query, React Hooks |
+| **Styling** | Tailwind CSS 4.0 |
+| **Build Tool** | Vite 7 |
+| **Server** | Nitro (TanStack Start) |
+| **Testing** | Vitest |
+| **Icons** | Lucide React |
+
+---
+
+## 📖 Documentation
+
+### 📦 Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server on port 3000 |
+| `npm run build` | Build for production |
+| `npm run test` | Run test suite |
+| `npm run preview` | Preview production build |
+| `npm run lint` | Lint code with ESLint |
+
+### 🏗️ Project Structure
+
+```
+card-manager/
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── data/          # Server functions (type-safe RPC)
+│   ├── routes/        # File-based routing
+│   └── styles.css     # Global styles
+├── public/            # Static assets
+└── vite.config.ts     # Vite configuration
 ```
 
-## Styling
+### 🔧 Key Concepts
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
-
-## Routing
-
-This project uses [TanStack Router](https://tanstack.com/router). The initial setup is a file based router. Which means that the routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add another a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
+#### File-Based Routing
+Routes are automatically generated from files in `src/routes/`:
 ```tsx
-import { Link } from "@tanstack/react-router";
+// src/routes/payments.tsx
+import { createFileRoute } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/payments')({
+  component: () => <div>Payments Page</div>
+})
 ```
 
-Then anywhere in your JSX you can use it like so:
-
+#### Server Functions
+Type-safe server functions with full IntelliSense:
 ```tsx
-<Link to="/about">About</Link>
+// src/data/payments.ts
+import { createServerFn } from '@tanstack/react-start'
+
+export const getPayments = createServerFn({ method: 'GET' })
+  .handler(async () => {
+    // Server-side logic
+    return payments
+  })
 ```
 
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you use the `<Outlet />` component.
-
-Here is an example layout that includes a header:
-
+#### Styling with Tailwind
 ```tsx
-import { Outlet, createRootRoute } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-
-import { Link } from "@tanstack/react-router";
-
-export const Route = createRootRoute({
-  component: () => (
-    <>
-      <header>
-        <nav>
-          <Link to="/">Home</Link>
-          <Link to="/about">About</Link>
-        </nav>
-      </header>
-      <Outlet />
-      <TanStackRouterDevtools />
-    </>
-  ),
-});
+<div className="flex items-center gap-4 rounded-lg bg-white p-6 shadow-md">
+  {/* Your content */}
+</div>
 ```
 
-The `<TanStackRouterDevtools />` component is not required so you can remove it if you don't want it in your layout.
+---
 
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
+## 🗺️ Roadmap
 
-## Data Fetching
+- [ ] 📱 Mobile app (React Native)
+- [ ] 🔔 Push notifications for upcoming payments
+- [ ] 📊 Payment history and analytics
+- [ ] 💾 Cloud sync across devices
+- [ ] 🔐 Multi-user support with authentication
+- [ ] 📈 Spending insights and reports
+- [ ] 🌐 Multi-currency support
 
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
+---
 
-For example:
+## 🤝 Contributing
 
-```tsx
-const peopleRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/people",
-  loader: async () => {
-    const response = await fetch("https://swapi.dev/api/people");
-    return response.json() as Promise<{
-      results: {
-        name: string;
-      }[];
-    }>;
-  },
-  component: () => {
-    const data = peopleRoute.useLoaderData();
-    return (
-      <ul>
-        {data.results.map((person) => (
-          <li key={person.name}>{person.name}</li>
-        ))}
-      </ul>
-    );
-  },
-});
-```
+Contributions are welcome! Here's how you can help:
 
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-### React-Query
+Please ensure:
+- ✅ All tests pass (`npm run test`)
+- ✅ Code builds successfully (`npm run build`)
+- ✅ Code follows the existing style
 
-React-Query is an excellent addition or alternative to route loading and integrating it into you application is a breeze.
+---
 
-First add your dependencies:
+## 📄 License
 
-```bash
-npm install @tanstack/react-query @tanstack/react-query-devtools
-```
+This project is open source and available under the [MIT License](LICENSE).
 
-Next we'll need to create a query client and provider. We recommend putting those in `main.tsx`.
+---
 
-```tsx
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+## 👤 Author
 
-// ...
+**Mir Sameer Irfan**
 
-const queryClient = new QueryClient();
+- GitHub: [@MirSameerIrfan](https://github.com/MirSameerIrfan)
 
-// ...
+---
 
-if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
+## 🙏 Acknowledgments
 
-  root.render(
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  );
-}
-```
+Built with amazing open-source projects:
+- [React](https://reactjs.org/) - UI library
+- [TanStack](https://tanstack.com/) - Router, Query, and Start
+- [Tailwind CSS](https://tailwindcss.com/) - Styling framework
+- [Vite](https://vitejs.dev/) - Build tool
+- [Lucide](https://lucide.dev/) - Icon library
 
-You can also add TanStack Query Devtools to the root route (optional).
+---
 
-```tsx
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+<div align="center">
 
-const rootRoute = createRootRoute({
-  component: () => (
-    <>
-      <Outlet />
-      <ReactQueryDevtools buttonPosition="top-right" />
-      <TanStackRouterDevtools />
-    </>
-  ),
-});
-```
+**⭐ Star this repo if you find it helpful!**
 
-Now you can use `useQuery` to fetch your data.
+Made with ❤️ by [Mir Sameer Irfan](https://github.com/MirSameerIrfan)
 
-```tsx
-import { useQuery } from "@tanstack/react-query";
-
-import "./App.css";
-
-function App() {
-  const { data } = useQuery({
-    queryKey: ["people"],
-    queryFn: () =>
-      fetch("https://swapi.dev/api/people")
-        .then((res) => res.json())
-        .then((data) => data.results as { name: string }[]),
-    initialData: [],
-  });
-
-  return (
-    <div>
-      <ul>
-        {data.map((person) => (
-          <li key={person.name}>{person.name}</li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-export default App;
-```
-
-You can find out everything you need to know on how to use React-Query in the [React-Query documentation](https://tanstack.com/query/latest/docs/framework/react/overview).
-
-## State Management
-
-Another common requirement for React applications is state management. There are many options for state management in React. TanStack Store provides a great starting point for your project.
-
-First you need to add TanStack Store as a dependency:
-
-```bash
-npm install @tanstack/store
-```
-
-Now let's create a simple counter in the `src/App.tsx` file as a demonstration.
-
-```tsx
-import { useStore } from "@tanstack/react-store";
-import { Store } from "@tanstack/store";
-import "./App.css";
-
-const countStore = new Store(0);
-
-function App() {
-  const count = useStore(countStore);
-  return (
-    <div>
-      <button onClick={() => countStore.setState((n) => n + 1)}>
-        Increment - {count}
-      </button>
-    </div>
-  );
-}
-
-export default App;
-```
-
-One of the many nice features of TanStack Store is the ability to derive state from other state. That derived state will update when the base state updates.
-
-Let's check this out by doubling the count using derived state.
-
-```tsx
-import { useStore } from "@tanstack/react-store";
-import { Store, Derived } from "@tanstack/store";
-import "./App.css";
-
-const countStore = new Store(0);
-
-const doubledStore = new Derived({
-  fn: () => countStore.state * 2,
-  deps: [countStore],
-});
-doubledStore.mount();
-
-function App() {
-  const count = useStore(countStore);
-  const doubledCount = useStore(doubledStore);
-
-  return (
-    <div>
-      <button onClick={() => countStore.setState((n) => n + 1)}>
-        Increment - {count}
-      </button>
-      <div>Doubled - {doubledCount}</div>
-    </div>
-  );
-}
-
-export default App;
-```
-
-We use the `Derived` class to create a new store that is derived from another store. The `Derived` class has a `mount` method that will start the derived store updating.
-
-Once we've created the derived store we can use it in the `App` component just like we would any other store using the `useStore` hook.
-
-You can find out everything you need to know on how to use TanStack Store in the [TanStack Store documentation](https://tanstack.com/store/latest).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
+</div>
