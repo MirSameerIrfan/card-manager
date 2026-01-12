@@ -70,7 +70,7 @@ Get up and running in less than a minute:
 
 ```bash
 # Clone the repository
-git clone https://github.com/MirSameerIrfan/card-manager.git
+git clone https://github.com/<your-username>/card-manager.git
 cd card-manager
 
 # Install dependencies
@@ -135,7 +135,7 @@ Routes are automatically generated from files in `src/routes/`:
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/payments')({
-  component: PaymentsPage
+  component: () => <div>Payments Page</div>
 })
 ```
 
