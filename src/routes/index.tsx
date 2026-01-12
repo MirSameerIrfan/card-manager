@@ -1,13 +1,18 @@
 import { createFileRoute } from '@tanstack/react-router'
-export const Route = createFileRoute('/')({ component: App })
+import { Hero } from '@/components/landing/Hero'
+import { Features } from '@/components/landing/Features'
+import { Testimonials } from '@/components/landing/Testimonials'
+import { CTA } from '@/components/landing/CTA'
 
-function App() {
+export const Route = createFileRoute('/')({ component: LandingPage })
 
+function LandingPage() {
   return (
-    <div>
-      <h1>
-        Hello World!
-      </h1>
+    <div className="min-h-screen">
+      <Hero />
+      <Features />
+      <Testimonials />
+      <CTA />
     </div>
   )
 }
