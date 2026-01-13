@@ -135,26 +135,6 @@ export default function Header() {
               </Link>
             )
           })}
-
-          <div className="mt-6">
-            <button
-              className="w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors mb-2 font-semibold"
-              onClick={() =>
-                setGroupedExpanded((prev) => ({
-                  ...prev,
-                  StartSSRDemo: !prev.StartSSRDemo,
-                }))
-              }
-            >
-              <span className="flex items-center gap-3">
-                <StickyNote size={20} />
-                Examples
-              </span>
-              <span className={`transition-transform duration-300 ${groupedExpanded.StartSSRDemo ? 'rotate-180' : ''}`}>
-                <ChevronDown size={20} />
-              </span>
-            </button>
-          </div>
         </nav>
 
         {/* Mobile Auth Buttons */}
