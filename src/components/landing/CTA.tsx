@@ -29,15 +29,15 @@ export function CTA() {
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
                     <Link
-                        to="/example/example1"
+                        to="/auth"
                         className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-gray-50 text-emerald-600 font-semibold rounded-xl transition-all transform hover:scale-105 shadow-xl"
                     >
                         Start for Free
                         <ArrowRight className="w-5 h-5" />
                     </Link>
-                    <button className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-transparent hover:bg-white/10 text-white font-semibold rounded-xl border-2 border-white transition-all">
+                    {/* <button className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-transparent hover:bg-white/10 text-white font-semibold rounded-xl border-2 border-white transition-all">
                         Schedule Demo
-                    </button>
+                    </button> */}
                 </div>
 
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-3xl mx-auto">

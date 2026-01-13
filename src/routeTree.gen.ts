@@ -10,72 +10,63 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ExampleExample3RouteImport } from './routes/example/example3'
-import { Route as ExampleExample2RouteImport } from './routes/example/example2'
-import { Route as ExampleExample1RouteImport } from './routes/example/example1'
+import { Route as AuthIndexRouteImport } from './routes/auth/index'
+import { Route as AuthSignupIndexRouteImport } from './routes/auth/signup/index'
+import { Route as AuthLoginIndexRouteImport } from './routes/auth/login/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ExampleExample3Route = ExampleExample3RouteImport.update({
-  id: '/example/example3',
-  path: '/example/example3',
+const AuthIndexRoute = AuthIndexRouteImport.update({
+  id: '/auth/',
+  path: '/auth/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ExampleExample2Route = ExampleExample2RouteImport.update({
-  id: '/example/example2',
-  path: '/example/example2',
+const AuthSignupIndexRoute = AuthSignupIndexRouteImport.update({
+  id: '/auth/signup/',
+  path: '/auth/signup/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ExampleExample1Route = ExampleExample1RouteImport.update({
-  id: '/example/example1',
-  path: '/example/example1',
+const AuthLoginIndexRoute = AuthLoginIndexRouteImport.update({
+  id: '/auth/login/',
+  path: '/auth/login/',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/example/example1': typeof ExampleExample1Route
-  '/example/example2': typeof ExampleExample2Route
-  '/example/example3': typeof ExampleExample3Route
+  '/auth': typeof AuthIndexRoute
+  '/auth/login': typeof AuthLoginIndexRoute
+  '/auth/signup': typeof AuthSignupIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/example/example1': typeof ExampleExample1Route
-  '/example/example2': typeof ExampleExample2Route
-  '/example/example3': typeof ExampleExample3Route
+  '/auth': typeof AuthIndexRoute
+  '/auth/login': typeof AuthLoginIndexRoute
+  '/auth/signup': typeof AuthSignupIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/example/example1': typeof ExampleExample1Route
-  '/example/example2': typeof ExampleExample2Route
-  '/example/example3': typeof ExampleExample3Route
+  '/auth/': typeof AuthIndexRoute
+  '/auth/login/': typeof AuthLoginIndexRoute
+  '/auth/signup/': typeof AuthSignupIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/example/example1'
-    | '/example/example2'
-    | '/example/example3'
+  fullPaths: '/' | '/auth' | '/auth/login' | '/auth/signup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/example/example1' | '/example/example2' | '/example/example3'
-  id:
-    | '__root__'
-    | '/'
-    | '/example/example1'
-    | '/example/example2'
-    | '/example/example3'
+  to: '/' | '/auth' | '/auth/login' | '/auth/signup'
+  id: '__root__' | '/' | '/auth/' | '/auth/login/' | '/auth/signup/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ExampleExample1Route: typeof ExampleExample1Route
-  ExampleExample2Route: typeof ExampleExample2Route
-  ExampleExample3Route: typeof ExampleExample3Route
+  AuthIndexRoute: typeof AuthIndexRoute
+  AuthLoginIndexRoute: typeof AuthLoginIndexRoute
+  AuthSignupIndexRoute: typeof AuthSignupIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -87,25 +78,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/example/example3': {
-      id: '/example/example3'
-      path: '/example/example3'
-      fullPath: '/example/example3'
-      preLoaderRoute: typeof ExampleExample3RouteImport
+    '/auth/': {
+      id: '/auth/'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/example/example2': {
-      id: '/example/example2'
-      path: '/example/example2'
-      fullPath: '/example/example2'
-      preLoaderRoute: typeof ExampleExample2RouteImport
+    '/auth/signup/': {
+      id: '/auth/signup/'
+      path: '/auth/signup'
+      fullPath: '/auth/signup'
+      preLoaderRoute: typeof AuthSignupIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/example/example1': {
-      id: '/example/example1'
-      path: '/example/example1'
-      fullPath: '/example/example1'
-      preLoaderRoute: typeof ExampleExample1RouteImport
+    '/auth/login/': {
+      id: '/auth/login/'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -113,9 +104,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ExampleExample1Route: ExampleExample1Route,
-  ExampleExample2Route: ExampleExample2Route,
-  ExampleExample3Route: ExampleExample3Route,
+  AuthIndexRoute: AuthIndexRoute,
+  AuthLoginIndexRoute: AuthLoginIndexRoute,
+  AuthSignupIndexRoute: AuthSignupIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
