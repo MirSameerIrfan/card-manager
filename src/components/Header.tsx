@@ -2,10 +2,8 @@ import { Link } from '@tanstack/react-router'
 
 import { useState } from 'react'
 import {
-  ChevronDown,
   Home,
   Menu,
-  StickyNote,
   X,
   CreditCard,
   BarChart3,
@@ -20,9 +18,6 @@ const navTabs = [
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
-  const [groupedExpanded, setGroupedExpanded] = useState<
-    Record<string, boolean>
-  >({})
 
   return (
     <>
