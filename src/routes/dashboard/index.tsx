@@ -182,12 +182,15 @@ function DashboardPage() {
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false)
   
   // Calculate summary statistics
+  // NOTE: For MVP with dummy data, using simplified logic
+  // In production, would filter by actual due dates within current month
   const totalDueThisMonth = [
     ...creditCards.filter(c => c.status !== 'paid').map(c => c.amountDue),
     ...loans.map(l => l.monthlyPayment),
     ...bills.map(b => b.amount)
   ].reduce((sum, amount) => sum + amount, 0)
   
+  // Count payments that require attention (not on auto-pay or due soon)
   const upcomingPaymentsCount = [
     ...creditCards.filter(c => c.status === 'due-soon'),
     ...loans.filter(l => !l.autoPay),
@@ -525,8 +528,7 @@ function AddPaymentModal({ onClose }: { onClose: () => void }) {
   ]
   
   const handleSelectType = (type: string) => {
-    console.log('Selected payment type:', type)
-    // TODO: Navigate to add payment form
+    // TODO: Navigate to add payment form for the selected type
     onClose()
   }
   
