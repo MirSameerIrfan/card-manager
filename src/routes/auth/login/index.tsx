@@ -1,21 +1,60 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { AuthLayout } from '@/components/auth/AuthLayout'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
+import { signInEmailFn } from '@/utils/auth.functions'
+import { useServerFn } from '@tanstack/react-start'
 
-export const Route = createFileRoute('/auth/login/')({
+type LoginSearch = {
+    redirect?: string
+}
+
+export const Route = createFileRoute('/auth/login/')({    
     component: LoginPage,
+    validateSearch: (search: Record<string, unknown>): LoginSearch => {
+        return {
+            redirect: search.redirect as string
+        }
+    }
 })
 
 function LoginPage() {
+    const signIn = useServerFn(signInEmailFn)
+    const navigate = useNavigate()
+    const search = useSearch({ from: '/auth/login/' })
     const [showPassword, setShowPassword] = useState(false)
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
+    const [formData, setFormData] = useState({
+        email: '',
+        password: ''
+    })
+    const [error, setError] = useState('')
+    const [loading, setLoading] = useState(false)
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        // TODO: Add authentication logic
-        console.log('Login attempt:', { email, password })
+        setError('')
+        setLoading(true)
+
+        try {
+            const formDataObj = new FormData()
+            formDataObj.append('email', formData.email)
+            formDataObj.append('password', formData.password)
+            formDataObj.append('redirectTo', search.redirect || '/dashboard')
+            
+            await signIn({
+                data: formDataObj
+            })
+            // Navigation will be handled by the server function redirect
+        } catch (err) {
+            console.error('Login error:', err)
+            setError(err instanceof Error ? err.message : 'An error has occurred. Please try again.')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleChange = (field: string, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }))
     }
 
     return (
@@ -35,9 +74,10 @@ function LoginPage() {
                         </div>
                         <input
                             id="email"
+                            name="email"
                             type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            value={formData.email}
+                            onChange={(e) => handleChange('email', e.target.value)}
                             required
                             className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                             placeholder="you@example.com"
@@ -56,9 +96,10 @@ function LoginPage() {
                         </div>
                         <input
                             id="password"
+                            name="password"
                             type={showPassword ? 'text' : 'password'}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            value={formData.password}
+                            onChange={(e) => handleChange('password', e.target.value)}
                             required
                             className="block w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                             placeholder="••••••••"
@@ -76,6 +117,13 @@ function LoginPage() {
                         </button>
                     </div>
                 </div>
+
+                {/* Error Message */}
+                {error && (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                        {error}
+                    </div>
+                )}
 
                 {/* Remember Me & Forgot Password */}
                 <div className="flex items-center justify-between">
@@ -97,9 +145,10 @@ function LoginPage() {
                 {/* Submit Button */}
                 <button
                     type="submit"
-                    className="w-full flex items-center justify-center px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    disabled={loading}
+                    className="w-full flex items-center justify-center px-8 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
                 >
-                    Sign in
+                    {loading ? 'Signing in...' : 'Sign in'}
                 </button>
 
                 {/* Divider */}

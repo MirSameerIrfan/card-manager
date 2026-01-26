@@ -1,13 +1,17 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { AuthLayout } from '@/components/auth/AuthLayout'
 import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react'
 import { useState } from 'react'
+import { signUpUser } from '@/utils/auth.functions'
+import { useServerFn } from '@tanstack/react-start'
 
 export const Route = createFileRoute('/auth/signup/')({
     component: SignupPage,
 })
 
 function SignupPage() {
+    const signUp = useServerFn(signUpUser)
+    const navigate = useNavigate()
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [formData, setFormData] = useState({
@@ -16,11 +20,35 @@ function SignupPage() {
         password: '',
         confirmPassword: ''
     })
+    const [error, setError] = useState('')
+    const [loading, setLoading] = useState(false)
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        // TODO: Add registration logic
-        console.log('Signup attempt:', formData)
+        setError('')
+        setLoading(true)
+
+        if (formData.password !== formData.confirmPassword) {
+            setError('Passwords do not match')
+            setLoading(false)
+            return
+        }
+
+        try {
+            await signUp({
+                data: {
+                    name: formData.name,
+                    email: formData.email,
+                    password: formData.password,
+                }
+            })
+            await navigate({ to: '/dashboard' })
+        } catch (err) {
+            console.error('Signup error:', err)
+            setError(err instanceof Error ? err.message : 'An unexpected error occurred')
+        } finally {
+            setLoading(false)
+        }
     }
 
     const handleChange = (field: string, value: string) => {
@@ -33,6 +61,13 @@ function SignupPage() {
             subtitle="Start tracking your bills in minutes"
         >
             <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Error Message */}
+                {error && (
+                    <div className="p-4 bg-red-100 border border-red-300 rounded-xl">
+                        <p className="text-sm text-red-700 font-medium">{error}</p>
+                    </div>
+                )}
+
                 {/* Name Field */}
                 <div>
                     <label htmlFor="name" className="block text-sm font-semibold text-gray-900 mb-2">
@@ -165,9 +200,10 @@ function SignupPage() {
                 {/* Submit Button */}
                 <button
                     type="submit"
-                    className="w-full flex items-center justify-center px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    disabled={loading}
+                    className="w-full flex items-center justify-center px-8 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
                 >
-                    Create account
+                    {loading ? 'Creating account...' : 'Create account'}
                 </button>
 
                 {/* Divider */}
