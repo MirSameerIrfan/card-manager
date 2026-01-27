@@ -1,129 +1,147 @@
-import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { AuthLayout } from '@/components/auth/AuthLayout'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
+import { useForm } from '@tanstack/react-form'
+import type { AnyFieldApi } from '@tanstack/react-form'
 import { signInEmailFn } from '@/utils/auth.functions'
-import { useServerFn } from '@tanstack/react-start'
+import { useAuth } from '@/utils/auth-context'
 
-type LoginSearch = {
-    redirect?: string
-}
-
-export const Route = createFileRoute('/auth/login/')({    
+export const Route = createFileRoute('/auth/login/')({
     component: LoginPage,
-    validateSearch: (search: Record<string, unknown>): LoginSearch => {
-        return {
-            redirect: search.redirect as string
-        }
-    }
 })
 
+function FieldInfo({ field }: { field: AnyFieldApi }) {
+    return (
+        <>
+            {field.state.meta.isTouched && !field.state.meta.isValid ? (
+                <em className="text-red-500 text-sm">{field.state.meta.errors.join(', ')}</em>
+            ) : null}
+            {field.state.meta.isValidating ? (
+                <span className="text-amber-500 text-sm">Validating...</span>
+            ) : null}
+        </>
+    )
+}
+
 function LoginPage() {
-    const signIn = useServerFn(signInEmailFn)
-    const navigate = useNavigate()
-    const search = useSearch({ from: '/auth/login/' })
     const [showPassword, setShowPassword] = useState(false)
-    const [formData, setFormData] = useState({
-        email: '',
-        password: ''
-    })
-    const [error, setError] = useState('')
-    const [loading, setLoading] = useState(false)
+    const navigate = useNavigate()
+    const { refetchSession } = useAuth()
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setError('')
-        setLoading(true)
-
-        try {
-            const formDataObj = new FormData()
-            formDataObj.append('email', formData.email)
-            formDataObj.append('password', formData.password)
-            formDataObj.append('redirectTo', search.redirect || '/dashboard')
-            
-            await signIn({
-                data: formDataObj
+    const form = useForm({
+        defaultValues: {
+            email: '',
+            password: '',
+        },
+        onSubmit: async ({ value }) => {
+            await signInEmailFn({
+                data: { email: value.email, password: value.password }
             })
-            // Navigation will be handled by the server function redirect
-        } catch (err) {
-            console.error('Login error:', err)
-            setError(err instanceof Error ? err.message : 'An error has occurred. Please try again.')
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleChange = (field: string, value: string) => {
-        setFormData(prev => ({ ...prev, [field]: value }))
-    }
+            await refetchSession()
+            await navigate({ to: '/dashboard' })
+        },
+    })
 
     return (
         <AuthLayout
             title="Welcome back"
             subtitle="Sign in to your account to continue"
         >
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form
+                onSubmit={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    void form.handleSubmit()
+                }}
+                className="space-y-6"
+            >
                 {/* Email Field */}
                 <div>
-                    <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
-                        Email address
-                    </label>
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Mail className="w-5 h-5 text-gray-400" />
-                        </div>
-                        <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => handleChange('email', e.target.value)}
-                            required
-                            className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                            placeholder="you@example.com"
-                        />
-                    </div>
+                    <form.Field
+                        name="email"
+                        validators={{
+                            onChange: ({ value }) =>
+                                !value
+                                    ? 'Email is required'
+                                    : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+                                        ? 'Please enter a valid email address'
+                                        : undefined,
+                        }}
+                        children={(field) => (
+                            <>
+                                <label htmlFor={field.name} className="block text-sm font-semibold text-gray-900 mb-2">
+                                    Email address
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Mail className="w-5 h-5 text-gray-400" />
+                                    </div>
+                                    <input
+                                        id={field.name}
+                                        name={field.name}
+                                        type="email"
+                                        value={field.state.value}
+                                        onBlur={field.handleBlur}
+                                        onChange={(e) => field.handleChange(e.target.value)}
+                                        className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                                        placeholder="you@example.com"
+                                    />
+                                </div>
+                                <FieldInfo field={field} />
+                            </>
+                        )}
+                    />
                 </div>
 
                 {/* Password Field */}
                 <div>
-                    <label htmlFor="password" className="block text-sm font-semibold text-gray-900 mb-2">
-                        Password
-                    </label>
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Lock className="w-5 h-5 text-gray-400" />
-                        </div>
-                        <input
-                            id="password"
-                            name="password"
-                            type={showPassword ? 'text' : 'password'}
-                            value={formData.password}
-                            onChange={(e) => handleChange('password', e.target.value)}
-                            required
-                            className="block w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                            placeholder="••••••••"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
-                        >
-                            {showPassword ? (
-                                <EyeOff className="w-5 h-5" />
-                            ) : (
-                                <Eye className="w-5 h-5" />
-                            )}
-                        </button>
-                    </div>
+                    <form.Field
+                        name="password"
+                        validators={{
+                            onChange: ({ value }) =>
+                                !value
+                                    ? 'Password is required'
+                                    : value.length < 8
+                                        ? 'Password must be at least 8 characters'
+                                        : undefined,
+                        }}
+                        children={(field) => (
+                            <>
+                                <label htmlFor={field.name} className="block text-sm font-semibold text-gray-900 mb-2">
+                                    Password
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Lock className="w-5 h-5 text-gray-400" />
+                                    </div>
+                                    <input
+                                        id={field.name}
+                                        name={field.name}
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={field.state.value}
+                                        onBlur={field.handleBlur}
+                                        onChange={(e) => field.handleChange(e.target.value)}
+                                        className="block w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                                        placeholder="••••••••"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff className="w-5 h-5" />
+                                        ) : (
+                                            <Eye className="w-5 h-5" />
+                                        )}
+                                    </button>
+                                </div>
+                                <FieldInfo field={field} />
+                            </>
+                        )}
+                    />
                 </div>
-
-                {/* Error Message */}
-                {error && (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-                        {error}
-                    </div>
-                )}
 
                 {/* Remember Me & Forgot Password */}
                 <div className="flex items-center justify-between">
@@ -143,13 +161,18 @@ function LoginPage() {
                 </div>
 
                 {/* Submit Button */}
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full flex items-center justify-center px-8 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
-                >
-                    {loading ? 'Signing in...' : 'Sign in'}
-                </button>
+                <form.Subscribe
+                    selector={(state) => [state.canSubmit, state.isSubmitting]}
+                    children={([canSubmit, isSubmitting]) => (
+                        <button
+                            type="submit"
+                            disabled={!canSubmit}
+                            className="w-full flex items-center justify-center px-8 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+                        >
+                            {isSubmitting ? 'Signing in...' : 'Sign in'}
+                        </button>
+                    )}
+                />
 
                 {/* Divider */}
                 <div className="relative my-6">

@@ -1,17 +1,18 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 
 import { useState } from 'react'
 import {
-  ChevronDown,
   Home,
   Menu,
-  StickyNote,
   X,
   CreditCard,
   BarChart3,
   LogIn,
   UserPlus,
+  LogOut,
 } from 'lucide-react'
+import { useAuth } from '@/utils/auth-context'
+import { signOutFn } from '@/utils/auth.functions'
 
 const navTabs = [
   { label: 'Home', to: '/', icon: Home },
@@ -20,9 +21,19 @@ const navTabs = [
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
-  const [groupedExpanded, setGroupedExpanded] = useState<
-    Record<string, boolean>
-  >({})
+
+  const { isLoggedIn, loading, refetchSession } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      await signOutFn()
+      await refetchSession()
+      await navigate({ to: '/auth/login' })
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
 
   return (
     <>
@@ -66,20 +77,34 @@ export default function Header() {
           <div className="flex items-center gap-3">
             {/* Desktop Auth Buttons */}
             <div className="hidden md:flex items-center gap-3">
-              <Link
-                to="/auth/login"
-                className="inline-flex items-center justify-center gap-2 px-5 py-2 text-emerald-600 font-semibold hover:text-emerald-700 transition-colors"
-              >
-                <LogIn size={18} />
-                <span className="hidden sm:inline">Login</span>
-              </Link>
-              <Link
-                to="/auth/signup"
-                className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-md hover:shadow-lg"
-              >
-                <UserPlus size={18} />
-                <span className="hidden sm:inline">Sign Up</span>
-              </Link>
+              {!loading && (
+                isLoggedIn ? (
+                  <button
+                    onClick={() => void handleLogout()}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-md hover:shadow-lg"
+                  >
+                    <LogOut size={18} />
+                    <span className="hidden sm:inline">Logout</span>
+                  </button>
+                ) : (
+                  <>
+                    <Link
+                      to="/auth/login"
+                      className="inline-flex items-center justify-center gap-2 px-5 py-2 text-emerald-600 font-semibold hover:text-emerald-700 transition-colors"
+                    >
+                      <LogIn size={18} />
+                      <span className="hidden sm:inline">Login</span>
+                    </Link>
+                    <Link
+                      to="/auth/signup"
+                      className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-md hover:shadow-lg"
+                    >
+                      <UserPlus size={18} />
+                      <span className="hidden sm:inline">Sign Up</span>
+                    </Link>
+                  </>
+                )
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -139,22 +164,39 @@ export default function Header() {
 
         {/* Mobile Auth Buttons */}
         <div className="p-4 border-t border-gray-200 space-y-3">
-          <Link
-            to="/auth/login"
-            onClick={() => setIsOpen(false)}
-            className="flex items-center justify-center gap-2 w-full px-4 py-3 text-emerald-600 font-semibold hover:bg-emerald-50 rounded-xl transition-all border-2 border-emerald-600"
-          >
-            <LogIn size={18} />
-            Login
-          </Link>
-          <Link
-            to="/auth/signup"
-            onClick={() => setIsOpen(false)}
-            className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg"
-          >
-            <UserPlus size={18} />
-            Sign Up
-          </Link>
+          {!loading && (
+            isLoggedIn ? (
+              <button
+                onClick={() => {
+                  setIsOpen(false)
+                  void handleLogout()
+                }}
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg"
+              >
+                <LogOut size={18} />
+                Logout
+              </button>
+            ) : (
+              <>
+                <Link
+                  to="/auth/login"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center justify-center gap-2 w-full px-4 py-3 text-emerald-600 font-semibold hover:bg-emerald-50 rounded-xl transition-all border-2 border-emerald-600"
+                >
+                  <LogIn size={18} />
+                  Login
+                </Link>
+                <Link
+                  to="/auth/signup"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg"
+                >
+                  <UserPlus size={18} />
+                  Sign Up
+                </Link>
+              </>
+            )
+          )}
         </div>
       </aside>
 

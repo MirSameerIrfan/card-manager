@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { redirect } from "@tanstack/react-router";
 import { auth } from "@/utils/auth";
 import { z } from "zod";
 
@@ -20,21 +19,22 @@ export const signUpUser = createServerFn({ method: "POST" })
       body: {
         email: data.email,
         password: data.password,
-        name: data.name || undefined,
+        name: data.name,
       },
     });
 
-    throw redirect({ to: "/dashboard" });
+    return { success: true };
   });
 
 export const signInEmailFn = createServerFn({ method: "POST" })
-  .inputValidator((raw) => {
-    if (!(raw instanceof FormData)) throw new Error("Expected FormData");
-    const email = raw.get("email")?.toString() || "";
-    const password = raw.get("password")?.toString() || "";
-    const redirectTo = raw.get("redirectTo")?.toString() || "/dashboard";
-    if (!email || !password) throw new Error("Missing login data");
-    return { email, password, redirectTo };
+  .inputValidator((data: unknown) => {
+    const parsed = z
+      .object({
+        email: z.string().email(),
+        password: z.string().min(6),
+      })
+      .parse(data);
+    return parsed;
   })
   .handler(async ({ data }) => {
     const req = getRequest();
@@ -44,7 +44,7 @@ export const signInEmailFn = createServerFn({ method: "POST" })
       body: { email: data.email, password: data.password },
     });
 
-    throw redirect({ to: data.redirectTo });
+    return { success: true };
   });
 
 export const getSessionFn = createServerFn({ method: "GET" }).handler(
@@ -62,6 +62,6 @@ export const signOutFn = createServerFn({ method: "POST" }).handler(
     await auth.api.signOut({
       headers: Object.fromEntries(req.headers.entries()),
     });
-    throw redirect({ to: "/auth/login" });
+    return { success: true };
   },
 );
