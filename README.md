@@ -76,11 +76,24 @@ cd card-manager
 # Install dependencies
 npm install
 
+# Set up environment variables
+cp .env.example .env
+# Edit .env and add your DATABASE_URL
+
+# Set up database
+npx prisma generate
+npx prisma db push
+
+# Seed sample data (optional)
+npm run db:seed
+
 # Start development server
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser. 🎉
+
+> 📘 **New to the database setup?** Check out [DASHBOARD_INTEGRATION.md](./DASHBOARD_INTEGRATION.md) for detailed instructions.
 
 ---
 
@@ -96,6 +109,8 @@ Built with modern, cutting-edge technologies:
 | **Styling** | Tailwind CSS 4.0 |
 | **Build Tool** | Vite 7 |
 | **Server** | Nitro (TanStack Start) |
+| **Database** | PostgreSQL + Prisma ORM |
+| **Authentication** | Better Auth |
 | **Testing** | Vitest |
 | **Icons** | Lucide React |
 
@@ -112,6 +127,7 @@ Built with modern, cutting-edge technologies:
 | `npm run test` | Run test suite |
 | `npm run preview` | Preview production build |
 | `npm run lint` | Lint code with ESLint |
+| `npm run db:seed` | Seed database with sample data |
 
 ### 🏗️ Project Structure
 
@@ -121,7 +137,11 @@ card-manager/
 │   ├── components/     # Reusable UI components
 │   ├── data/          # Server functions (type-safe RPC)
 │   ├── routes/        # File-based routing
+│   ├── utils/         # Auth and utilities
 │   └── styles.css     # Global styles
+├── prisma/            # Database schema and migrations
+│   ├── schema.prisma  # Database models
+│   └── seed.ts        # Sample data
 ├── public/            # Static assets
 └── vite.config.ts     # Vite configuration
 ```
@@ -163,11 +183,14 @@ export const getPayments = createServerFn({ method: 'GET' })
 
 ## 🗺️ Roadmap
 
+- [x] 🗄️ **Database integration** - PostgreSQL with Prisma ORM
+- [x] 🔐 **User authentication** - Secure login with Better Auth
+- [x] 📊 **Dashboard** - Real-time view of all payments
+- [ ] ➕ **Add/Edit payments** - CRUD operations for payments
 - [ ] 📱 Mobile app (React Native)
 - [ ] 🔔 Push notifications for upcoming payments
 - [ ] 📊 Payment history and analytics
 - [ ] 💾 Cloud sync across devices
-- [ ] 🔐 Multi-user support with authentication
 - [ ] 📈 Spending insights and reports
 - [ ] 🌐 Multi-currency support
 
