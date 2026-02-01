@@ -76,6 +76,19 @@ cd card-manager
 # Install dependencies
 npm install
 
+# Set up environment variables
+cp .env.example .env
+# Edit .env and add your DATABASE_URL and other credentials
+
+# Generate Prisma Client
+npx prisma generate
+
+# Run database migrations
+npx prisma migrate dev
+
+# Seed the database with sample data (optional)
+npm run db:seed
+
 # Start development server
 npm run dev
 ```
@@ -96,6 +109,8 @@ Built with modern, cutting-edge technologies:
 | **Styling** | Tailwind CSS 4.0 |
 | **Build Tool** | Vite 7 |
 | **Server** | Nitro (TanStack Start) |
+| **Database** | PostgreSQL with Prisma ORM |
+| **Authentication** | Better Auth |
 | **Testing** | Vitest |
 | **Icons** | Lucide React |
 
@@ -112,6 +127,7 @@ Built with modern, cutting-edge technologies:
 | `npm run test` | Run test suite |
 | `npm run preview` | Preview production build |
 | `npm run lint` | Lint code with ESLint |
+| `npm run db:seed` | Seed database with sample data |
 
 ### 🏗️ Project Structure
 
@@ -120,8 +136,14 @@ card-manager/
 ├── src/
 │   ├── components/     # Reusable UI components
 │   ├── data/          # Server functions (type-safe RPC)
+│   ├── lib/           # Utility functions and DB client
 │   ├── routes/        # File-based routing
+│   ├── utils/         # Authentication utilities
 │   └── styles.css     # Global styles
+├── prisma/            # Database schema and migrations
+│   ├── schema.prisma  # Prisma schema definition
+│   ├── migrations/    # Database migration files
+│   └── seed.ts        # Database seed script
 ├── public/            # Static assets
 └── vite.config.ts     # Vite configuration
 ```
