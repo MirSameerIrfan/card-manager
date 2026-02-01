@@ -7,16 +7,53 @@ datasource db {
   provider = "postgresql"
 }
 
+enum FinancialItemType {
+  CREDIT_CARD
+  LOAN
+  RECURRING_BILL
+}
+
+enum PaymentStatus {
+  UPCOMING
+  DUE_SOON
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+}
+
+enum BillingCadence {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum LoanType {
+  AUTO
+  MORTGAGE
+  STUDENT
+  PERSONAL
+}
+
+enum BillCategory {
+  UTILITIES
+  SUBSCRIPTION
+  INSURANCE
+  PHONE
+  INTERNET
+  OTHER
+}
+
 model User {
-  id            String    @id
-  name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  accounts      Account[]
-  sessions      Session[]
+  id                String             @id
+  name              String
+  email             String             @unique
+  emailVerified     Boolean            @default(false)
+  image             String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  accounts          Account[]
+  sessions          Session[]
+  financialAccounts FinancialAccount[]
 
   @@map("user")
 }
@@ -66,4 +103,108 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model FinancialAccount {
+  id     String            @id @default(cuid())
+  userId String
+  type   FinancialItemType
+
+  name     String
+  provider String
+  last4    String?
+  autopay  Boolean @default(false)
+  isActive Boolean @default(true)
+
+  currency String
+  notes    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creditCard    CreditCard?
+  loan          Loan?
+  recurringBill RecurringBill?
+  payments      Payment[]
+
+  @@index([userId, isActive])
+}
+
+model CreditCard {
+  id        String @id @default(cuid())
+  accountId String @unique
+
+  creditLimit    Decimal?
+  currentBalance Decimal  @default(0)
+  minimumPayment Decimal
+
+  statementDate       DateTime
+  statementDayOfMonth Int?
+
+  dueDate       DateTime
+  dueDayOfMonth Int
+
+  lastUpdated DateTime @updatedAt
+
+  account FinancialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model Loan {
+  id        String @id @default(cuid())
+  accountId String @unique
+
+  type             LoanType
+  monthlyPayment   Decimal
+  remainingBalance Decimal
+  nextPaymentDate  DateTime
+
+  account FinancialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model RecurringBill {
+  id        String @id @default(cuid())
+  accountId String @unique
+
+  amount   Decimal
+  cadence  BillingCadence
+  category BillCategory
+  dueDay   Int
+
+  account FinancialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id        String @id @default(cuid())
+  accountId String
+
+  amountDue Decimal
+  currency  String
+  dueDate   DateTime
+  status    PaymentStatus
+
+  reminderSentAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  account      FinancialAccount     @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  transactions PaymentTransaction[]
+
+  @@index([accountId])
+  @@index([dueDate])
+  @@index([status])
+}
+
+model PaymentTransaction {
+  id        String @id @default(cuid())
+  paymentId String
+
+  amountPaid Decimal
+  currency   String
+  paidAt     DateTime @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId])
 }
