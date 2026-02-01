@@ -61,6 +61,30 @@ const statusClasses: Record<NonNullable<PaymentCardProps['status']>['tone'], str
   danger: 'bg-rose-100 text-rose-700',
 }
 
+// Helper function to determine loan icon based on loan name
+function getLoanIcon(loanName: string): React.ComponentType<{ className?: string }> {
+  const name = loanName.toLowerCase()
+  if (name.includes('mortgage')) {
+    return Home
+  }
+  if (name.includes('auto') || name.includes('car')) {
+    return Landmark
+  }
+  return Building2
+}
+
+// Helper function to determine bill icon based on category and name
+function getBillIcon(category: string, billName: string): React.ComponentType<{ className?: string }> {
+  const name = billName.toLowerCase()
+  if (category === 'Utilities' && name.includes('internet')) {
+    return Wifi
+  }
+  if (category === 'Utilities' && name.includes('phone')) {
+    return Smartphone
+  }
+  return Receipt
+}
+
 function StatCard({ label, value, icon: Icon, tone }: StatCardProps) {
   return (
     <div
@@ -255,7 +279,7 @@ export function Dashboard() {
         metaLabel: 'Remaining balance:',
         metaValue: `$${loan.remainingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         status: loan.isAutoPayOn ? { label: 'Auto-pay on', tone: 'success' } : undefined,
-        icon: loan.name.toLowerCase().includes('mortgage') ? Home : loan.name.toLowerCase().includes('auto') || loan.name.toLowerCase().includes('car') ? Landmark : Building2,
+        icon: getLoanIcon(loan.name),
       }
     }) || []
 
@@ -263,16 +287,6 @@ export function Dashboard() {
   const recurringBills: PaymentCardProps[] =
     recurringBillsData?.map((bill) => {
       const dueDate = new Date(bill.dueDate)
-      
-      // Determine icon based on category or name
-      let icon: React.ComponentType<{ className?: string }> = Receipt
-      if (bill.category === 'Utilities' && bill.name.toLowerCase().includes('internet')) {
-        icon = Wifi
-      } else if (bill.category === 'Utilities' && bill.name.toLowerCase().includes('phone')) {
-        icon = Smartphone
-      } else if (bill.category === 'Utilities' || bill.category === 'Subscription' || bill.category === 'Insurance') {
-        icon = Receipt
-      }
 
       return {
         name: bill.name,
@@ -284,7 +298,7 @@ export function Dashboard() {
         metaLabel: 'Category:',
         metaValue: bill.category,
         status: bill.isAutoPayOn ? { label: 'Auto-pay on', tone: 'success' } : undefined,
-        icon,
+        icon: getBillIcon(bill.category, bill.name),
       }
     }) || []
 
