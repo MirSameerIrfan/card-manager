@@ -1,3 +1,4 @@
+import { use, Suspense } from 'react'
 import {
   ArrowUpRight,
   Bell,
@@ -11,6 +12,7 @@ import {
   Smartphone,
   Wifi,
 } from 'lucide-react'
+import { getDashboardDataFn } from '@/data/dashboard'
 
 type StatCardProps = {
   label: string
@@ -143,168 +145,212 @@ function DashboardSection({ title, count, icon: Icon, children }: DashboardSecti
   )
 }
 
-const stats: StatCardProps[] = [
-  {
-    label: 'Total Due This Month',
-    value: '$5,119.53',
-    icon: DollarSign,
-    tone: 'emerald',
-  },
-  {
-    label: 'Upcoming Payments',
-    value: '3',
-    icon: Bell,
-    tone: 'teal',
-  },
-  {
-    label: 'Auto-Pay Active',
-    value: '6',
-    icon: ArrowUpRight,
-    tone: 'cyan',
-  },
-]
+// Helper functions to transform database data to PaymentCardProps format
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(amount)
+}
 
-const creditCards: PaymentCardProps[] = [
-  {
-    name: 'Chase Sapphire Reserve',
-    provider: '••••4589',
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(date))
+}
+
+function getStatusFromCreditCardStatus(
+  status: string
+): PaymentCardProps['status'] | undefined {
+  switch (status) {
+    case 'due_soon':
+      return { label: 'Due Soon', tone: 'warning' }
+    case 'paid':
+      return { label: 'Paid', tone: 'success' }
+    case 'overdue':
+      return { label: 'Overdue', tone: 'danger' }
+    default:
+      return undefined
+  }
+}
+
+// Map category names to icons
+function getIconForCategory(category: string): React.ComponentType<{ className?: string }> {
+  const lowerCategory = category.toLowerCase()
+  if (lowerCategory.includes('internet') || lowerCategory.includes('wifi')) {
+    return Wifi
+  }
+  if (lowerCategory.includes('phone') || lowerCategory.includes('mobile')) {
+    return Smartphone
+  }
+  return Receipt
+}
+
+// Map loan names to icons
+function getIconForLoan(name: string): React.ComponentType<{ className?: string }> {
+  const lowerName = name.toLowerCase()
+  if (lowerName.includes('auto') || lowerName.includes('car')) {
+    return Landmark
+  }
+  if (lowerName.includes('mortgage') || lowerName.includes('home')) {
+    return Home
+  }
+  if (lowerName.includes('student') || lowerName.includes('education')) {
+    return Building2
+  }
+  return Landmark
+}
+
+type DashboardData = {
+  creditCards: Array<{
+    id: string
+    name: string
+    provider: string
+    lastFourDigits: string
+    amountDue: number
+    dueDate: Date
+    minimumPayment: number
+    status: string
+  }>
+  loans: Array<{
+    id: string
+    name: string
+    provider: string
+    monthlyPayment: number
+    nextPaymentDate: Date
+    remainingBalance: number
+    autoPayEnabled: boolean
+  }>
+  recurringBills: Array<{
+    id: string
+    name: string
+    provider: string
+    amount: number
+    dueDate: Date
+    category: string
+    autoPayEnabled: boolean
+  }>
+}
+
+function transformDashboardData(data: DashboardData) {
+  // Transform credit cards
+  const creditCards: PaymentCardProps[] = data.creditCards.map((card) => ({
+    name: card.name,
+    provider: `••••${card.lastFourDigits}`,
     amountLabel: 'Amount Due',
-    amountValue: '$1,247.50',
+    amountValue: formatCurrency(card.amountDue),
     dateLabel: 'Due Date',
-    dateValue: 'Jan 18, 2026',
+    dateValue: formatDate(card.dueDate),
     metaLabel: 'Minimum payment:',
-    metaValue: '$35.00',
-    status: { label: 'Due Soon', tone: 'warning' },
+    metaValue: formatCurrency(card.minimumPayment),
+    status: getStatusFromCreditCardStatus(card.status),
     icon: CreditCard,
-  },
-  {
-    name: 'American Express Gold',
-    provider: '••••8765',
-    amountLabel: 'Amount Due',
-    amountValue: '$892.30',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 25, 2026',
-    metaLabel: 'Minimum payment:',
-    metaValue: '$25.00',
-    status: { label: 'Paid', tone: 'success' },
-    icon: CreditCard,
-  },
-  {
-    name: 'Discover It',
-    provider: '••••3421',
-    amountLabel: 'Amount Due',
-    amountValue: '$456.75',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 12, 2026',
-    metaLabel: 'Minimum payment:',
-    metaValue: '$25.00',
-    status: { label: 'Overdue', tone: 'danger' },
-    icon: CreditCard,
-  },
-]
+  }))
 
-const loans: PaymentCardProps[] = [
-  {
-    name: 'Auto Loan',
-    provider: 'Honda Finance',
+  // Transform loans
+  const loans: PaymentCardProps[] = data.loans.map((loan) => ({
+    name: loan.name,
+    provider: loan.provider,
     amountLabel: 'Monthly Payment',
-    amountValue: '$485.00',
+    amountValue: formatCurrency(loan.monthlyPayment),
     dateLabel: 'Next Payment',
-    dateValue: 'Jan 20, 2026',
+    dateValue: formatDate(loan.nextPaymentDate),
     metaLabel: 'Remaining balance:',
-    metaValue: '$18,250.00',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Landmark,
-  },
-  {
-    name: 'Mortgage',
-    provider: 'Wells Fargo',
-    amountLabel: 'Monthly Payment',
-    amountValue: '$2,150.00',
-    dateLabel: 'Next Payment',
-    dateValue: 'Feb 1, 2026',
-    metaLabel: 'Remaining balance:',
-    metaValue: '$325,000.00',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Home,
-  },
-  {
-    name: 'Student Loan',
-    provider: 'Sallie Mae',
-    amountLabel: 'Monthly Payment',
-    amountValue: '$325.00',
-    dateLabel: 'Next Payment',
-    dateValue: 'Jan 15, 2026',
-    metaLabel: 'Remaining balance:',
-    metaValue: '$28,500.00',
-    icon: Building2,
-  },
-]
+    metaValue: formatCurrency(loan.remainingBalance),
+    status: loan.autoPayEnabled
+      ? { label: 'Auto-pay on', tone: 'success' }
+      : undefined,
+    icon: getIconForLoan(loan.name),
+  }))
 
-const recurringBills: PaymentCardProps[] = [
-  {
-    name: 'Internet',
-    provider: 'Comcast Xfinity',
+  // Transform recurring bills
+  const recurringBills: PaymentCardProps[] = data.recurringBills.map((bill) => ({
+    name: bill.name,
+    provider: bill.provider,
     amountLabel: 'Amount',
-    amountValue: '$89.99',
+    amountValue: formatCurrency(bill.amount),
     dateLabel: 'Due Date',
-    dateValue: 'Jan 10, 2026',
+    dateValue: formatDate(bill.dueDate),
     metaLabel: 'Category:',
-    metaValue: 'Utilities',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Wifi,
-  },
-  {
-    name: 'Electric',
-    provider: 'Pacific Gas & Electric',
-    amountLabel: 'Amount',
-    amountValue: '$145.30',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 15, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Utilities',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Receipt,
-  },
-  {
-    name: 'Phone Plan',
-    provider: 'T-Mobile',
-    amountLabel: 'Amount',
-    amountValue: '$75.00',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 22, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Utilities',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Smartphone,
-  },
-  {
-    name: 'Netflix Premium',
-    provider: 'Netflix',
-    amountLabel: 'Amount',
-    amountValue: '$19.99',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 8, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Subscription',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Receipt,
-  },
-  {
-    name: 'Home Insurance',
-    provider: 'State Farm',
-    amountLabel: 'Amount',
-    amountValue: '$125.00',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 30, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Insurance',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Receipt,
-  },
-]
+    metaValue: bill.category,
+    status: bill.autoPayEnabled
+      ? { label: 'Auto-pay on', tone: 'success' }
+      : undefined,
+    icon: getIconForCategory(bill.category),
+  }))
 
-export function Dashboard() {
+  // Calculate stats
+  const now = new Date()
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+
+  // Total due this month: credit cards + loans + recurring bills due this month
+  const creditCardsDueThisMonth = data.creditCards
+    .filter((card) => new Date(card.dueDate) <= endOfMonth)
+    .reduce((sum, card) => sum + card.amountDue, 0)
+
+  const loansDueThisMonth = data.loans
+    .filter((loan) => new Date(loan.nextPaymentDate) <= endOfMonth)
+    .reduce((sum, loan) => sum + loan.monthlyPayment, 0)
+
+  const billsDueThisMonth = data.recurringBills
+    .filter((bill) => new Date(bill.dueDate) <= endOfMonth)
+    .reduce((sum, bill) => sum + bill.amount, 0)
+
+  const totalDueThisMonth = creditCardsDueThisMonth + loansDueThisMonth + billsDueThisMonth
+
+  // Upcoming payments: count items due within next 7 days
+  const next7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+  const upcomingPayments =
+    data.creditCards.filter(
+      (card) => new Date(card.dueDate) >= now && new Date(card.dueDate) <= next7Days
+    ).length +
+    data.loans.filter(
+      (loan) =>
+        new Date(loan.nextPaymentDate) >= now && new Date(loan.nextPaymentDate) <= next7Days
+    ).length +
+    data.recurringBills.filter(
+      (bill) => new Date(bill.dueDate) >= now && new Date(bill.dueDate) <= next7Days
+    ).length
+
+  // Auto-pay active: count loans and bills with auto-pay enabled
+  const autoPayActive =
+    data.loans.filter((loan) => loan.autoPayEnabled).length +
+    data.recurringBills.filter((bill) => bill.autoPayEnabled).length
+
+  const stats: StatCardProps[] = [
+    {
+      label: 'Total Due This Month',
+      value: formatCurrency(totalDueThisMonth),
+      icon: DollarSign,
+      tone: 'emerald',
+    },
+    {
+      label: 'Upcoming Payments',
+      value: upcomingPayments.toString(),
+      icon: Bell,
+      tone: 'teal',
+    },
+    {
+      label: 'Auto-Pay Active',
+      value: autoPayActive.toString(),
+      icon: ArrowUpRight,
+      tone: 'cyan',
+    },
+  ]
+
+  return { stats, creditCards, loans, recurringBills }
+}
+
+function DashboardContent() {
+  // Use the use() hook to fetch data - suspends until data is ready
+  const dashboardDataPromise = getDashboardDataFn()
+  const data = use(dashboardDataPromise)
+
+  // Transform database data to match UI format
+  const { stats, creditCards, loans, recurringBills } = transformDashboardData(data)
+
   return (
     <main className="min-h-screen bg-linear-to-br from-emerald-50 via-white to-cyan-50 pb-20">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8">
@@ -346,5 +392,26 @@ export function Dashboard() {
         </DashboardSection>
       </div>
     </main>
+  )
+}
+
+export function Dashboard() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-linear-to-br from-emerald-50 via-white to-cyan-50 pb-20">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-center py-20">
+              <div className="text-center">
+                <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent mx-auto" />
+                <p className="text-lg font-semibold text-gray-600">Loading dashboard...</p>
+              </div>
+            </div>
+          </div>
+        </main>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
   )
 }
