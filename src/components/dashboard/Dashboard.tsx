@@ -12,6 +12,8 @@ import {
   Wifi,
 } from 'lucide-react'
 import { getRouteApi } from '@tanstack/react-router'
+import { useState } from 'react'
+import { AddPaymentModal } from './AddPaymentModal'
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -163,6 +165,7 @@ const routeApi = getRouteApi('/dashboard')
 
 export function Dashboard() {
   const data = routeApi.useLoaderData()
+  const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false)
 
   const statsItems: StatCardProps[] = [
     {
@@ -187,6 +190,8 @@ export function Dashboard() {
 
   return (
     <main className="min-h-screen bg-linear-to-br from-emerald-50 via-white to-cyan-50 pb-20">
+      <AddPaymentModal isOpen={isAddPaymentOpen} onClose={() => setIsAddPaymentOpen(false)} />
+
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8">
         <section className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-3">
@@ -195,7 +200,10 @@ export function Dashboard() {
             <p className="max-w-2xl text-lg text-gray-600">Manage all your payments in one place.</p>
           </div>
 
-          <button className="inline-flex items-center justify-center gap-2 self-start rounded-xl bg-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md shadow-emerald-900/15 transition-all hover:translate-y-0.5 hover:bg-emerald-700">
+          <button
+            onClick={() => setIsAddPaymentOpen(true)}
+            className="inline-flex items-center justify-center gap-2 self-start rounded-xl bg-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md shadow-emerald-900/15 transition-all hover:translate-y-0.5 hover:bg-emerald-700"
+          >
             <Plus className="h-5 w-5" />
             Add Payment
           </button>

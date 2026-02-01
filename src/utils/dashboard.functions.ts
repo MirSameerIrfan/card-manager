@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { auth } from "@/utils/auth";
 import { prisma } from "@/utils/auth";
+import { z } from "zod";
 
 export const getDashboardDataFn = createServerFn({ method: "GET" }).handler(
     async () => {
@@ -81,3 +82,80 @@ export const getDashboardDataFn = createServerFn({ method: "GET" }).handler(
         };
     },
 );
+// Add Payment Mutation
+const AddPaymentSchema = z.object({
+    type: z.enum(['credit_card', 'loan', 'recurring_bill']),
+    name: z.string().min(1),
+    provider: z.string().min(1),
+    amount: z.number().min(0),
+    date: z.string(), // ISO date string
+    // Type specific fields
+    minimumPayment: z.number().optional(),
+    status: z.string().optional(),
+    category: z.string().optional(),
+    autoPay: z.boolean().optional(),
+});
+
+export const addPaymentFn = createServerFn({ method: "POST" })
+    .inputValidator(AddPaymentSchema)
+    .handler(async ({ data }) => {
+        const req = getRequest();
+
+        const session = await auth.api.getSession({
+            headers: Object.fromEntries(req.headers.entries()),
+        });
+
+        if (!session?.user) {
+            throw new Error("Unauthorized");
+        }
+
+        const userId = session.user.id;
+        const date = new Date(data.date);
+
+        try {
+            if (data.type === 'credit_card') {
+                await prisma.credit_card.create({
+                    data: {
+                        userId,
+                        name: data.name,
+                        provider: data.provider,
+                        amountDue: data.amount,
+                        dueDate: date,
+                        minimumPayment: data.minimumPayment || 0,
+                        status: data.status || 'Due Soon',
+                        updatedAt: new Date(),
+                    }
+                });
+            } else if (data.type === 'loan') {
+                await prisma.loan.create({
+                    data: {
+                        userId,
+                        name: data.name,
+                        provider: data.provider,
+                        monthlyPayment: data.amount,
+                        nextPayment: date,
+                        remainingBalance: 0, // Default or add field? Let's assume 0 for now or add to schema
+                        autoPay: data.autoPay || false,
+                        updatedAt: new Date(),
+                    }
+                });
+            } else if (data.type === 'recurring_bill') {
+                await prisma.recurring_bill.create({
+                    data: {
+                        userId,
+                        name: data.name,
+                        provider: data.provider,
+                        amount: data.amount,
+                        dueDate: date,
+                        category: data.category || 'Utilities',
+                        autoPay: data.autoPay || false,
+                        updatedAt: new Date(),
+                    }
+                });
+            }
+            return { success: true };
+        } catch (e) {
+            console.error('Failed to add payment', e);
+            return { success: false, error: 'Failed to add payment' };
+        }
+    });
