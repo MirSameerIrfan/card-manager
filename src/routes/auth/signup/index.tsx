@@ -29,6 +29,7 @@ function SignupPage() {
     const { refetchSession } = useAuth()
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+    const [submitError, setSubmitError] = useState<string | null>(null)
 
     const form = useForm({
         defaultValues: {
@@ -38,15 +39,29 @@ function SignupPage() {
             confirmPassword: '',
         },
         onSubmit: async ({ value }) => {
-            await signUpUser({
-                data: {
-                    name: value.name,
-                    email: value.email,
-                    password: value.password,
+            setSubmitError(null)
+
+            try {
+
+                const result = await signUpUser({
+                    data: {
+                        name: value.name,
+                        email: value.email,
+                        password: value.password,
+                    }
+                })
+
+                if (!result.success) {
+                    setSubmitError(result.error ?? 'sign up failed')
+                    return
                 }
-            })
-            await refetchSession()
-            await navigate({ to: '/dashboard' })
+                await refetchSession()
+                await navigate({ to: '/dashboard' })
+
+            } catch (error) {
+                setSubmitError(error instanceof Error ? error.message : 'Sign up failed')
+            }
+
         },
     })
 
@@ -273,6 +288,16 @@ function SignupPage() {
                         </button>
                     )}
                 />
+
+                {submitError ? (
+                    <div
+                        role="alert"
+                        className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                    >
+                        {submitError}
+                    </div>
+                ) : null}
+
 
                 {/* Divider */}
                 <div className="relative my-6">

@@ -26,6 +26,7 @@ function FieldInfo({ field }: { field: AnyFieldApi }) {
 
 function LoginPage() {
     const [showPassword, setShowPassword] = useState(false)
+    const [submitError, setSubmitError] = useState<string | null>(null)
     const navigate = useNavigate()
     const { refetchSession } = useAuth()
 
@@ -35,11 +36,21 @@ function LoginPage() {
             password: '',
         },
         onSubmit: async ({ value }) => {
-            await signInEmailFn({
-                data: { email: value.email, password: value.password }
-            })
-            await refetchSession()
-            await navigate({ to: '/dashboard' })
+            setSubmitError(null)
+            try {
+                const result = await signInEmailFn({
+                    data: { email: value.email, password: value.password }
+                })
+
+                if (!result.success) {
+                    setSubmitError(result.error ?? 'Invalid email or password')
+                    return
+                }
+                await refetchSession()
+                await navigate({ to: '/dashboard' })
+            } catch (error) {
+                setSubmitError(error instanceof Error ? error.message : 'Sign in failed')
+            }
         },
     })
 
@@ -143,6 +154,16 @@ function LoginPage() {
                     />
                 </div>
 
+                {submitError ? (
+                    <div
+                        role="alert"
+                        className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                    >
+                        {submitError}
+                    </div>
+                ) : null}
+
+                {/* TODO */}
                 {/* Remember Me & Forgot Password */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -184,6 +205,7 @@ function LoginPage() {
                     </div>
                 </div>
 
+                {/* TODO Implement Social Logins */}
                 {/* Social Login Buttons */}
                 <div className="grid grid-cols-2 gap-4">
                     <button

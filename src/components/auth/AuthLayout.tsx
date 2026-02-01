@@ -1,5 +1,4 @@
-import { Link } from '@tanstack/react-router'
-import { CreditCard, CheckCircle2 } from 'lucide-react'
+import { CheckCircle2 } from 'lucide-react'
 
 interface AuthLayoutProps {
     children: React.ReactNode
@@ -20,16 +19,6 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
             {/* Left Side - Form */}
             <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 bg-white">
                 <div className="w-full max-w-md">
-                    {/* Logo */}
-                    <Link to="/" className="flex items-center gap-3 mb-8 group">
-                        <div className="w-12 h-12 bg-linear-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center group-hover:shadow-lg transition-shadow">
-                            <CreditCard className="w-7 h-7 text-white" />
-                        </div>
-                        <span className="font-black text-2xl text-gray-900">
-                            Card Manager
-                        </span>
-                    </Link>
-
                     {/* Title */}
                     <div className="mb-8">
                         <h1 className="text-4xl font-black text-gray-900 mb-2">
@@ -39,7 +28,6 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
                             {subtitle}
                         </p>
                     </div>
-
                     {/* Form Content */}
                     {children}
                 </div>
