@@ -76,11 +76,21 @@ cd card-manager
 # Install dependencies
 npm install
 
+# Set up environment variables
+cp .env.example .env
+# Edit .env and add your DATABASE_URL
+
+# Set up database (see docs/DATABASE_SETUP.md for detailed instructions)
+npx prisma generate
+npx prisma migrate dev
+
 # Start development server
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser. 🎉
+
+**📚 For detailed database setup instructions, see [docs/DATABASE_SETUP.md](docs/DATABASE_SETUP.md)**
 
 ---
 
@@ -96,6 +106,8 @@ Built with modern, cutting-edge technologies:
 | **Styling** | Tailwind CSS 4.0 |
 | **Build Tool** | Vite 7 |
 | **Server** | Nitro (TanStack Start) |
+| **Database** | PostgreSQL, Prisma ORM |
+| **Authentication** | Better Auth |
 | **Testing** | Vitest |
 | **Icons** | Lucide React |
 
