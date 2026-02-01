@@ -2,8 +2,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { prisma } from '@/lib/db'
 import type { 
-  FinancialItemType, 
-  PaymentStatus, 
   LoanType, 
   BillCategory 
 } from '../../generated/prisma/client'

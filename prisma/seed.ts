@@ -50,7 +50,7 @@ async function main() {
     },
   })
 
-  const creditCard2 = await prisma.financialAccount.create({
+  const _creditCard2 = await prisma.financialAccount.create({
     data: {
       userId: user.id,
       type: 'CREDIT_CARD',
@@ -118,7 +118,7 @@ async function main() {
     },
   })
 
-  const mortgage = await prisma.financialAccount.create({
+  const _mortgage = await prisma.financialAccount.create({
     data: {
       userId: user.id,
       type: 'LOAN',
@@ -137,7 +137,7 @@ async function main() {
     },
   })
 
-  const studentLoan = await prisma.financialAccount.create({
+  const _studentLoan = await prisma.financialAccount.create({
     data: {
       userId: user.id,
       type: 'LOAN',
@@ -159,7 +159,7 @@ async function main() {
   console.log('✅ Created 3 loans')
 
   // Create Recurring Bills
-  const internet = await prisma.financialAccount.create({
+  const _internet = await prisma.financialAccount.create({
     data: {
       userId: user.id,
       type: 'RECURRING_BILL',
@@ -178,7 +178,7 @@ async function main() {
     },
   })
 
-  const electric = await prisma.financialAccount.create({
+  const _electric = await prisma.financialAccount.create({
     data: {
       userId: user.id,
       type: 'RECURRING_BILL',
@@ -197,7 +197,7 @@ async function main() {
     },
   })
 
-  const phone = await prisma.financialAccount.create({
+  const _phone = await prisma.financialAccount.create({
     data: {
       userId: user.id,
       type: 'RECURRING_BILL',
@@ -216,7 +216,7 @@ async function main() {
     },
   })
 
-  const netflix = await prisma.financialAccount.create({
+  const _netflix = await prisma.financialAccount.create({
     data: {
       userId: user.id,
       type: 'RECURRING_BILL',
@@ -235,7 +235,7 @@ async function main() {
     },
   })
 
-  const insurance = await prisma.financialAccount.create({
+  const _insurance = await prisma.financialAccount.create({
     data: {
       userId: user.id,
       type: 'RECURRING_BILL',

@@ -194,7 +194,7 @@ export function DashboardContainer() {
       }
     }
 
-    fetchData()
+    void fetchData()
   }, [])
 
   if (loading) {

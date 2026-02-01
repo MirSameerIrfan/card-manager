@@ -10,7 +10,7 @@ export const Route = createFileRoute('/dashboard')({
         throw redirect({ to: '/auth/login', search: { redirect: '/dashboard' } })
       }
       return { session }
-    } catch (error) {
+    } catch (_error) {
       // If there's an error getting the session, assume user is not authenticated
       throw redirect({ to: '/auth/login', search: { redirect: '/dashboard' } })
     }
