@@ -1,12 +1,24 @@
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
+import { HeadContent, Scripts, createRootRoute, useLoaderData } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import Header from '../components/Header'
+import { AuthProvider } from '@/utils/auth-context'
+import { getSessionFn } from '@/utils/auth.functions'
 
 import appCss from '../styles.css?url'
 
+async function rootLoader() {
+  try {
+    const session = await getSessionFn()
+    return { isLoggedIn: !!session }
+  } catch (error) {
+    return { isLoggedIn: false }
+  }
+}
+
 export const Route = createRootRoute({
+  loader: rootLoader,
   head: () => ({
     meta: [
       {
@@ -32,14 +44,18 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const { isLoggedIn } = useLoaderData({ from: '__root__' })
+
   return (
     <html lang="en">
       <head>
         <HeadContent />
       </head>
       <body>
-        <Header />
-        {children}
+        <AuthProvider initialSession={isLoggedIn}>
+          <Header />
+          {children}
+        </AuthProvider>
         <TanStackDevtools
           config={{
             position: 'bottom-right',
