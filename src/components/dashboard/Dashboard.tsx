@@ -1,3 +1,4 @@
+import { Suspense, use } from 'react'
 import {
   ArrowUpRight,
   Bell,
@@ -11,6 +12,16 @@ import {
   Smartphone,
   Wifi,
 } from 'lucide-react'
+import {
+  getCreditCardsFn,
+  getLoansFn,
+  getRecurringBillsFn,
+  getDashboardStatsFn,
+  type CreditCardData,
+  type LoanData,
+  type RecurringBillData,
+  type DashboardStats,
+} from '@/data/dashboard.functions'
 
 type StatCardProps = {
   label: string
@@ -119,8 +130,7 @@ function PaymentCard({
       </div>
 
       <div className="mt-6 border-t border-gray-100 pt-4 text-sm font-medium text-gray-500">
-        {metaLabel}{' '}
-        <span className="font-semibold text-gray-700">{metaValue}</span>
+        {metaLabel} <span className="font-semibold text-gray-700">{metaValue}</span>
       </div>
     </article>
   )
@@ -143,168 +153,274 @@ function DashboardSection({ title, count, icon: Icon, children }: DashboardSecti
   )
 }
 
-const stats: StatCardProps[] = [
-  {
-    label: 'Total Due This Month',
-    value: '$5,119.53',
-    icon: DollarSign,
-    tone: 'emerald',
-  },
-  {
-    label: 'Upcoming Payments',
-    value: '3',
-    icon: Bell,
-    tone: 'teal',
-  },
-  {
-    label: 'Auto-Pay Active',
-    value: '6',
-    icon: ArrowUpRight,
-    tone: 'cyan',
-  },
-]
+// Helper functions to format data for display
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(amount)
+}
 
-const creditCards: PaymentCardProps[] = [
-  {
-    name: 'Chase Sapphire Reserve',
-    provider: '••••4589',
-    amountLabel: 'Amount Due',
-    amountValue: '$1,247.50',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 18, 2026',
-    metaLabel: 'Minimum payment:',
-    metaValue: '$35.00',
-    status: { label: 'Due Soon', tone: 'warning' },
-    icon: CreditCard,
-  },
-  {
-    name: 'American Express Gold',
-    provider: '••••8765',
-    amountLabel: 'Amount Due',
-    amountValue: '$892.30',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 25, 2026',
-    metaLabel: 'Minimum payment:',
-    metaValue: '$25.00',
-    status: { label: 'Paid', tone: 'success' },
-    icon: CreditCard,
-  },
-  {
-    name: 'Discover It',
-    provider: '••••3421',
-    amountLabel: 'Amount Due',
-    amountValue: '$456.75',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 12, 2026',
-    metaLabel: 'Minimum payment:',
-    metaValue: '$25.00',
-    status: { label: 'Overdue', tone: 'danger' },
-    icon: CreditCard,
-  },
-]
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(date))
+}
 
-const loans: PaymentCardProps[] = [
-  {
-    name: 'Auto Loan',
-    provider: 'Honda Finance',
-    amountLabel: 'Monthly Payment',
-    amountValue: '$485.00',
-    dateLabel: 'Next Payment',
-    dateValue: 'Jan 20, 2026',
-    metaLabel: 'Remaining balance:',
-    metaValue: '$18,250.00',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Landmark,
-  },
-  {
-    name: 'Mortgage',
-    provider: 'Wells Fargo',
-    amountLabel: 'Monthly Payment',
-    amountValue: '$2,150.00',
-    dateLabel: 'Next Payment',
-    dateValue: 'Feb 1, 2026',
-    metaLabel: 'Remaining balance:',
-    metaValue: '$325,000.00',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Home,
-  },
-  {
-    name: 'Student Loan',
-    provider: 'Sallie Mae',
-    amountLabel: 'Monthly Payment',
-    amountValue: '$325.00',
-    dateLabel: 'Next Payment',
-    dateValue: 'Jan 15, 2026',
-    metaLabel: 'Remaining balance:',
-    metaValue: '$28,500.00',
-    icon: Building2,
-  },
-]
+function mapCreditCardStatus(status: string): NonNullable<PaymentCardProps['status']> {
+  switch (status) {
+    case 'due_soon':
+      return { label: 'Due Soon', tone: 'warning' }
+    case 'paid':
+      return { label: 'Paid', tone: 'success' }
+    case 'overdue':
+      return { label: 'Overdue', tone: 'danger' }
+    default:
+      return { label: 'Due Soon', tone: 'warning' }
+  }
+}
 
-const recurringBills: PaymentCardProps[] = [
-  {
-    name: 'Internet',
-    provider: 'Comcast Xfinity',
-    amountLabel: 'Amount',
-    amountValue: '$89.99',
+// Icon mapping for bills by category
+function getBillIcon(category: string) {
+  switch (category.toLowerCase()) {
+    case 'utilities':
+      return Wifi
+    case 'subscription':
+      return Receipt
+    case 'insurance':
+      return Receipt
+    default:
+      return Receipt
+  }
+}
+
+// Components that fetch and display real data
+function StatsSection({ statsPromise }: { statsPromise: Promise<DashboardStats> }) {
+  const stats = use(statsPromise)
+
+  const statCards: StatCardProps[] = [
+    {
+      label: 'Total Due This Month',
+      value: formatCurrency(stats.totalDue),
+      icon: DollarSign,
+      tone: 'emerald',
+    },
+    {
+      label: 'Upcoming Payments',
+      value: stats.upcomingPayments.toString(),
+      icon: Bell,
+      tone: 'teal',
+    },
+    {
+      label: 'Auto-Pay Active',
+      value: stats.autoPayActive.toString(),
+      icon: ArrowUpRight,
+      tone: 'cyan',
+    },
+  ]
+
+  return (
+    <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      {statCards.map((stat) => (
+        <StatCard key={stat.label} {...stat} />
+      ))}
+    </section>
+  )
+}
+
+function CreditCardsSection({ cardsPromise }: { cardsPromise: Promise<CreditCardData[]> }) {
+  const creditCards = use(cardsPromise)
+
+  if (creditCards.length === 0) {
+    return (
+      <section className="space-y-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-900/15">
+            <CreditCard className="h-5 w-5" />
+          </div>
+          <h2 className="text-2xl font-black text-gray-900">Credit Cards</h2>
+          <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700">0</span>
+        </div>
+        <div className="rounded-2xl border border-emerald-100/60 bg-white p-12 text-center">
+          <p className="text-gray-500">No credit cards found. Add your first credit card to get started.</p>
+        </div>
+      </section>
+    )
+  }
+
+  const mappedCards: PaymentCardProps[] = creditCards.map((card) => ({
+    name: card.name,
+    provider: card.provider,
+    amountLabel: 'Amount Due',
+    amountValue: formatCurrency(card.amountDue),
     dateLabel: 'Due Date',
-    dateValue: 'Jan 10, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Utilities',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Wifi,
-  },
-  {
-    name: 'Electric',
-    provider: 'Pacific Gas & Electric',
+    dateValue: formatDate(card.dueDate),
+    metaLabel: 'Minimum payment:',
+    metaValue: formatCurrency(card.minimumPayment),
+    status: mapCreditCardStatus(card.status),
+    icon: CreditCard,
+  }))
+
+  return (
+    <DashboardSection title="Credit Cards" count={creditCards.length} icon={CreditCard}>
+      {mappedCards.map((card) => (
+        <PaymentCard key={card.name} {...card} />
+      ))}
+    </DashboardSection>
+  )
+}
+
+function LoansSection({ loansPromise }: { loansPromise: Promise<LoanData[]> }) {
+  const loans = use(loansPromise)
+
+  if (loans.length === 0) {
+    return (
+      <section className="space-y-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-900/15">
+            <Landmark className="h-5 w-5" />
+          </div>
+          <h2 className="text-2xl font-black text-gray-900">Loans</h2>
+          <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700">0</span>
+        </div>
+        <div className="rounded-2xl border border-emerald-100/60 bg-white p-12 text-center">
+          <p className="text-gray-500">No loans found.</p>
+        </div>
+      </section>
+    )
+  }
+
+  const getLoanIcon = (name: string) => {
+    if (name.toLowerCase().includes('auto')) return Landmark
+    if (name.toLowerCase().includes('mortgage') || name.toLowerCase().includes('home')) return Home
+    if (name.toLowerCase().includes('student')) return Building2
+    return Landmark
+  }
+
+  const mappedLoans: PaymentCardProps[] = loans.map((loan) => ({
+    name: loan.name,
+    provider: loan.provider,
+    amountLabel: 'Monthly Payment',
+    amountValue: formatCurrency(loan.monthlyPayment),
+    dateLabel: 'Next Payment',
+    dateValue: formatDate(loan.nextPayment),
+    metaLabel: 'Remaining balance:',
+    metaValue: formatCurrency(loan.remainingBalance),
+    status: loan.autoPay ? { label: 'Auto-pay on', tone: 'success' } : undefined,
+    icon: getLoanIcon(loan.name),
+  }))
+
+  return (
+    <DashboardSection title="Loans" count={loans.length} icon={Landmark}>
+      {mappedLoans.map((loan) => (
+        <PaymentCard key={loan.name} {...loan} />
+      ))}
+    </DashboardSection>
+  )
+}
+
+function RecurringBillsSection({ billsPromise }: { billsPromise: Promise<RecurringBillData[]> }) {
+  const bills = use(billsPromise)
+
+  if (bills.length === 0) {
+    return (
+      <section className="space-y-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-900/15">
+            <Receipt className="h-5 w-5" />
+          </div>
+          <h2 className="text-2xl font-black text-gray-900">Recurring Bills</h2>
+          <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700">0</span>
+        </div>
+        <div className="rounded-2xl border border-emerald-100/60 bg-white p-12 text-center">
+          <p className="text-gray-500">No recurring bills found.</p>
+        </div>
+      </section>
+    )
+  }
+
+  const mappedBills: PaymentCardProps[] = bills.map((bill) => ({
+    name: bill.name,
+    provider: bill.provider,
     amountLabel: 'Amount',
-    amountValue: '$145.30',
+    amountValue: formatCurrency(bill.amount),
     dateLabel: 'Due Date',
-    dateValue: 'Jan 15, 2026',
+    dateValue: formatDate(bill.dueDate),
     metaLabel: 'Category:',
-    metaValue: 'Utilities',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Receipt,
-  },
-  {
-    name: 'Phone Plan',
-    provider: 'T-Mobile',
-    amountLabel: 'Amount',
-    amountValue: '$75.00',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 22, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Utilities',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Smartphone,
-  },
-  {
-    name: 'Netflix Premium',
-    provider: 'Netflix',
-    amountLabel: 'Amount',
-    amountValue: '$19.99',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 8, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Subscription',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Receipt,
-  },
-  {
-    name: 'Home Insurance',
-    provider: 'State Farm',
-    amountLabel: 'Amount',
-    amountValue: '$125.00',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 30, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Insurance',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Receipt,
-  },
-]
+    metaValue: bill.category,
+    status: bill.autoPay ? { label: 'Auto-pay on', tone: 'success' } : undefined,
+    icon: getBillIcon(bill.category),
+  }))
+
+  return (
+    <DashboardSection title="Recurring Bills" count={bills.length} icon={Receipt}>
+      {mappedBills.map((bill) => (
+        <PaymentCard key={bill.name} {...bill} />
+      ))}
+    </DashboardSection>
+  )
+}
+
+// Loading fallbacks
+function LoadingCard() {
+  return (
+    <div className="h-64 animate-pulse rounded-2xl border border-emerald-100/60 bg-white p-6">
+      <div className="flex gap-4">
+        <div className="h-12 w-12 rounded-xl bg-gray-200"></div>
+        <div className="flex-1 space-y-2">
+          <div className="h-5 w-32 rounded bg-gray-200"></div>
+          <div className="h-4 w-24 rounded bg-gray-200"></div>
+        </div>
+      </div>
+      <div className="mt-6 grid grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <div className="h-3 w-20 rounded bg-gray-200"></div>
+          <div className="h-8 w-24 rounded bg-gray-200"></div>
+        </div>
+        <div className="space-y-2">
+          <div className="h-3 w-20 rounded bg-gray-200"></div>
+          <div className="h-6 w-28 rounded bg-gray-200"></div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function LoadingSection() {
+  return (
+    <section className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 animate-pulse rounded-xl bg-gray-200"></div>
+        <div className="h-8 w-32 animate-pulse rounded bg-gray-200"></div>
+      </div>
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <LoadingCard />
+        <LoadingCard />
+        <LoadingCard />
+      </div>
+    </section>
+  )
+}
+
+function LoadingStats() {
+  return (
+    <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="h-32 animate-pulse rounded-2xl bg-emerald-200"></div>
+      ))}
+    </section>
+  )
+}
 
 export function Dashboard() {
+  // Fetch all data in parallel - these return promises that suspend rendering
+  const statsPromise = getDashboardStatsFn()
+  const cardsPromise = getCreditCardsFn()
+  const loansPromise = getLoansFn()
+  const billsPromise = getRecurringBillsFn()
+
   return (
     <main className="min-h-screen bg-linear-to-br from-emerald-50 via-white to-cyan-50 pb-20">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8">
@@ -321,29 +437,21 @@ export function Dashboard() {
           </button>
         </section>
 
-        <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {stats.map((stat) => (
-            <StatCard key={stat.label} {...stat} />
-          ))}
-        </section>
+        <Suspense fallback={<LoadingStats />}>
+          <StatsSection statsPromise={statsPromise} />
+        </Suspense>
 
-        <DashboardSection title="Credit Cards" count={creditCards.length} icon={CreditCard}>
-          {creditCards.map((card) => (
-            <PaymentCard key={card.name} {...card} />
-          ))}
-        </DashboardSection>
+        <Suspense fallback={<LoadingSection />}>
+          <CreditCardsSection cardsPromise={cardsPromise} />
+        </Suspense>
 
-        <DashboardSection title="Loans" count={loans.length} icon={Landmark}>
-          {loans.map((loan) => (
-            <PaymentCard key={loan.name} {...loan} />
-          ))}
-        </DashboardSection>
+        <Suspense fallback={<LoadingSection />}>
+          <LoansSection loansPromise={loansPromise} />
+        </Suspense>
 
-        <DashboardSection title="Recurring Bills" count={recurringBills.length} icon={Receipt}>
-          {recurringBills.map((bill) => (
-            <PaymentCard key={bill.name} {...bill} />
-          ))}
-        </DashboardSection>
+        <Suspense fallback={<LoadingSection />}>
+          <RecurringBillsSection billsPromise={billsPromise} />
+        </Suspense>
       </div>
     </main>
   )
