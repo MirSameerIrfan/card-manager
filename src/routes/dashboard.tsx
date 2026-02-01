@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { Dashboard } from '@/components/dashboard/Dashboard'
+import { DashboardContainer } from '@/components/dashboard/DashboardContainer'
 import { getSessionFn } from '@/utils/auth.functions'
 
 export const Route = createFileRoute('/dashboard')({
@@ -15,5 +15,5 @@ export const Route = createFileRoute('/dashboard')({
       throw redirect({ to: '/auth/login', search: { redirect: '/dashboard' } })
     }
   },
-  component: Dashboard,
+  component: DashboardContainer,
 })
