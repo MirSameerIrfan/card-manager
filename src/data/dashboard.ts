@@ -4,11 +4,18 @@ import { auth } from '@/utils/auth'
 import { PrismaClient } from '../../generated/prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL!,
-})
+// Singleton pattern for PrismaClient to avoid connection pool exhaustion
+let prisma: PrismaClient
 
-const prisma = new PrismaClient({ adapter })
+function getPrismaClient() {
+  if (!prisma) {
+    const adapter = new PrismaPg({
+      connectionString: process.env.DATABASE_URL!,
+    })
+    prisma = new PrismaClient({ adapter })
+  }
+  return prisma
+}
 
 export const getDashboardDataFn = createServerFn({
   method: 'GET',
@@ -23,17 +30,18 @@ export const getDashboardDataFn = createServerFn({
   }
 
   const userId = session.user.id
+  const db = getPrismaClient()
 
   const [creditCards, loans, recurringBills] = await Promise.all([
-    prisma.creditCard.findMany({
+    db.creditCard.findMany({
       where: { userId },
       orderBy: { dueDate: 'asc' },
     }),
-    prisma.loan.findMany({
+    db.loan.findMany({
       where: { userId },
       orderBy: { nextPaymentDate: 'asc' },
     }),
-    prisma.recurringBill.findMany({
+    db.recurringBill.findMany({
       where: { userId },
       orderBy: { dueDate: 'asc' },
     }),

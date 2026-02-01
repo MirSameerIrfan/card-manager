@@ -1,4 +1,4 @@
-import { use, Suspense } from 'react'
+import { useLoaderData } from '@tanstack/react-router'
 import {
   ArrowUpRight,
   Bell,
@@ -12,7 +12,6 @@ import {
   Smartphone,
   Wifi,
 } from 'lucide-react'
-import { getDashboardDataFn } from '@/data/dashboard'
 
 type StatCardProps = {
   label: string
@@ -344,9 +343,8 @@ function transformDashboardData(data: DashboardData) {
 }
 
 function DashboardContent() {
-  // Use the use() hook to fetch data - suspends until data is ready
-  const dashboardDataPromise = getDashboardDataFn()
-  const data = use(dashboardDataPromise)
+  // Get data from route loader - no refetches on re-renders
+  const data = useLoaderData({ from: '/dashboard' })
 
   // Transform database data to match UI format
   const { stats, creditCards, loans, recurringBills } = transformDashboardData(data)
@@ -396,22 +394,6 @@ function DashboardContent() {
 }
 
 export function Dashboard() {
-  return (
-    <Suspense
-      fallback={
-        <main className="min-h-screen bg-linear-to-br from-emerald-50 via-white to-cyan-50 pb-20">
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-center py-20">
-              <div className="text-center">
-                <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent mx-auto" />
-                <p className="text-lg font-semibold text-gray-600">Loading dashboard...</p>
-              </div>
-            </div>
-          </div>
-        </main>
-      }
-    >
-      <DashboardContent />
-    </Suspense>
-  )
+  // Route loader handles data fetching, no need for Suspense wrapper
+  return <DashboardContent />
 }
