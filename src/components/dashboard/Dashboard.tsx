@@ -11,6 +11,22 @@ import {
   Smartphone,
   Wifi,
 } from 'lucide-react'
+import { getRouteApi } from '@tanstack/react-router'
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(amount)
+}
+
+const formatDate = (date: Date | string) => {
+  return new Date(date).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
 
 type StatCardProps = {
   label: string
@@ -143,168 +159,32 @@ function DashboardSection({ title, count, icon: Icon, children }: DashboardSecti
   )
 }
 
-const stats: StatCardProps[] = [
-  {
-    label: 'Total Due This Month',
-    value: '$5,119.53',
-    icon: DollarSign,
-    tone: 'emerald',
-  },
-  {
-    label: 'Upcoming Payments',
-    value: '3',
-    icon: Bell,
-    tone: 'teal',
-  },
-  {
-    label: 'Auto-Pay Active',
-    value: '6',
-    icon: ArrowUpRight,
-    tone: 'cyan',
-  },
-]
-
-const creditCards: PaymentCardProps[] = [
-  {
-    name: 'Chase Sapphire Reserve',
-    provider: '••••4589',
-    amountLabel: 'Amount Due',
-    amountValue: '$1,247.50',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 18, 2026',
-    metaLabel: 'Minimum payment:',
-    metaValue: '$35.00',
-    status: { label: 'Due Soon', tone: 'warning' },
-    icon: CreditCard,
-  },
-  {
-    name: 'American Express Gold',
-    provider: '••••8765',
-    amountLabel: 'Amount Due',
-    amountValue: '$892.30',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 25, 2026',
-    metaLabel: 'Minimum payment:',
-    metaValue: '$25.00',
-    status: { label: 'Paid', tone: 'success' },
-    icon: CreditCard,
-  },
-  {
-    name: 'Discover It',
-    provider: '••••3421',
-    amountLabel: 'Amount Due',
-    amountValue: '$456.75',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 12, 2026',
-    metaLabel: 'Minimum payment:',
-    metaValue: '$25.00',
-    status: { label: 'Overdue', tone: 'danger' },
-    icon: CreditCard,
-  },
-]
-
-const loans: PaymentCardProps[] = [
-  {
-    name: 'Auto Loan',
-    provider: 'Honda Finance',
-    amountLabel: 'Monthly Payment',
-    amountValue: '$485.00',
-    dateLabel: 'Next Payment',
-    dateValue: 'Jan 20, 2026',
-    metaLabel: 'Remaining balance:',
-    metaValue: '$18,250.00',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Landmark,
-  },
-  {
-    name: 'Mortgage',
-    provider: 'Wells Fargo',
-    amountLabel: 'Monthly Payment',
-    amountValue: '$2,150.00',
-    dateLabel: 'Next Payment',
-    dateValue: 'Feb 1, 2026',
-    metaLabel: 'Remaining balance:',
-    metaValue: '$325,000.00',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Home,
-  },
-  {
-    name: 'Student Loan',
-    provider: 'Sallie Mae',
-    amountLabel: 'Monthly Payment',
-    amountValue: '$325.00',
-    dateLabel: 'Next Payment',
-    dateValue: 'Jan 15, 2026',
-    metaLabel: 'Remaining balance:',
-    metaValue: '$28,500.00',
-    icon: Building2,
-  },
-]
-
-const recurringBills: PaymentCardProps[] = [
-  {
-    name: 'Internet',
-    provider: 'Comcast Xfinity',
-    amountLabel: 'Amount',
-    amountValue: '$89.99',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 10, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Utilities',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Wifi,
-  },
-  {
-    name: 'Electric',
-    provider: 'Pacific Gas & Electric',
-    amountLabel: 'Amount',
-    amountValue: '$145.30',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 15, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Utilities',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Receipt,
-  },
-  {
-    name: 'Phone Plan',
-    provider: 'T-Mobile',
-    amountLabel: 'Amount',
-    amountValue: '$75.00',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 22, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Utilities',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Smartphone,
-  },
-  {
-    name: 'Netflix Premium',
-    provider: 'Netflix',
-    amountLabel: 'Amount',
-    amountValue: '$19.99',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 8, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Subscription',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Receipt,
-  },
-  {
-    name: 'Home Insurance',
-    provider: 'State Farm',
-    amountLabel: 'Amount',
-    amountValue: '$125.00',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 30, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Insurance',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Receipt,
-  },
-]
+const routeApi = getRouteApi('/dashboard')
 
 export function Dashboard() {
+  const data = routeApi.useLoaderData()
+
+  const statsItems: StatCardProps[] = [
+    {
+      label: 'Total Due This Month',
+      value: formatCurrency(data.stats.totalDue),
+      icon: DollarSign,
+      tone: 'emerald',
+    },
+    {
+      label: 'Upcoming Payments',
+      value: data.stats.upcomingPaymentsCount.toString(),
+      icon: Bell,
+      tone: 'teal',
+    },
+    {
+      label: 'Auto-Pay Active',
+      value: data.stats.autoPayCount.toString(),
+      icon: ArrowUpRight,
+      tone: 'cyan',
+    },
+  ]
+
   return (
     <main className="min-h-screen bg-linear-to-br from-emerald-50 via-white to-cyan-50 pb-20">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8">
@@ -322,27 +202,75 @@ export function Dashboard() {
         </section>
 
         <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {stats.map((stat) => (
+          {statsItems.map((stat) => (
             <StatCard key={stat.label} {...stat} />
           ))}
         </section>
 
-        <DashboardSection title="Credit Cards" count={creditCards.length} icon={CreditCard}>
-          {creditCards.map((card) => (
-            <PaymentCard key={card.name} {...card} />
+        <DashboardSection title="Credit Cards" count={data.creditCards.length} icon={CreditCard}>
+          {data.creditCards.map((card) => {
+            let tone: 'warning' | 'success' | 'danger' = 'warning';
+            if (card.status === 'Paid') tone = 'success';
+            if (card.status === 'Overdue') tone = 'danger';
+
+            return (
+              <PaymentCard
+                key={card.id}
+                name={card.name}
+                provider={card.provider}
+                amountLabel="Amount Due"
+                amountValue={formatCurrency(card.amountDue)}
+                dateLabel="Due Date"
+                dateValue={formatDate(card.dueDate)}
+                metaLabel="Minimum payment:"
+                metaValue={formatCurrency(card.minimumPayment)}
+                status={{ label: card.status, tone }}
+                icon={CreditCard}
+              />
+            )
+          })}
+        </DashboardSection>
+
+        <DashboardSection title="Loans" count={data.loans.length} icon={Landmark}>
+          {data.loans.map((loan) => (
+            <PaymentCard
+              key={loan.id}
+              name={loan.name}
+              provider={loan.provider}
+              amountLabel="Monthly Payment"
+              amountValue={formatCurrency(loan.monthlyPayment)}
+              dateLabel="Next Payment"
+              dateValue={formatDate(loan.nextPayment)}
+              metaLabel="Remaining balance:"
+              metaValue={formatCurrency(loan.remainingBalance)}
+              status={loan.autoPay ? { label: 'Auto-pay on', tone: 'success' } : undefined}
+              icon={loan.name.includes('Mortgage') || loan.name.includes('Home') ? Home : (loan.name.includes('Auto') ? Landmark : Building2)}
+            />
           ))}
         </DashboardSection>
 
-        <DashboardSection title="Loans" count={loans.length} icon={Landmark}>
-          {loans.map((loan) => (
-            <PaymentCard key={loan.name} {...loan} />
-          ))}
-        </DashboardSection>
+        <DashboardSection title="Recurring Bills" count={data.recurringBills.length} icon={Receipt}>
+          {data.recurringBills.map((bill) => {
+            let Icon = Receipt;
+            if (bill.name.includes('Internet') || bill.name.includes('Wifi')) Icon = Wifi;
+            if (bill.name.includes('Phone')) Icon = Smartphone;
 
-        <DashboardSection title="Recurring Bills" count={recurringBills.length} icon={Receipt}>
-          {recurringBills.map((bill) => (
-            <PaymentCard key={bill.name} {...bill} />
-          ))}
+            return (
+              <PaymentCard
+                key={bill.id}
+                name={bill.name}
+                provider={bill.provider}
+                amountLabel="Amount"
+                amountValue={formatCurrency(bill.amount)}
+                dateLabel="Due Date"
+                dateValue={formatDate(bill.dueDate)}
+                metaLabel="Category:"
+                metaValue={bill.category}
+                status={bill.autoPay ? { label: 'Auto-pay on', tone: 'success' } : undefined}
+                icon={Icon}
+              />
+            )
+          })}
         </DashboardSection>
       </div>
     </main>
