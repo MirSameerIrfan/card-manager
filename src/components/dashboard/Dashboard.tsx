@@ -11,6 +11,13 @@ import {
   Smartphone,
   Wifi,
 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import {
+  getCreditCardsFn,
+  getLoansFn,
+  getRecurringBillsFn,
+  getPaymentStatsFn,
+} from '@/data/payments'
 
 type StatCardProps = {
   label: string
@@ -52,6 +59,14 @@ const statusClasses: Record<NonNullable<PaymentCardProps['status']>['tone'], str
   warning: 'bg-amber-100 text-amber-700',
   success: 'bg-emerald-100 text-emerald-700',
   danger: 'bg-rose-100 text-rose-700',
+}
+
+// Icon mapping for categories
+const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+  Utilities: Wifi,
+  Subscription: Receipt,
+  Insurance: Receipt,
+  default: Receipt,
 }
 
 function StatCard({ label, value, icon: Icon, tone }: StatCardProps) {
@@ -143,168 +158,160 @@ function DashboardSection({ title, count, icon: Icon, children }: DashboardSecti
   )
 }
 
-const stats: StatCardProps[] = [
-  {
-    label: 'Total Due This Month',
-    value: '$5,119.53',
-    icon: DollarSign,
-    tone: 'emerald',
-  },
-  {
-    label: 'Upcoming Payments',
-    value: '3',
-    icon: Bell,
-    tone: 'teal',
-  },
-  {
-    label: 'Auto-Pay Active',
-    value: '6',
-    icon: ArrowUpRight,
-    tone: 'cyan',
-  },
-]
-
-const creditCards: PaymentCardProps[] = [
-  {
-    name: 'Chase Sapphire Reserve',
-    provider: '••••4589',
-    amountLabel: 'Amount Due',
-    amountValue: '$1,247.50',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 18, 2026',
-    metaLabel: 'Minimum payment:',
-    metaValue: '$35.00',
-    status: { label: 'Due Soon', tone: 'warning' },
-    icon: CreditCard,
-  },
-  {
-    name: 'American Express Gold',
-    provider: '••••8765',
-    amountLabel: 'Amount Due',
-    amountValue: '$892.30',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 25, 2026',
-    metaLabel: 'Minimum payment:',
-    metaValue: '$25.00',
-    status: { label: 'Paid', tone: 'success' },
-    icon: CreditCard,
-  },
-  {
-    name: 'Discover It',
-    provider: '••••3421',
-    amountLabel: 'Amount Due',
-    amountValue: '$456.75',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 12, 2026',
-    metaLabel: 'Minimum payment:',
-    metaValue: '$25.00',
-    status: { label: 'Overdue', tone: 'danger' },
-    icon: CreditCard,
-  },
-]
-
-const loans: PaymentCardProps[] = [
-  {
-    name: 'Auto Loan',
-    provider: 'Honda Finance',
-    amountLabel: 'Monthly Payment',
-    amountValue: '$485.00',
-    dateLabel: 'Next Payment',
-    dateValue: 'Jan 20, 2026',
-    metaLabel: 'Remaining balance:',
-    metaValue: '$18,250.00',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Landmark,
-  },
-  {
-    name: 'Mortgage',
-    provider: 'Wells Fargo',
-    amountLabel: 'Monthly Payment',
-    amountValue: '$2,150.00',
-    dateLabel: 'Next Payment',
-    dateValue: 'Feb 1, 2026',
-    metaLabel: 'Remaining balance:',
-    metaValue: '$325,000.00',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Home,
-  },
-  {
-    name: 'Student Loan',
-    provider: 'Sallie Mae',
-    amountLabel: 'Monthly Payment',
-    amountValue: '$325.00',
-    dateLabel: 'Next Payment',
-    dateValue: 'Jan 15, 2026',
-    metaLabel: 'Remaining balance:',
-    metaValue: '$28,500.00',
-    icon: Building2,
-  },
-]
-
-const recurringBills: PaymentCardProps[] = [
-  {
-    name: 'Internet',
-    provider: 'Comcast Xfinity',
-    amountLabel: 'Amount',
-    amountValue: '$89.99',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 10, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Utilities',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Wifi,
-  },
-  {
-    name: 'Electric',
-    provider: 'Pacific Gas & Electric',
-    amountLabel: 'Amount',
-    amountValue: '$145.30',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 15, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Utilities',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Receipt,
-  },
-  {
-    name: 'Phone Plan',
-    provider: 'T-Mobile',
-    amountLabel: 'Amount',
-    amountValue: '$75.00',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 22, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Utilities',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Smartphone,
-  },
-  {
-    name: 'Netflix Premium',
-    provider: 'Netflix',
-    amountLabel: 'Amount',
-    amountValue: '$19.99',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 8, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Subscription',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Receipt,
-  },
-  {
-    name: 'Home Insurance',
-    provider: 'State Farm',
-    amountLabel: 'Amount',
-    amountValue: '$125.00',
-    dateLabel: 'Due Date',
-    dateValue: 'Jan 30, 2026',
-    metaLabel: 'Category:',
-    metaValue: 'Insurance',
-    status: { label: 'Auto-pay on', tone: 'success' },
-    icon: Receipt,
-  },
-]
-
 export function Dashboard() {
+  // State for data
+  const [creditCardsData, setCreditCardsData] = useState<Awaited<ReturnType<typeof getCreditCardsFn>>>([])
+  const [loansData, setLoansData] = useState<Awaited<ReturnType<typeof getLoansFn>>>([])
+  const [recurringBillsData, setRecurringBillsData] = useState<Awaited<ReturnType<typeof getRecurringBillsFn>>>([])
+  const [statsData, setStatsData] = useState<Awaited<ReturnType<typeof getPaymentStatsFn>> | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Fetch data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true)
+        const [creditCards, loans, bills, stats] = await Promise.all([
+          getCreditCardsFn(),
+          getLoansFn(),
+          getRecurringBillsFn(),
+          getPaymentStatsFn(),
+        ])
+        setCreditCardsData(creditCards)
+        setLoansData(loans)
+        setRecurringBillsData(bills)
+        setStatsData(stats)
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  // Format stats data
+  const stats: StatCardProps[] = [
+    {
+      label: 'Total Due This Month',
+      value: statsData?.totalDue ? `$${statsData.totalDue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00',
+      icon: DollarSign,
+      tone: 'emerald',
+    },
+    {
+      label: 'Upcoming Payments',
+      value: String(statsData?.upcomingPayments || 0),
+      icon: Bell,
+      tone: 'teal',
+    },
+    {
+      label: 'Auto-Pay Active',
+      value: String(statsData?.autoPayActive || 0),
+      icon: ArrowUpRight,
+      tone: 'cyan',
+    },
+  ]
+
+  // Transform credit cards data
+  const creditCards: PaymentCardProps[] =
+    creditCardsData?.map((card) => {
+      const dueDate = new Date(card.dueDate)
+      const now = new Date()
+      const daysDiff = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+
+      let status: PaymentCardProps['status']
+      if (card.isPaid) {
+        status = { label: 'Paid', tone: 'success' }
+      } else if (card.isOverdue || daysDiff < 0) {
+        status = { label: 'Overdue', tone: 'danger' }
+      } else if (daysDiff <= 7) {
+        status = { label: 'Due Soon', tone: 'warning' }
+      } else {
+        status = undefined
+      }
+
+      return {
+        name: card.name,
+        provider: card.provider,
+        amountLabel: 'Amount Due',
+        amountValue: `$${card.amountDue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        dateLabel: 'Due Date',
+        dateValue: dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        metaLabel: 'Minimum payment:',
+        metaValue: `$${card.minimumPayment.toFixed(2)}`,
+        status,
+        icon: CreditCard,
+      }
+    }) || []
+
+  // Transform loans data
+  const loans: PaymentCardProps[] =
+    loansData?.map((loan) => {
+      const nextPaymentDate = new Date(loan.nextPaymentDate)
+
+      return {
+        name: loan.name,
+        provider: loan.provider,
+        amountLabel: 'Monthly Payment',
+        amountValue: `$${loan.monthlyPayment.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        dateLabel: 'Next Payment',
+        dateValue: nextPaymentDate.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        }),
+        metaLabel: 'Remaining balance:',
+        metaValue: `$${loan.remainingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        status: loan.isAutoPayOn ? { label: 'Auto-pay on', tone: 'success' } : undefined,
+        icon: loan.name.toLowerCase().includes('mortgage') ? Home : loan.name.toLowerCase().includes('auto') || loan.name.toLowerCase().includes('car') ? Landmark : Building2,
+      }
+    }) || []
+
+  // Transform recurring bills data
+  const recurringBills: PaymentCardProps[] =
+    recurringBillsData?.map((bill) => {
+      const dueDate = new Date(bill.dueDate)
+      
+      // Determine icon based on category or name
+      let icon: React.ComponentType<{ className?: string }> = Receipt
+      if (bill.category === 'Utilities' && bill.name.toLowerCase().includes('internet')) {
+        icon = Wifi
+      } else if (bill.category === 'Utilities' && bill.name.toLowerCase().includes('phone')) {
+        icon = Smartphone
+      } else if (bill.category === 'Utilities' || bill.category === 'Subscription' || bill.category === 'Insurance') {
+        icon = Receipt
+      }
+
+      return {
+        name: bill.name,
+        provider: bill.provider,
+        amountLabel: 'Amount',
+        amountValue: `$${bill.amount.toFixed(2)}`,
+        dateLabel: 'Due Date',
+        dateValue: dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        metaLabel: 'Category:',
+        metaValue: bill.category,
+        status: bill.isAutoPayOn ? { label: 'Auto-pay on', tone: 'success' } : undefined,
+        icon,
+      }
+    }) || []
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-linear-to-br from-emerald-50 via-white to-cyan-50 pb-20">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent"></div>
+              <p className="text-lg font-semibold text-gray-600">Loading dashboard...</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-linear-to-br from-emerald-50 via-white to-cyan-50 pb-20">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8">
