@@ -1,4 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
+import { getRequest } from '@tanstack/react-start/server'
+import { auth } from '@/utils/auth'
 import { PrismaClient } from '../../generated/prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 
@@ -10,8 +12,12 @@ const prisma = new PrismaClient({ adapter })
 
 export const getDashboardDataFn = createServerFn({
   method: 'GET',
-}).handler(async ({ context }) => {
-  const session = context.session
+}).handler(async () => {
+  const req = getRequest()
+  const session = await auth.api.getSession({
+    headers: Object.fromEntries(req.headers.entries()),
+  })
+
   if (!session?.user?.id) {
     throw new Error('Unauthorized')
   }
