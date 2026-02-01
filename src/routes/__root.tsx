@@ -12,7 +12,7 @@ async function rootLoader() {
   try {
     const session = await getSessionFn()
     return { isLoggedIn: !!session }
-  } catch (error) {
+  } catch (_error) {
     return { isLoggedIn: false }
   }
 }
