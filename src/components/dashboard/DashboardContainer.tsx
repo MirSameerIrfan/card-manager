@@ -311,24 +311,24 @@ export function DashboardContainer() {
 
         {creditCardCards.length > 0 && (
           <DashboardSection title="Credit Cards" count={creditCardCards.length} icon={CreditCard}>
-            {creditCardCards.map((card, index) => (
-              <PaymentCard key={index} {...card} />
+            {creditCardCards.map((card) => (
+              <PaymentCard key={card.name} {...card} />
             ))}
           </DashboardSection>
         )}
 
         {loanCards.length > 0 && (
           <DashboardSection title="Loans" count={loanCards.length} icon={Landmark}>
-            {loanCards.map((loan, index) => (
-              <PaymentCard key={index} {...loan} />
+            {loanCards.map((loan) => (
+              <PaymentCard key={loan.name} {...loan} />
             ))}
           </DashboardSection>
         )}
 
         {billCards.length > 0 && (
           <DashboardSection title="Recurring Bills" count={billCards.length} icon={Receipt}>
-            {billCards.map((bill, index) => (
-              <PaymentCard key={index} {...bill} />
+            {billCards.map((bill) => (
+              <PaymentCard key={bill.name} {...bill} />
             ))}
           </DashboardSection>
         )}
