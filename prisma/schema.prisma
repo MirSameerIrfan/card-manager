@@ -8,15 +8,18 @@ datasource db {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  accounts      Account[]
-  sessions      Session[]
+  id             String           @id
+  name           String
+  email          String           @unique
+  emailVerified  Boolean          @default(false)
+  image          String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  accounts       Account[]
+  credit_card    credit_card[]
+  loan           loan[]
+  recurring_bill recurring_bill[]
+  sessions       Session[]
 
   @@map("user")
 }
@@ -66,4 +69,52 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model credit_card {
+  id             String   @id @default(uuid())
+  userId         String
+  name           String
+  provider       String
+  amountDue      Float
+  dueDate        DateTime
+  minimumPayment Float
+  status         String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model loan {
+  id               String   @id @default(uuid())
+  userId           String
+  name             String
+  provider         String
+  monthlyPayment   Float
+  nextPayment      DateTime
+  remainingBalance Float
+  autoPay          Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model recurring_bill {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  provider  String
+  amount    Float
+  dueDate   DateTime
+  category  String
+  autoPay   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

@@ -10,7 +10,7 @@ const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL!,
 });
 
-const prisma = new PrismaClient({ adapter });
+export const prisma = new PrismaClient({ adapter });
 
 export const auth = betterAuth({
   // IMPORTANT: match your mounted handler route

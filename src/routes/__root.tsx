@@ -1,6 +1,7 @@
 import { HeadContent, Scripts, createRootRoute, useLoaderData } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
+import { NotFound } from '@/components/NotFound'
 
 import Header from '../components/Header'
 import { AuthProvider } from '@/utils/auth-context'
@@ -41,6 +42,7 @@ export const Route = createRootRoute({
   }),
 
   shellComponent: RootDocument,
+  notFoundComponent: NotFound,
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {

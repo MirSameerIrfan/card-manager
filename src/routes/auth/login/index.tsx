@@ -1,13 +1,26 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate, redirect } from '@tanstack/react-router'
 import { AuthLayout } from '@/components/auth/AuthLayout'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import type { AnyFieldApi } from '@tanstack/react-form'
-import { signInEmailFn } from '@/utils/auth.functions'
+import { signInEmailFn, getSessionFn } from '@/utils/auth.functions'
 import { useAuth } from '@/utils/auth-context'
 
 export const Route = createFileRoute('/auth/login/')({
+    beforeLoad: async () => {
+        try {
+            const session = await getSessionFn()
+            if (session?.user) {
+                throw redirect({ to: '/dashboard' })
+            }
+        } catch (error) {
+            // Re-throw redirects, catch others (e.g. network error -> show login)
+            if (error instanceof Response || (error as any)?.isRedirect) {
+                throw error
+            }
+        }
+    },
     component: LoginPage,
 })
 

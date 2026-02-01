@@ -1,6 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { Dashboard } from '@/components/dashboard/Dashboard'
 import { getSessionFn } from '@/utils/auth.functions'
+import { getDashboardDataFn } from '@/utils/dashboard.functions'
 
 export const Route = createFileRoute('/dashboard')({
   beforeLoad: async () => {
@@ -11,9 +12,11 @@ export const Route = createFileRoute('/dashboard')({
       }
       return { session }
     } catch (error) {
-      // If there's an error getting the session, assume user is not authenticated
       throw redirect({ to: '/auth/login', search: { redirect: '/dashboard' } })
     }
+  },
+  loader: async () => {
+    return await getDashboardDataFn()
   },
   component: Dashboard,
 })
