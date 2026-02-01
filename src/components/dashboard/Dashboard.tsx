@@ -1,19 +1,18 @@
+
 import {
   ArrowUpRight,
   Bell,
-  Building2,
   CreditCard,
   DollarSign,
-  Home,
   Landmark,
   Plus,
   Receipt,
-  Smartphone,
-  Wifi,
+  Trash,
 } from 'lucide-react'
-import { getRouteApi } from '@tanstack/react-router'
+import { getRouteApi, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { AddPaymentModal } from './AddPaymentModal'
+import { deletePaymentFn } from '@/utils/dashboard.functions'
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -38,38 +37,22 @@ type StatCardProps = {
 }
 
 type PaymentCardProps = {
+  id: string
+  type: 'credit_card' | 'loan' | 'recurring_bill'
   name: string
   provider: string
-  amountLabel: string
-  amountValue: string
-  dateLabel: string
-  dateValue: string
-  metaLabel: string
-  metaValue: string
-  status?: {
-    label: string
-    tone: 'warning' | 'success' | 'danger'
-  }
+  amount: string
+  date: string
+  status: 'Paid' | 'Due Soon' | 'Overdue' | 'Auto-Pay'
   icon: React.ComponentType<{ className?: string }>
 }
 
-type DashboardSectionProps = {
-  title: string
-  count: number
-  icon: React.ComponentType<{ className?: string }>
-  children: React.ReactNode
-}
+
 
 const toneClasses: Record<StatCardProps['tone'], string> = {
   emerald: 'from-emerald-500 to-emerald-600',
   teal: 'from-teal-500 to-cyan-500',
   cyan: 'from-cyan-500 to-sky-500',
-}
-
-const statusClasses: Record<NonNullable<PaymentCardProps['status']>['tone'], string> = {
-  warning: 'bg-amber-100 text-amber-700',
-  success: 'bg-emerald-100 text-emerald-700',
-  danger: 'bg-rose-100 text-rose-700',
 }
 
 function StatCard({ label, value, icon: Icon, tone }: StatCardProps) {
@@ -90,76 +73,76 @@ function StatCard({ label, value, icon: Icon, tone }: StatCardProps) {
   )
 }
 
-function StatusPill({ status }: { status: NonNullable<PaymentCardProps['status']> }) {
-  return (
-    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClasses[status.tone]}`}>
-      {status.label}
-    </span>
-  )
-}
 
-function PaymentCard({
-  name,
-  provider,
-  amountLabel,
-  amountValue,
-  dateLabel,
-  dateValue,
-  metaLabel,
-  metaValue,
-  status,
-  icon: Icon,
-}: PaymentCardProps) {
+
+function PaymentCard({ id, type, name, provider, amount, date, status, icon: Icon }: PaymentCardProps) {
+  const router = useRouter()
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const theme = {
+    Paid: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+    'Due Soon': { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+    Overdue: { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
+    'Auto-Pay': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+  }[status]
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this payment?')) return
+
+    setIsDeleting(true)
+    try {
+      const res = await deletePaymentFn({ data: { id, type } })
+      if (!res.success) throw new Error(res.error || 'Failed')
+      await router.invalidate()
+    } catch (e) {
+      alert('Failed to delete')
+      setIsDeleting(false)
+    }
+  }
+
   return (
-    <article className="flex h-full flex-col rounded-2xl border border-emerald-100/60 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-900/15">
-            <Icon className="h-6 w-6" />
+    <div className="group relative flex flex-col justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-200/50">
+      <button
+        onClick={handleDelete}
+        disabled={isDeleting}
+        className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+        title="Delete Payment"
+      >
+        <Trash className="w-4 h-4" />
+      </button>
+
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-4">
+          <div className={`flex h-12 w-12 items-center justify-center rounded-xl transition-colors ${theme.bg}`}>
+            <Icon className={`h-6 w-6 ${theme.text}`} />
           </div>
-          <div className="space-y-1">
-            <h3 className="text-lg font-bold text-gray-900">{name}</h3>
+          <div>
+            <h3 className="font-bold text-gray-900 line-clamp-1">{name}</h3>
             <p className="text-sm font-medium text-gray-500">{provider}</p>
           </div>
         </div>
-        {status ? <StatusPill status={status} /> : null}
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-6">
+      {/* ... rest of component ... */}
+      <div className="flex items-center justify-between border-t border-gray-100 pt-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{amountLabel}</p>
-          <p className="mt-2 text-2xl font-black text-gray-900">{amountValue}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Amount</p>
+          <p className="mt-0.5 text-lg font-black text-gray-900">{amount}</p>
         </div>
         <div className="text-right">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{dateLabel}</p>
-          <p className="mt-2 text-lg font-bold text-gray-900">{dateValue}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            {status === 'Auto-Pay' ? 'Next Payment' : 'Due Date'}
+          </p>
+          <div className={`mt-1 inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-bold ${theme.bg} ${theme.text} ${theme.border}`}>
+            {date}
+          </div>
         </div>
       </div>
-
-      <div className="mt-6 border-t border-gray-100 pt-4 text-sm font-medium text-gray-500">
-        {metaLabel}{' '}
-        <span className="font-semibold text-gray-700">{metaValue}</span>
-      </div>
-    </article>
+    </div>
   )
 }
 
-function DashboardSection({ title, count, icon: Icon, children }: DashboardSectionProps) {
-  return (
-    <section className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-900/15">
-          <Icon className="h-5 w-5" />
-        </div>
-        <h2 className="text-2xl font-black text-gray-900">{title}</h2>
-        <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700">
-          {count}
-        </span>
-      </div>
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">{children}</div>
-    </section>
-  )
-}
+
 
 const routeApi = getRouteApi('/dashboard')
 
@@ -215,71 +198,98 @@ export function Dashboard() {
           ))}
         </section>
 
-        <DashboardSection title="Credit Cards" count={data.creditCards.length} icon={CreditCard}>
-          {data.creditCards.map((card) => {
-            let tone: 'warning' | 'success' | 'danger' = 'warning';
-            if (card.status === 'Paid') tone = 'success';
-            if (card.status === 'Overdue') tone = 'danger';
+        {/* Credit Cards Grid */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-3 text-xl font-bold text-gray-900">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                <CreditCard className="h-5 w-5" />
+              </span>
+              Credit Cards
+              <span className="ml-2 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                {data.creditCards.length}
+              </span>
+            </h2>
+          </div>
 
-            return (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {data.creditCards.map((card) => (
               <PaymentCard
                 key={card.id}
+                id={card.id}
+                type="credit_card"
                 name={card.name}
                 provider={card.provider}
-                amountLabel="Amount Due"
-                amountValue={formatCurrency(card.amountDue)}
-                dateLabel="Due Date"
-                dateValue={formatDate(card.dueDate)}
-                metaLabel="Minimum payment:"
-                metaValue={formatCurrency(card.minimumPayment)}
-                status={{ label: card.status, tone }}
+                amount={formatCurrency(card.amountDue)}
+                date={formatDate(card.dueDate)}
+                status={card.status as PaymentCardProps['status']}
                 icon={CreditCard}
               />
-            )
-          })}
-        </DashboardSection>
+            ))}
+          </div>
+        </section>
 
-        <DashboardSection title="Loans" count={data.loans.length} icon={Landmark}>
-          {data.loans.map((loan) => (
-            <PaymentCard
-              key={loan.id}
-              name={loan.name}
-              provider={loan.provider}
-              amountLabel="Monthly Payment"
-              amountValue={formatCurrency(loan.monthlyPayment)}
-              dateLabel="Next Payment"
-              dateValue={formatDate(loan.nextPayment)}
-              metaLabel="Remaining balance:"
-              metaValue={formatCurrency(loan.remainingBalance)}
-              status={loan.autoPay ? { label: 'Auto-pay on', tone: 'success' } : undefined}
-              icon={loan.name.includes('Mortgage') || loan.name.includes('Home') ? Home : (loan.name.includes('Auto') ? Landmark : Building2)}
-            />
-          ))}
-        </DashboardSection>
+        {/* Loans Grid */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-3 text-xl font-bold text-gray-900">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                <Landmark className="h-5 w-5" />
+              </span>
+              Loans
+              <span className="ml-2 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                {data.loans.length}
+              </span>
+            </h2>
+          </div>
 
-        <DashboardSection title="Recurring Bills" count={data.recurringBills.length} icon={Receipt}>
-          {data.recurringBills.map((bill) => {
-            let Icon = Receipt;
-            if (bill.name.includes('Internet') || bill.name.includes('Wifi')) Icon = Wifi;
-            if (bill.name.includes('Phone')) Icon = Smartphone;
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {data.loans.map((loan) => (
+              <PaymentCard
+                key={loan.id}
+                id={loan.id}
+                type="loan"
+                name={loan.name}
+                provider={loan.provider}
+                amount={formatCurrency(loan.monthlyPayment)}
+                date={formatDate(loan.nextPayment)}
+                status={loan.autoPay ? 'Auto-Pay' : 'Due Soon'}
+                icon={Landmark}
+              />
+            ))}
+          </div>
+        </section>
 
-            return (
+        {/* Recurring Bills Grid */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-3 text-xl font-bold text-gray-900">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+                <Receipt className="h-5 w-5" />
+              </span>
+              Recurring Bills
+              <span className="ml-2 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                {data.recurringBills.length}
+              </span>
+            </h2>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {data.recurringBills.map((bill) => (
               <PaymentCard
                 key={bill.id}
+                id={bill.id}
+                type="recurring_bill"
                 name={bill.name}
                 provider={bill.provider}
-                amountLabel="Amount"
-                amountValue={formatCurrency(bill.amount)}
-                dateLabel="Due Date"
-                dateValue={formatDate(bill.dueDate)}
-                metaLabel="Category:"
-                metaValue={bill.category}
-                status={bill.autoPay ? { label: 'Auto-pay on', tone: 'success' } : undefined}
-                icon={Icon}
+                amount={formatCurrency(bill.amount)}
+                date={formatDate(bill.dueDate)}
+                status={bill.autoPay ? 'Auto-Pay' : 'Due Soon'}
+                icon={Receipt}
               />
-            )
-          })}
-        </DashboardSection>
+            ))}
+          </div>
+        </section>
       </div>
     </main>
   )

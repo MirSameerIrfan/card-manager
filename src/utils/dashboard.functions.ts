@@ -159,3 +159,44 @@ export const addPaymentFn = createServerFn({ method: "POST" })
             return { success: false, error: 'Failed to add payment' };
         }
     });
+
+const DeletePaymentSchema = z.object({
+    id: z.string(),
+    type: z.enum(['credit_card', 'loan', 'recurring_bill']),
+});
+
+export const deletePaymentFn = createServerFn({ method: "POST" })
+    .inputValidator(DeletePaymentSchema)
+    .handler(async ({ data }) => {
+        const req = getRequest();
+
+        const session = await auth.api.getSession({
+            headers: Object.fromEntries(req.headers.entries()),
+        });
+
+        if (!session?.user) {
+            throw new Error("Unauthorized");
+        }
+
+        const userId = session.user.id;
+
+        try {
+            if (data.type === 'credit_card') {
+                await prisma.credit_card.delete({
+                    where: { id: data.id, userId }
+                });
+            } else if (data.type === 'loan') {
+                await prisma.loan.delete({
+                    where: { id: data.id, userId }
+                });
+            } else if (data.type === 'recurring_bill') {
+                await prisma.recurring_bill.delete({
+                    where: { id: data.id, userId }
+                });
+            }
+            return { success: true };
+        } catch (e) {
+            console.error('Failed to delete payment', e);
+            return { success: false, error: 'Failed to delete payment' };
+        }
+    });
