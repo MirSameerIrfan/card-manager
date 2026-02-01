@@ -61,14 +61,6 @@ const statusClasses: Record<NonNullable<PaymentCardProps['status']>['tone'], str
   danger: 'bg-rose-100 text-rose-700',
 }
 
-// Icon mapping for categories
-const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-  Utilities: Wifi,
-  Subscription: Receipt,
-  Insurance: Receipt,
-  default: Receipt,
-}
-
 function StatCard({ label, value, icon: Icon, tone }: StatCardProps) {
   return (
     <div
@@ -181,13 +173,13 @@ export function Dashboard() {
         setLoansData(loans)
         setRecurringBillsData(bills)
         setStatsData(stats)
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error)
+      } catch (_error) {
+        console.error('Error fetching dashboard data:', _error)
       } finally {
         setIsLoading(false)
       }
     }
-    fetchData()
+    void fetchData()
   }, [])
 
   // Format stats data

@@ -4,6 +4,9 @@ import tsparser from "@typescript-eslint/parser";
 
 export default [
   {
+    ignores: [".output/**", "node_modules/**", ".nitro/**", ".tanstack/**", "generated/**"],
+  },
+  {
     files: ["**/*.ts", "**/*.tsx"],
     languageOptions: {
       parser: tsparser,
@@ -33,6 +36,7 @@ export default [
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/await-thenable": "error",
       "@typescript-eslint/no-misused-promises": "error",
+      "no-var": "off", // Allow var for global declarations (e.g., Prisma)
     },
   },
 ];
