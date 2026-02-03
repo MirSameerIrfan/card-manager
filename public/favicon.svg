@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="64" y1="64" x2="448" y2="448" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B1220"/>
+      <stop offset="1" stop-color="#0F2A2A"/>
+    </linearGradient>
+    <linearGradient id="card" x1="128" y1="160" x2="404" y2="352" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#10B981"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="144" y1="164" x2="384" y2="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="shadow" x="104" y="132" width="320" height="260" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feOffset dy="10"/>
+      <feGaussianBlur stdDeviation="14"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.35 0"/>
+      <feBlend in="SourceGraphic"/>
+    </filter>
+  </defs>
+
+  <rect x="40" y="40" width="432" height="432" rx="96" fill="url(#bg)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="112" y="150" width="288" height="212" rx="28" fill="url(#card)"/>
+    <rect x="112" y="150" width="288" height="212" rx="28" fill="url(#shine)"/>
+
+    <rect x="142" y="186" width="86" height="60" rx="10" fill="#0B1220" fill-opacity="0.28"/>
+    <rect x="152" y="196" width="26" height="16" rx="4" fill="#0B1220" fill-opacity="0.38"/>
+    <rect x="184" y="196" width="26" height="16" rx="4" fill="#0B1220" fill-opacity="0.38"/>
+    <rect x="152" y="216" width="58" height="20" rx="4" fill="#0B1220" fill-opacity="0.25"/>
+
+    <path d="M220 302 L248 330 L310 268" stroke="#FFFFFF" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
