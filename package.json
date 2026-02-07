@@ -10,6 +10,9 @@
     "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {
+    "@fullcalendar/core": "^6.1.20",
+    "@fullcalendar/daygrid": "^6.1.20",
+    "@fullcalendar/react": "^6.1.20",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
     "@tailwindcss/vite": "^4.0.6",

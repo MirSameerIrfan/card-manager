@@ -1,11 +1,10 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Home,
   Menu,
   X,
-  CreditCard,
   BarChart3,
   LogIn,
   UserPlus,
@@ -19,11 +18,18 @@ const navTabs = [
   { label: 'Dashboard', to: '/dashboard', icon: BarChart3 },
 ]
 
-export default function Header() {
+export default function Header({ isPending = false }: { isPending?: boolean }) {
   const [isOpen, setIsOpen] = useState(false)
 
   const { isLoggedIn, loading, refetchSession } = useAuth()
+  const [displayLoggedIn, setDisplayLoggedIn] = useState(isLoggedIn)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!isPending) {
+      setDisplayLoggedIn(isLoggedIn)
+    }
+  }, [isLoggedIn, isPending])
 
   const handleLogout = async () => {
     try {
@@ -45,10 +51,10 @@ export default function Header() {
             className="flex items-center gap-3 group"
           >
             <div className="w-10 h-10 bg-linear-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center group-hover:shadow-lg transition-shadow">
-              <CreditCard className="w-6 h-6 text-white" />
+              <img src="/logo.svg" alt="MoneyScope logo" className="h-6 w-6" />
             </div>
             <span className="font-black text-xl text-gray-900 hidden sm:inline">
-              Card Manager
+              MoneyScope
             </span>
           </Link>
 
@@ -77,32 +83,39 @@ export default function Header() {
           <div className="flex items-center gap-3">
             {/* Desktop Auth Buttons */}
             <div className="hidden md:flex items-center gap-3">
-              {!loading && (
-                isLoggedIn ? (
-                  <button
-                    onClick={() => void handleLogout()}
-                    className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-md hover:shadow-lg"
-                  >
-                    <LogOut size={18} />
-                    <span className="hidden sm:inline">Logout</span>
-                  </button>
-                ) : (
-                  <>
-                    <Link
-                      to="/auth/login"
-                      className="inline-flex items-center justify-center gap-2 px-5 py-2 text-emerald-600 font-semibold hover:text-emerald-700 transition-colors"
+              {isPending ? (
+                <>
+                  <div className="h-10 w-24 rounded-xl bg-gray-100 animate-pulse" />
+                  <div className="h-10 w-28 rounded-xl bg-emerald-100 animate-pulse" />
+                </>
+              ) : (
+                !loading && (
+                  displayLoggedIn ? (
+                    <button
+                      onClick={() => void handleLogout()}
+                      className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-md hover:shadow-lg"
                     >
-                      <LogIn size={18} />
-                      <span className="hidden sm:inline">Login</span>
-                    </Link>
-                    <Link
-                      to="/auth/signup"
-                      className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-md hover:shadow-lg"
-                    >
-                      <UserPlus size={18} />
-                      <span className="hidden sm:inline">Sign Up</span>
-                    </Link>
-                  </>
+                      <LogOut size={18} />
+                      <span className="hidden sm:inline">Logout</span>
+                    </button>
+                  ) : (
+                    <>
+                      <Link
+                        to="/auth/login"
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2 text-emerald-600 font-semibold hover:text-emerald-700 transition-colors"
+                      >
+                        <LogIn size={18} />
+                        <span className="hidden sm:inline">Login</span>
+                      </Link>
+                      <Link
+                        to="/auth/signup"
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-md hover:shadow-lg"
+                      >
+                        <UserPlus size={18} />
+                        <span className="hidden sm:inline">Sign Up</span>
+                      </Link>
+                    </>
+                  )
                 )
               )}
             </div>
@@ -121,13 +134,13 @@ export default function Header() {
 
       {/* Mobile Navigation Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-80 bg-white text-gray-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col border-r border-gray-200 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed top-0 right-0 h-full w-80 bg-white text-gray-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col border-l border-gray-200 ${isOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
       >
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-linear-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center">
-              <CreditCard className="w-6 h-6 text-white" />
+              <img src="/logo.svg" alt="MoneyScope logo" className="h-6 w-6" />
             </div>
             <h2 className="text-xl font-black text-gray-900">Menu</h2>
           </div>
@@ -165,7 +178,7 @@ export default function Header() {
         {/* Mobile Auth Buttons */}
         <div className="p-4 border-t border-gray-200 space-y-3">
           {!loading && (
-            isLoggedIn ? (
+            displayLoggedIn ? (
               <button
                 onClick={() => {
                   setIsOpen(false)

@@ -41,7 +41,6 @@ export const getDashboardDataFn = createServerFn({ method: "GET" }).handler(
         // In a real app, you'd filter by date range.
 
         let totalDue = 0;
-        let upcomingPaymentsCount = 0;
         let autoPayCount = 0;
 
         const allPayments = [
@@ -52,7 +51,6 @@ export const getDashboardDataFn = createServerFn({ method: "GET" }).handler(
 
         allPayments.forEach(p => {
             totalDue += p.amount;
-            upcomingPaymentsCount++;
             // Rough auto-pay check based on string or boolean source
             if (p.status.toLowerCase().includes('auto-pay') || p.status === 'Paid') {
                 // 'Paid' implies it might be done, but for the 'Auto-Pay Active' stat in the screenshot...
@@ -71,6 +69,10 @@ export const getDashboardDataFn = createServerFn({ method: "GET" }).handler(
         autoPayCount = loanAutoPay + billAutoPay;
 
         return {
+            user: {
+                name: session.user.name ?? null,
+                email: session.user.email ?? null,
+            },
             stats: {
                 totalDue,
                 upcomingPaymentsCount: allPayments.length,
