@@ -32,7 +32,7 @@ export function Hero() {
 
                         <div className="flex flex-col sm:flex-row gap-4">
                             <Link
-                                to="/example/example1"
+                                to="/auth/signup"
                                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
                             >
                                 Get Started Free
@@ -64,57 +64,65 @@ export function Hero() {
                     <div className="relative">
                         <div className="relative z-10 space-y-4">
                             {/* Card mockup 1 */}
-                            <div className="bg-white rounded-2xl shadow-2xl p-6 transform rotate-2 hover:rotate-0 transition-transform">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 bg-linear-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
-                                            <CreditCard className="w-6 h-6 text-white" />
+                            <div className="bg-white rounded-2xl shadow-2xl p-6 transform rotate-2 hover:rotate-0 transition-transform relative overflow-hidden ring-1 ring-white/40">
+                                <div className="pointer-events-none absolute inset-0 rounded-2xl bg-linear-to-br from-white/80 via-white/20 to-emerald-100/30 opacity-60"></div>
+                                <div className="pointer-events-none absolute -top-12 -right-12 h-36 w-36 rounded-full bg-white/50 blur-2xl"></div>
+                                <div className="relative z-10">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 bg-linear-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
+                                                <CreditCard className="w-6 h-6 text-white" />
+                                            </div>
+                                            <div>
+                                                <div className="font-semibold text-gray-900">Chase Sapphire</div>
+                                                <div className="text-sm text-gray-500">••••4589</div>
+                                            </div>
                                         </div>
+                                        <div className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">
+                                            Due in 3 days
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between items-end">
                                         <div>
-                                            <div className="font-semibold text-gray-900">Chase Sapphire</div>
-                                            <div className="text-sm text-gray-500">••••4589</div>
+                                            <div className="text-sm text-gray-500">Amount Due</div>
+                                            <div className="text-2xl font-bold text-gray-900">$1,247.50</div>
                                         </div>
-                                    </div>
-                                    <div className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">
-                                        Due in 3 days
-                                    </div>
-                                </div>
-                                <div className="flex justify-between items-end">
-                                    <div>
-                                        <div className="text-sm text-gray-500">Amount Due</div>
-                                        <div className="text-2xl font-bold text-gray-900">$1,247.50</div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="text-sm text-gray-500">Due Date</div>
-                                        <div className="font-semibold text-gray-900">Jan 15, 2026</div>
+                                        <div className="text-right">
+                                            <div className="text-sm text-gray-500">Due Date</div>
+                                            <div className="font-semibold text-gray-900">Jan 15, 2026</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Card mockup 2 */}
-                            <div className="bg-white rounded-2xl shadow-2xl p-6 transform -rotate-1 hover:rotate-0 transition-transform ml-8">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 bg-linear-to-br from-teal-500 to-cyan-500 rounded-xl flex items-center justify-center">
-                                            <Clock className="w-6 h-6 text-white" />
+                            <div className="bg-white rounded-2xl shadow-2xl p-6 transform -rotate-1 hover:rotate-0 transition-transform ml-8 relative overflow-hidden ring-1 ring-white/40">
+                                <div className="pointer-events-none absolute inset-0 rounded-2xl bg-linear-to-br from-white/80 via-white/20 to-cyan-100/30 opacity-60"></div>
+                                <div className="pointer-events-none absolute -top-12 -right-12 h-36 w-36 rounded-full bg-white/50 blur-2xl"></div>
+                                <div className="relative z-10">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 bg-linear-to-br from-teal-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                                                <Clock className="w-6 h-6 text-white" />
+                                            </div>
+                                            <div>
+                                                <div className="font-semibold text-gray-900">Car Loan</div>
+                                                <div className="text-sm text-gray-500">Honda Finance</div>
+                                            </div>
                                         </div>
+                                        <div className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium">
+                                            Auto-pay on
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between items-end">
                                         <div>
-                                            <div className="font-semibold text-gray-900">Car Loan</div>
-                                            <div className="text-sm text-gray-500">Honda Finance</div>
+                                            <div className="text-sm text-gray-500">Monthly Payment</div>
+                                            <div className="text-2xl font-bold text-gray-900">$485.00</div>
                                         </div>
-                                    </div>
-                                    <div className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium">
-                                        Auto-pay on
-                                    </div>
-                                </div>
-                                <div className="flex justify-between items-end">
-                                    <div>
-                                        <div className="text-sm text-gray-500">Monthly Payment</div>
-                                        <div className="text-2xl font-bold text-gray-900">$485.00</div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="text-sm text-gray-500">Next Payment</div>
-                                        <div className="font-semibold text-gray-900">Jan 20, 2026</div>
+                                        <div className="text-right">
+                                            <div className="text-sm text-gray-500">Next Payment</div>
+                                            <div className="font-semibold text-gray-900">Jan 20, 2026</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

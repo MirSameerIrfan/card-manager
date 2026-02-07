@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { createRoot } from 'react-dom/client'
 import { useRouter } from '@tanstack/react-router'
 import {
     CreditCard,
@@ -70,9 +69,11 @@ export function AddPaymentModal({ isOpen, onClose }: AddPaymentModalProps) {
             setProvider('')
             setAmount('')
             setDate('')
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error)
-            alert(error.message || 'Failed to add payment')
+            const message =
+                error instanceof Error ? error.message : 'Failed to add payment'
+            alert(message)
         } finally {
             setIsLoading(false)
         }
@@ -103,7 +104,7 @@ export function AddPaymentModal({ isOpen, onClose }: AddPaymentModalProps) {
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
 
                     {/* Type Selector */}
                     <div className="grid grid-cols-3 gap-3">

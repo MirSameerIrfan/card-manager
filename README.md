@@ -1,10 +1,10 @@
 <div align="center">
 
-# 💳 Card Manager
+# 💳 MoneyScope
 
 ### Never Miss a Payment Again
 
-**A modern, lightweight personal finance tracker for managing credit cards, loans, and recurring bills**
+**A modern personal finance hub for tracking bills, income, assets, and recurring payments**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
@@ -17,9 +17,9 @@
 
 ---
 
-## 🎯 Why Card Manager?
+## 🎯 Why MoneyScope?
 
-Tired of late fees and missed payment deadlines? **Card Manager** consolidates all your recurring payments into one intuitive dashboard. Track credit card statements, loan installments, and monthly bills—all in one place.
+Tired of late fees and missed payment deadlines? **MoneyScope** consolidates bills, income, and assets into one intuitive dashboard. Track credit card statements, loan installments, monthly bills, and more—all in one place.
 
 ### ✨ Features
 
@@ -70,8 +70,8 @@ Get up and running in less than a minute:
 
 ```bash
 # Clone the repository
-git clone https://github.com/<your-username>/card-manager.git
-cd card-manager
+git clone https://github.com/<your-username>/moneyscope.git
+cd moneyscope
 
 # Install dependencies
 npm install
@@ -116,7 +116,7 @@ Built with modern, cutting-edge technologies:
 ### 🏗️ Project Structure
 
 ```
-card-manager/
+moneyscope/
 ├── src/
 │   ├── components/     # Reusable UI components
 │   ├── data/          # Server functions (type-safe RPC)
@@ -152,10 +152,25 @@ export const getPayments = createServerFn({ method: 'GET' })
   })
 ```
 
-#### Styling with Tailwind
+#### Styling Guide
+**Typography**
+- Headings: `Sora`
+- Body/UI: `Manrope`
+
+**Colors**
+- Primary: Emerald/Teal gradient (`from-emerald-600 to-teal-600`)
+- Accents: Cyan, Emerald, and Teal variants for status and highlights
+- Surface: White with soft gray borders for cards and panels
+
+**UI Patterns**
+- Cards use rounded corners (`rounded-2xl`) and soft shadows (`shadow-sm`/`shadow-lg`)
+- Buttons are pill‑like with subtle lift on hover
+- Use consistent spacing (`gap-3` to `gap-6`) for rhythm
+
+**Example**
 ```tsx
-<div className="flex items-center gap-4 rounded-lg bg-white p-6 shadow-md">
-  {/* Your content */}
+<div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+  {/* MoneyScope card */}
 </div>
 ```
 
