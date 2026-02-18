@@ -12,7 +12,7 @@ const isRedirectError = (
 export async function redirectIfAuthenticated(to: string = '/dashboard') {
   try {
     const session = await getSessionFn()
-    if (session?.user) {
+    if (session?.user?.emailVerified === true) {
       throw redirect({ to })
     }
   } catch (error) {

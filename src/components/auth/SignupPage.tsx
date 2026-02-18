@@ -13,6 +13,7 @@ export function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
 
   const form = useForm({
     defaultValues: {
@@ -23,6 +24,7 @@ export function SignupPage() {
     },
     onSubmit: async ({ value }) => {
       setSubmitError(null)
+      setSubmitSuccess(null)
 
       try {
         const result = await signUpUser({
@@ -37,6 +39,12 @@ export function SignupPage() {
           setSubmitError(result.error ?? 'sign up failed')
           return
         }
+
+        if (result.requiresVerification) {
+          setSubmitSuccess('Account created. Please verify your email before signing in.')
+          return
+        }
+
         await refetchSession()
         await navigate({ to: '/dashboard' })
       } catch (error) {
@@ -282,6 +290,12 @@ export function SignupPage() {
             className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
           >
             {submitError}
+          </div>
+        ) : null}
+
+        {submitSuccess ? (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {submitSuccess}
           </div>
         ) : null}
 

@@ -13,7 +13,7 @@ export const getDashboardDataFn = createServerFn({ method: "GET" }).handler(
             headers: Object.fromEntries(req.headers.entries()),
         });
 
-        if (!session?.user) {
+        if (!session?.user || session.user.emailVerified !== true) {
             throw new Error("Unauthorized");
         }
 
@@ -107,7 +107,7 @@ export const addPaymentFn = createServerFn({ method: "POST" })
             headers: Object.fromEntries(req.headers.entries()),
         });
 
-        if (!session?.user) {
+        if (!session?.user || session.user.emailVerified !== true) {
             throw new Error("Unauthorized");
         }
 
@@ -176,7 +176,7 @@ export const deletePaymentFn = createServerFn({ method: "POST" })
             headers: Object.fromEntries(req.headers.entries()),
         });
 
-        if (!session?.user) {
+        if (!session?.user || session.user.emailVerified !== true) {
             throw new Error("Unauthorized");
         }
 
