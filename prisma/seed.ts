@@ -59,12 +59,6 @@ async function main() {
 
     console.log(`User ready: ${user.email} (${user.id})`)
 
-    // Manually verify email
-    await prisma.user.update({
-        where: { id: user.id },
-        data: { emailVerified: true }
-    });
-
     const userId = user.id;
 
     // 3. Credit Cards

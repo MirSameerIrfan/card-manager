@@ -24,6 +24,13 @@ export const auth = betterAuth({
     enabled: true,
   },
 
+  user: {
+    changeEmail: {
+      enabled: true,
+      updateEmailWithoutVerification: true,
+    },
+  },
+
   // IMPORTANT: must be invoked + last
   plugins: [tanstackStartCookies()],
 });

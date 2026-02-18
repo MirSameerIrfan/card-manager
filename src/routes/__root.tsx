@@ -4,7 +4,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import { NotFound } from '@/components/NotFound'
 
 import Header from '../components/Header'
-import { AuthProvider } from '@/utils/auth-context'
+import { AuthProvider, type AuthUser } from '@/utils/auth-context'
 import { getSessionFn } from '@/utils/auth.functions'
 
 import appCss from '../styles.css?url'
@@ -12,9 +12,19 @@ import appCss from '../styles.css?url'
 async function rootLoader() {
   try {
     const session = await getSessionFn()
-    return { isLoggedIn: !!session }
+    const user: AuthUser | null = session?.user
+      ? {
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        image: session.user.image ?? null,
+        emailVerified: session.user.emailVerified,
+      }
+      : null
+
+    return { isLoggedIn: !!user, user }
   } catch (_error) {
-    return { isLoggedIn: false }
+    return { isLoggedIn: false, user: null }
   }
 }
 
@@ -51,7 +61,7 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn } = useLoaderData({ from: '__root__' })
+  const { user } = useLoaderData({ from: '__root__' })
   const isRoutePending = useRouterState({
     select: (state) => state.status === 'pending',
   })
@@ -62,7 +72,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <AuthProvider initialSession={isLoggedIn}>
+        <AuthProvider initialUser={user}>
           <Header isPending={isRoutePending} />
           {children}
         </AuthProvider>
