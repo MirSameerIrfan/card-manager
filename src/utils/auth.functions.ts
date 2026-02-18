@@ -180,20 +180,43 @@ export const changeEmailFn = createServerFn({ method: "POST" })
   .inputValidator(ChangeEmailSchema)
   .handler(async ({ data }) => {
     try {
+      const session = await auth.api.getSession({
+        headers: getRequestHeaders(),
+      });
+
+      if (!session?.user) {
+        return { success: false, error: "You must be signed in to change your email." };
+      }
+
+      if (session.user.emailVerified !== true) {
+        return {
+          success: false,
+          error: "Verify your current email address before changing it.",
+        };
+      }
+
       const result = await auth.api.changeEmail({
         headers: getRequestHeaders(),
-        body: { newEmail: data.newEmail.toLowerCase() },
+        body: {
+          newEmail: data.newEmail.toLowerCase(),
+          callbackURL: "/settings/profile",
+        },
       });
 
       if (!result?.status) {
         return { success: false, error: "Unable to update your email." };
       }
 
-      return { success: true, error: null };
+      return {
+        success: true,
+        error: null,
+        verificationRequired: true,
+      };
     } catch (error) {
       return {
         success: false,
         error: normalizeAuthError(error, "Unable to update your email."),
+        verificationRequired: false,
       };
     }
   });

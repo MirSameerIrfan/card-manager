@@ -17,6 +17,7 @@ export function ProfileSettingsPage() {
 
   const currentName = user?.name ?? data.user.name
   const currentEmail = user?.email ?? data.user.email
+  const isCurrentEmailVerified = user?.emailVerified === true
 
   const [name, setName] = useState(currentName)
   const [email, setEmail] = useState(currentEmail)
@@ -117,6 +118,11 @@ export function ProfileSettingsPage() {
     setEmailErrorMessage(null)
     setEmailSuccessMessage(null)
 
+    if (!isCurrentEmailVerified) {
+      setEmailErrorMessage('Verify your current email address before changing it.')
+      return
+    }
+
     if (emailValidationError) {
       setEmailErrorMessage(emailValidationError)
       return
@@ -124,6 +130,7 @@ export function ProfileSettingsPage() {
 
     setIsUpdatingEmail(true)
     try {
+      const requestedEmail = normalizedEmail
       const result = await changeEmailFn({ data: { newEmail: normalizedEmail } })
       if (!result.success) {
         setEmailErrorMessage(result.error ?? 'Unable to update your email.')
@@ -131,7 +138,11 @@ export function ProfileSettingsPage() {
       }
 
       await refreshAppState()
-      setEmailSuccessMessage('Your email address has been updated.')
+      // Keep showing the currently verified email until the new email is verified.
+      setEmail(currentEmail)
+      setEmailSuccessMessage(
+        `Verification email sent to ${requestedEmail}. Your current email stays active until verification is complete.`,
+      )
     } catch (error) {
       setEmailErrorMessage(error instanceof Error ? error.message : 'Unable to update your email.')
     } finally {
@@ -235,6 +246,11 @@ export function ProfileSettingsPage() {
         <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-black text-gray-900">Email</h2>
           <p className="mt-1 text-sm text-gray-600">Use an email address you can access.</p>
+          {!isCurrentEmailVerified ? (
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Your current email must be verified before you can change it.
+            </div>
+          ) : null}
 
           <form onSubmit={(event) => void handleEmailSubmit(event)} className="mt-5 space-y-4">
             <div>
@@ -250,6 +266,7 @@ export function ProfileSettingsPage() {
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
+                  disabled={!isCurrentEmailVerified}
                   className="block w-full rounded-xl border border-gray-300 py-3 pl-12 pr-4 text-gray-900 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   placeholder="you@example.com"
                 />
@@ -270,7 +287,7 @@ export function ProfileSettingsPage() {
 
             <button
               type="submit"
-              disabled={isUpdatingEmail || !!emailValidationError}
+              disabled={isUpdatingEmail || !!emailValidationError || !isCurrentEmailVerified}
               className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-400"
             >
               {isUpdatingEmail ? 'Saving...' : 'Save email'}
