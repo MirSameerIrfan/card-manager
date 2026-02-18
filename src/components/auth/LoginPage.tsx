@@ -3,13 +3,16 @@ import { AuthLayout } from '@/components/auth/AuthLayout'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { signInEmailFn } from '@/utils/auth.functions'
+import { resendVerificationEmailFn, signInEmailFn } from '@/utils/auth.functions'
 import { useAuth } from '@/utils/auth-context'
 import { FieldInfo } from '@/components/auth/FieldInfo'
 
 export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitInfo, setSubmitInfo] = useState<string | null>(null)
+  const [needsVerification, setNeedsVerification] = useState(false)
+  const [isResendingVerification, setIsResendingVerification] = useState(false)
   const navigate = useNavigate()
   const { refetchSession } = useAuth()
 
@@ -20,13 +23,19 @@ export function LoginPage() {
     },
     onSubmit: async ({ value }) => {
       setSubmitError(null)
+      setSubmitInfo(null)
+      setNeedsVerification(false)
       try {
         const result = await signInEmailFn({
           data: { email: value.email, password: value.password },
         })
 
         if (!result.success) {
-          setSubmitError(result.error ?? 'Invalid email or password')
+          const message = result.error ?? 'Invalid email or password'
+          const requiresVerification =
+            result.requiresVerification ?? message.toLowerCase().includes('verify your email')
+          setSubmitError(message)
+          setNeedsVerification(requiresVerification)
           return
         }
         await refetchSession()
@@ -36,6 +45,33 @@ export function LoginPage() {
       }
     },
   })
+
+  const handleResendVerification = async () => {
+    const email = form.getFieldValue('email')?.trim().toLowerCase() ?? ''
+    if (!email) {
+      setSubmitError('Please enter your email address to resend verification.')
+      return
+    }
+
+    setIsResendingVerification(true)
+    setSubmitError(null)
+    setSubmitInfo(null)
+    try {
+      const result = await resendVerificationEmailFn({ data: { email } })
+      if (!result.success) {
+        setSubmitError(result.error ?? 'Unable to resend verification email.')
+        return
+      }
+
+      setSubmitInfo('Verification email sent. Please check your inbox.')
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : 'Unable to resend verification email.',
+      )
+    } finally {
+      setIsResendingVerification(false)
+    }
+  }
 
   return (
     <AuthLayout title="Welcome back" subtitle="Sign in to your account to continue">
@@ -174,6 +210,23 @@ export function LoginPage() {
             className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
           >
             {submitError}
+          </div>
+        ) : null}
+
+        {needsVerification ? (
+          <button
+            type="button"
+            onClick={() => void handleResendVerification()}
+            disabled={isResendingVerification}
+            className="w-full rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isResendingVerification ? 'Sending verification...' : 'Resend verification email'}
+          </button>
+        ) : null}
+
+        {submitInfo ? (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {submitInfo}
           </div>
         ) : null}
 

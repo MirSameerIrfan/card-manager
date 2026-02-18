@@ -22,6 +22,10 @@ const ChangePasswordSchema = z.object({
   newPassword: z.string().min(8),
 });
 
+const ResendVerificationEmailSchema = z.object({
+  email: z.string().email(),
+});
+
 function getRequestHeaders() {
   const req = getRequest();
   return Object.fromEntries(req.headers.entries());
@@ -58,6 +62,10 @@ function normalizeAuthError(error: unknown, fallback: string) {
     return "Please enter a different email address.";
   }
 
+  if (message.includes("email not verified")) {
+    return "Please verify your email before signing in.";
+  }
+
   return error.message;
 }
 
@@ -66,7 +74,7 @@ export const signUpUser = createServerFn({ method: "POST" })
   .inputValidator(UserSchema)
   .handler(async ({ data }) => {
     try {
-      await auth.api.signUpEmail({
+      const response = await auth.api.signUpEmail({
         headers: getRequestHeaders(),
         body: {
           email: data.email,
@@ -74,11 +82,16 @@ export const signUpUser = createServerFn({ method: "POST" })
           name: data.name,
         },
       });
-      return { success: true, error: null };
+      return {
+        success: true,
+        error: null,
+        requiresVerification: response?.token === null,
+      };
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Sign up failed",
+        requiresVerification: false,
       };
     }
   });
@@ -106,15 +119,18 @@ export const signInEmailFn = createServerFn({ method: "POST" })
           success: false,
           user: null,
           error: "Invalid email or password",
+          requiresVerification: false,
         };
       }
 
-      return { success: true, user, error: null };
+      return { success: true, user, error: null, requiresVerification: false };
     } catch (error) {
+      const normalizedMessage = normalizeAuthError(error, "Sign in failed");
       return {
         success: false,
         user: null,
-        error: error instanceof Error ? error.message : "Sign in failed",
+        error: normalizedMessage,
+        requiresVerification: normalizedMessage.includes("verify your email"),
       };
     }
   });
@@ -200,6 +216,31 @@ export const changePasswordFn = createServerFn({ method: "POST" })
       return {
         success: false,
         error: normalizeAuthError(error, "Unable to update your password."),
+      };
+    }
+  });
+
+export const resendVerificationEmailFn = createServerFn({ method: "POST" })
+  .inputValidator(ResendVerificationEmailSchema)
+  .handler(async ({ data }) => {
+    try {
+      const result = await auth.api.sendVerificationEmail({
+        headers: getRequestHeaders(),
+        body: {
+          email: data.email.toLowerCase(),
+          callbackURL: "/dashboard",
+        },
+      });
+
+      if (!result?.status) {
+        return { success: false, error: "Unable to send verification email." };
+      }
+
+      return { success: true, error: null };
+    } catch (error) {
+      return {
+        success: false,
+        error: normalizeAuthError(error, "Unable to send verification email."),
       };
     }
   });

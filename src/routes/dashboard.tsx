@@ -8,7 +8,7 @@ export const Route = createFileRoute('/dashboard')({
   beforeLoad: async () => {
     try {
       const session = await getSessionFn()
-      if (!session?.user) {
+      if (!session?.user || session.user.emailVerified !== true) {
         throw redirect({ to: '/auth/login', search: { redirect: '/dashboard' } })
       }
       return { session }

@@ -26,7 +26,7 @@ export function AuthProvider({
     initialUser: AuthUser | null
 }) {
     const [user, setUser] = useState<AuthUser | null>(initialUser)
-    const [isLoggedIn, setIsLoggedIn] = useState(!!initialUser)
+    const [isLoggedIn, setIsLoggedIn] = useState(!!initialUser && initialUser.emailVerified === true)
     const [loading, setLoading] = useState(false)
 
     const refetchSession = useCallback(async () => {
@@ -44,7 +44,7 @@ export function AuthProvider({
                 : null
 
             setUser(currentUser)
-            setIsLoggedIn(!!currentUser)
+            setIsLoggedIn(!!currentUser && currentUser.emailVerified === true)
         } catch (_error) {
             setUser(null)
             setIsLoggedIn(false)

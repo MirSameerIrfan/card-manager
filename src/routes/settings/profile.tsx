@@ -6,7 +6,7 @@ export const Route = createFileRoute('/settings/profile')({
   beforeLoad: async () => {
     try {
       const session = await getSessionFn()
-      if (!session?.user) {
+      if (!session?.user || session.user.emailVerified !== true) {
         throw redirect({ to: '/auth/login', search: { redirect: '/settings/profile' } })
       }
       return { session }
@@ -16,7 +16,7 @@ export const Route = createFileRoute('/settings/profile')({
   },
   loader: async () => {
     const session = await getSessionFn()
-    if (!session?.user) {
+    if (!session?.user || session.user.emailVerified !== true) {
       throw redirect({ to: '/auth/login', search: { redirect: '/settings/profile' } })
     }
     return {

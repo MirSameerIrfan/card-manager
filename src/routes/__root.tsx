@@ -22,7 +22,7 @@ async function rootLoader() {
       }
       : null
 
-    return { isLoggedIn: !!user, user }
+    return { isLoggedIn: !!user && user.emailVerified === true, user }
   } catch (_error) {
     return { isLoggedIn: false, user: null }
   }
