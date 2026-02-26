@@ -1,4 +1,5 @@
 import { Zap, Shield, Bell, Calendar, TrendingUp, Smartphone } from 'lucide-react'
+import { useScrollReveal } from '@/utils/useScrollReveal'
 
 const features = [
     {
@@ -40,10 +41,15 @@ const features = [
 ]
 
 export function Features() {
+    const { ref: sectionRef, isVisible } = useScrollReveal({ threshold: 0.08 })
+
     return (
-        <section className="py-24 bg-white">
+        <section ref={sectionRef} className="py-24 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-16">
+                <div
+                    className={`text-center mb-16 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+                        }`}
+                >
                     <h2 className="text-4xl sm:text-5xl font-black text-gray-900 mb-4">
                         Everything you need to stay on top
                     </h2>
@@ -58,9 +64,16 @@ export function Features() {
                         return (
                             <div
                                 key={index}
-                                className="group relative bg-gray-50 rounded-2xl p-8 hover:bg-white hover:shadow-2xl transition-all duration-300 border border-transparent hover:border-gray-200"
+                                className={`feature-card group relative bg-gray-50 rounded-2xl p-8 hover:bg-white hover:shadow-2xl transition-all duration-500 border border-transparent hover:border-gray-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                                    }`}
+                                style={{ transitionDelay: isVisible ? `${index * 100 + 200}ms` : '0ms' }}
                             >
-                                <div className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform`}>
+                                {/* Decorative number */}
+                                <span className="absolute top-5 right-5 text-5xl font-black text-gray-100 group-hover:text-emerald-50 transition-colors select-none pointer-events-none">
+                                    {String(index + 1).padStart(2, '0')}
+                                </span>
+
+                                <div className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300`}>
                                     <Icon className="w-7 h-7 text-white" />
                                 </div>
                                 <h3 className="text-xl font-bold text-gray-900 mb-3">

@@ -11,6 +11,8 @@ import {
   LogOut,
   Settings,
   ChevronDown,
+  Info,
+  BookOpen,
 } from 'lucide-react'
 import { useAuth } from '@/utils/auth-context'
 import { signOutFn } from '@/utils/auth.functions'
@@ -18,16 +20,28 @@ import { signOutFn } from '@/utils/auth.functions'
 const navTabs = [
   { label: 'Home', to: '/', icon: Home },
   { label: 'Dashboard', to: '/dashboard', icon: BarChart3 },
+  { label: 'About', to: '/about', icon: Info },
+  { label: 'Blog', to: '/blog', icon: BookOpen },
 ]
 
 export default function Header({ isPending = false }: { isPending?: boolean }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
 
   const { isLoggedIn, loading, user, refetchSession } = useAuth()
   const [displayLoggedIn, setDisplayLoggedIn] = useState(isLoggedIn)
   const navigate = useNavigate()
   const userMenuRef = useRef<HTMLDivElement>(null)
+
+  // Track scroll position for glassmorphism effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   useEffect(() => {
     if (!isPending) {
@@ -74,14 +88,19 @@ export default function Header({ isPending = false }: { isPending?: boolean }) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+      <header
+        className={`sticky top-0 z-40 transition-all duration-300 ${isScrolled
+          ? 'bg-white/80 backdrop-blur-xl border-b border-gray-200/60 shadow-sm shadow-gray-900/5'
+          : 'bg-white border-b border-gray-200 shadow-sm'
+          }`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           {/* Logo & Brand */}
           <Link
             to="/"
             className="flex items-center gap-3 group"
           >
-            <div className="w-10 h-10 bg-linear-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center group-hover:shadow-lg transition-shadow">
+            <div className="w-10 h-10 bg-linear-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center group-hover:shadow-lg group-hover:shadow-emerald-500/20 transition-all">
               <img src="/logo.svg" alt="MoneyScope logo" className="h-6 w-6" />
             </div>
             <span className="font-black text-xl text-gray-900 hidden sm:inline">
@@ -130,14 +149,14 @@ export default function Header({ isPending = false }: { isPending?: boolean }) {
                         aria-expanded={isUserMenuOpen}
                         aria-label="Open user menu"
                       >
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-sm font-bold text-white shadow-sm">
                           {userInitial}
                         </span>
                         <ChevronDown size={16} className={`transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
                       </button>
 
                       {isUserMenuOpen ? (
-                        <div className="absolute right-0 mt-2 w-52 rounded-xl border border-gray-200 bg-white p-2 shadow-xl">
+                        <div className="absolute right-0 mt-2 w-52 rounded-xl border border-gray-200 bg-white/95 backdrop-blur-lg p-2 shadow-xl">
                           <Link
                             to="/settings/profile"
                             onClick={() => setIsUserMenuOpen(false)}
@@ -167,7 +186,7 @@ export default function Header({ isPending = false }: { isPending?: boolean }) {
                       </Link>
                       <Link
                         to="/auth/signup"
-                        className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-md hover:shadow-lg"
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-md hover:shadow-lg hover:shadow-emerald-500/20"
                       >
                         <UserPlus size={18} />
                         <span className="hidden sm:inline">Sign Up</span>
@@ -192,7 +211,7 @@ export default function Header({ isPending = false }: { isPending?: boolean }) {
 
       {/* Mobile Navigation Sidebar */}
       <aside
-        className={`fixed top-0 right-0 h-full w-80 bg-white text-gray-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col border-l border-gray-200 ${isOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed top-0 right-0 h-full w-80 bg-white/95 backdrop-blur-xl text-gray-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col border-l border-gray-200 ${isOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
       >
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -284,7 +303,7 @@ export default function Header({ isPending = false }: { isPending?: boolean }) {
       {/* Mobile menu overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/20 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}

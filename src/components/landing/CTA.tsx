@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
+import { useScrollReveal } from '@/utils/useScrollReveal'
 
 const benefits = [
     'No credit card required',
@@ -9,8 +10,10 @@ const benefits = [
 ]
 
 export function CTA() {
+    const { ref: sectionRef, isVisible } = useScrollReveal({ threshold: 0.15 })
+
     return (
-        <section className="relative py-24 overflow-hidden">
+        <section ref={sectionRef} className="relative py-24 overflow-hidden">
             {/* Background with pattern */}
             <div className="absolute inset-0 bg-linear-to-br from-emerald-600 via-teal-600 to-cyan-600"></div>
             <div className="absolute inset-0 opacity-10">
@@ -20,27 +23,36 @@ export function CTA() {
             </div>
 
             <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-6">
+                <h2
+                    className={`text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-6 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+                        }`}
+                >
                     Ready to take control?
                 </h2>
-                <p className="text-xl text-emerald-50 mb-12 max-w-2xl mx-auto">
+                <p
+                    className={`text-xl text-emerald-50 mb-12 max-w-2xl mx-auto transition-all duration-700 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+                        }`}
+                >
                     Join thousands of users who've said goodbye to late fees and hello to financial peace of mind.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                <div
+                    className={`flex flex-col sm:flex-row gap-4 justify-center mb-12 transition-all duration-700 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+                        }`}
+                >
                     <Link
                         to="/auth"
-                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-gray-50 text-emerald-600 font-semibold rounded-xl transition-all transform hover:scale-105 shadow-xl"
+                        className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-gray-50 text-emerald-600 font-semibold rounded-xl transition-all transform hover:scale-105 shadow-xl hover:shadow-2xl"
                     >
                         Start for Free
-                        <ArrowRight className="w-5 h-5" />
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
                     </Link>
-                    {/* <button className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-transparent hover:bg-white/10 text-white font-semibold rounded-xl border-2 border-white transition-all">
-                        Schedule Demo
-                    </button> */}
                 </div>
 
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-3xl mx-auto">
+                <div
+                    className={`grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-3xl mx-auto transition-all duration-700 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+                        }`}
+                >
                     {benefits.map((benefit, index) => (
                         <div key={index} className="flex items-center gap-2 text-white justify-center sm:justify-start">
                             <CheckCircle2 className="w-5 h-5 shrink-0" />

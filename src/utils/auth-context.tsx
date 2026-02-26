@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useState, useCallback } from 'react'
+import { createContext, useContext, ReactNode, useState, useCallback, useEffect } from 'react'
 import { getSessionFn } from './auth.functions'
 
 export interface AuthUser {
@@ -28,6 +28,12 @@ export function AuthProvider({
     const [user, setUser] = useState<AuthUser | null>(initialUser)
     const [isLoggedIn, setIsLoggedIn] = useState(!!initialUser && initialUser.emailVerified === true)
     const [loading, setLoading] = useState(false)
+
+    // Sync with loader data when router.invalidate() re-runs the root loader
+    useEffect(() => {
+        setUser(initialUser)
+        setIsLoggedIn(!!initialUser && initialUser.emailVerified === true)
+    }, [initialUser])
 
     const refetchSession = useCallback(async () => {
         setLoading(true)

@@ -2,6 +2,7 @@ import { HeadContent, Scripts, createRootRoute, useLoaderData, useRouterState } 
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { NotFound } from '@/components/NotFound'
+import { useEffect, useRef } from 'react'
 
 import Header from '../components/Header'
 import { AuthProvider, type AuthUser } from '@/utils/auth-context'
@@ -65,6 +66,29 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const isRoutePending = useRouterState({
     select: (state) => state.status === 'pending',
   })
+  const currentPath = useRouterState({
+    select: (state) => state.location.pathname,
+  })
+
+  const prevPathRef = useRef(currentPath)
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  // Only animate on actual route changes
+  useEffect(() => {
+    if (prevPathRef.current !== currentPath) {
+      prevPathRef.current = currentPath
+      const el = contentRef.current
+      if (el) {
+        el.style.opacity = '0'
+        el.style.transform = 'translateY(8px)'
+        requestAnimationFrame(() => {
+          el.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out'
+          el.style.opacity = '1'
+          el.style.transform = 'translateY(0)'
+        })
+      }
+    }
+  }, [currentPath])
 
   return (
     <html lang="en">
@@ -74,7 +98,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <AuthProvider initialUser={user}>
           <Header isPending={isRoutePending} />
-          {children}
+          <div ref={contentRef}>
+            {children}
+          </div>
         </AuthProvider>
         <TanStackDevtools
           config={{
@@ -92,3 +118,4 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     </html>
   )
 }
+

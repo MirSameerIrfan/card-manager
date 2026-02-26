@@ -1,10 +1,9 @@
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { AuthLayout } from '@/components/auth/AuthLayout'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { resendVerificationEmailFn, signInEmailFn } from '@/utils/auth.functions'
-import { useAuth } from '@/utils/auth-context'
 import { FieldInfo } from '@/components/auth/FieldInfo'
 
 export function LoginPage() {
@@ -14,7 +13,7 @@ export function LoginPage() {
   const [needsVerification, setNeedsVerification] = useState(false)
   const [isResendingVerification, setIsResendingVerification] = useState(false)
   const navigate = useNavigate()
-  const { refetchSession } = useAuth()
+  const router = useRouter()
 
   const form = useForm({
     defaultValues: {
@@ -38,8 +37,8 @@ export function LoginPage() {
           setNeedsVerification(requiresVerification)
           return
         }
-        await refetchSession()
         await navigate({ to: '/dashboard' })
+        await router.invalidate()
       } catch (error) {
         setSubmitError(error instanceof Error ? error.message : 'Sign in failed')
       }

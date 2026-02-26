@@ -1,15 +1,14 @@
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { AuthLayout } from '@/components/auth/AuthLayout'
 import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { signUpUser } from '@/utils/auth.functions'
-import { useAuth } from '@/utils/auth-context'
 import { FieldInfo } from '@/components/auth/FieldInfo'
 
 export function SignupPage() {
   const navigate = useNavigate()
-  const { refetchSession } = useAuth()
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -45,8 +44,8 @@ export function SignupPage() {
           return
         }
 
-        await refetchSession()
         await navigate({ to: '/dashboard' })
+        await router.invalidate()
       } catch (error) {
         setSubmitError(error instanceof Error ? error.message : 'Sign up failed')
       }

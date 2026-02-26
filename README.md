@@ -38,7 +38,7 @@ Tired of late fees and missed payment deadlines? **MoneyScope** consolidates bil
 **💰 Financial Overview**
 - Dashboard view of upcoming payments
 - Automatic calculation of total dues
-- Visual timeline of payment deadlines
+- Visual payment calendar with daily totals
 
 </td>
 </tr>
@@ -46,9 +46,10 @@ Tired of late fees and missed payment deadlines? **MoneyScope** consolidates bil
 <td width="50%">
 
 **🎨 Modern UI**
-- Clean, intuitive interface
+- Scroll-triggered entrance animations
+- Glassmorphism header with frosted blur effect
 - Responsive design for all devices
-- Built with Tailwind CSS
+- Premium feature card shimmer borders on hover
 
 </td>
 <td width="50%">
@@ -56,7 +57,28 @@ Tired of late fees and missed payment deadlines? **MoneyScope** consolidates bil
 **⚡ Performance**
 - Lightning-fast with React 19
 - Type-safe with TypeScript
-- Optimized with Vite
+- Optimized with Vite 7
+- Lightweight IntersectionObserver-based animations
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**🔐 Authentication**
+- Email/password sign up & sign in
+- Email verification flow
+- Profile settings (name, email, password)
+- Session management with better-auth
+
+</td>
+<td width="50%">
+
+**📝 Content Pages**
+- About page with mission, values, timeline & team
+- Blog with featured posts, category filters & newsletter
+- Full-width footer with social links
+- Custom animated 404 page
 
 </td>
 </tr>
@@ -92,12 +114,15 @@ Built with modern, cutting-edge technologies:
 |----------|-------------|
 | **Frontend** | React 19, TypeScript |
 | **Routing** | TanStack Router (File-based) |
-| **State Management** | TanStack Query, React Hooks |
+| **Forms** | TanStack Form |
 | **Styling** | Tailwind CSS 4.0 |
 | **Build Tool** | Vite 7 |
 | **Server** | Nitro (TanStack Start) |
-| **Testing** | Vitest |
+| **Database** | PostgreSQL via Prisma ORM |
+| **Auth** | better-auth (email/password) |
+| **Calendar** | FullCalendar |
 | **Icons** | Lucide React |
+| **Testing** | Vitest |
 
 ---
 
@@ -118,12 +143,36 @@ Built with modern, cutting-edge technologies:
 ```
 moneyscope/
 ├── src/
-│   ├── components/     # Reusable UI components
-│   ├── data/          # Server functions (type-safe RPC)
-│   ├── routes/        # File-based routing
-│   └── styles.css     # Global styles
-├── public/            # Static assets
-└── vite.config.ts     # Vite configuration
+│   ├── components/
+│   │   ├── about/           # About page (mission, values, timeline, team)
+│   │   ├── auth/            # Auth layout, login, signup, field info
+│   │   ├── blog/            # Blog page (posts, featured, newsletter)
+│   │   ├── dashboard/       # Dashboard, stats, payment cards, calendar
+│   │   ├── landing/         # Hero, Features, Testimonials, CTA, Footer
+│   │   ├── settings/        # Profile settings page
+│   │   ├── Header.tsx       # Glassmorphism header with scroll effect
+│   │   └── NotFound.tsx     # Animated 404 page
+│   ├── routes/              # File-based routing (auto-generates route tree)
+│   │   ├── __root.tsx       # Root layout with AuthProvider
+│   │   ├── index.tsx        # Landing page (/)
+│   │   ├── about.tsx        # About page (/about)
+│   │   ├── blog.tsx         # Blog page (/blog)
+│   │   ├── dashboard.tsx    # Dashboard (/dashboard, authenticated)
+│   │   ├── auth/            # Auth routes (/auth/login, /auth/signup)
+│   │   ├── settings/        # Settings routes (/settings/profile)
+│   │   └── api/             # API routes (auth handler)
+│   ├── utils/
+│   │   ├── auth-context.tsx # React context for auth state
+│   │   ├── auth.ts          # better-auth client config
+│   │   ├── auth.server.ts   # Server-side auth functions
+│   │   ├── auth.functions.ts# Client-callable server functions
+│   │   ├── dashboard.functions.ts # Dashboard data server functions
+│   │   ├── route-guards.ts  # Auth redirect guards
+│   │   └── useScrollReveal.ts # IntersectionObserver scroll animation hook
+│   └── styles.css           # Global styles, keyframes, animations, dark mode vars
+├── prisma/                  # Database schema and migrations
+├── public/                  # Static assets (logo, favicon, manifest)
+└── vite.config.ts           # Vite configuration
 ```
 
 ### 🔧 Key Concepts
@@ -131,18 +180,18 @@ moneyscope/
 #### File-Based Routing
 Routes are automatically generated from files in `src/routes/`:
 ```tsx
-// src/routes/payments.tsx
+// src/routes/about.tsx
 import { createFileRoute } from '@tanstack/react-router'
+import { AboutPage } from '@/components/about/AboutPage'
 
-export const Route = createFileRoute('/payments')({
-  component: () => <div>Payments Page</div>
+export const Route = createFileRoute('/about')({
+  component: AboutPage,
 })
 ```
 
 #### Server Functions
 Type-safe server functions with full IntelliSense:
 ```tsx
-// src/data/payments.ts
 import { createServerFn } from '@tanstack/react-start'
 
 export const getPayments = createServerFn({ method: 'GET' })
@@ -162,27 +211,32 @@ export const getPayments = createServerFn({ method: 'GET' })
 - Accents: Cyan, Emerald, and Teal variants for status and highlights
 - Surface: White with soft gray borders for cards and panels
 
+**Animations**
+- Scroll-reveal via `.reveal` / `.visible` CSS classes
+- Custom keyframes: `fade-in-up`, `float`, `shimmer`, `scale-in`, `slide-in-left/right`
+- Feature card hover shimmer via `.feature-card` CSS class
+- Glassmorphism header via `backdrop-blur-xl` on scroll
+
 **UI Patterns**
 - Cards use rounded corners (`rounded-2xl`) and soft shadows (`shadow-sm`/`shadow-lg`)
 - Buttons are pill‑like with subtle lift on hover
 - Use consistent spacing (`gap-3` to `gap-6`) for rhythm
 
-**Example**
-```tsx
-<div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-  {/* MoneyScope card */}
-</div>
-```
-
 ---
 
 ## 🗺️ Roadmap
 
+- [x] 🔐 User authentication with email verification
+- [x] 📊 Dashboard with payment tracking
+- [x] 📅 Payment calendar with daily totals
+- [x] ➕ Add/delete payments (credit cards, loans, bills)
+- [x] 👤 Profile settings (name, email, password)
+- [x] 📝 About page and Blog
+- [x] 🎨 Scroll animations and glassmorphism effects
 - [ ] 📱 Mobile app (React Native)
 - [ ] 🔔 Push notifications for upcoming payments
 - [ ] 📊 Payment history and analytics
 - [ ] 💾 Cloud sync across devices
-- [ ] 🔐 Multi-user support with authentication
 - [ ] 📈 Spending insights and reports
 - [ ] 🌐 Multi-currency support
 
@@ -223,9 +277,12 @@ This project is open source and available under the [MIT License](LICENSE).
 
 Built with amazing open-source projects:
 - [React](https://reactjs.org/) - UI library
-- [TanStack](https://tanstack.com/) - Router, Query, and Start
+- [TanStack](https://tanstack.com/) - Router, Query, Form, and Start
 - [Tailwind CSS](https://tailwindcss.com/) - Styling framework
 - [Vite](https://vitejs.dev/) - Build tool
+- [Prisma](https://www.prisma.io/) - Database ORM
+- [better-auth](https://www.better-auth.com/) - Authentication
+- [FullCalendar](https://fullcalendar.io/) - Calendar component
 - [Lucide](https://lucide.dev/) - Icon library
 
 ---
