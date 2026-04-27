@@ -12,6 +12,16 @@ const adapter = new PrismaPg({
 
 export const prisma = new PrismaClient({ adapter });
 
+const isProduction = process.env.NODE_ENV === "production";
+
+// BETTER_AUTH_URL must be set in production; in development localhost:3000 is used as a fallback.
+if (isProduction && !process.env.BETTER_AUTH_URL) {
+  throw new Error(
+    "[auth] BETTER_AUTH_URL environment variable is required in production. " +
+      "Set it to the full base URL of your application (e.g. https://yourdomain.com).",
+  );
+}
+
 type VerificationEmailPayload = {
   user: { email: string; name: string };
   url: string;
@@ -58,7 +68,10 @@ async function sendVerificationEmail({ user, url }: VerificationEmailPayload) {
 }
 
 export const auth = betterAuth({
-  // IMPORTANT: match your mounted handler route
+  // baseURL is the full URL of your app (origin + optional path prefix).
+  // BETTER_AUTH_URL must be set in production (see the guard above).
+  // In development, http://localhost:3000 is used when the env var is absent.
+  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
   basePath: "/api/auth",
 
   database: prismaAdapter(prisma, {
