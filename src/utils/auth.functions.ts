@@ -80,6 +80,7 @@ export const signUpUser = createServerFn({ method: "POST" })
           email: data.email,
           password: data.password,
           name: data.name,
+          callbackURL: "/auth/login",
         },
       });
       return {
@@ -111,7 +112,7 @@ export const signInEmailFn = createServerFn({ method: "POST" })
     try {
       const user = await auth.api.signInEmail({
         headers: getRequestHeaders(),
-        body: { email: data.email, password: data.password },
+        body: { email: data.email, password: data.password, callbackURL: "/auth/login" },
       });
 
       if (!user) {
