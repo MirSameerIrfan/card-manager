@@ -13,6 +13,7 @@ const config = defineConfig({
     nitro({
       wasm: false,
       traceDeps: ["pg"],
+      preset: process.env.NETLIFY ? "netlify" : undefined,
     }),
     // this is the plugin that enables path aliases
     viteTsConfigPaths({
