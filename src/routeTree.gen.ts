@@ -71,10 +71,10 @@ export interface FileRoutesByFullPath {
   '/blog': typeof BlogRoute
   '/dashboard': typeof DashboardRoute
   '/settings/profile': typeof SettingsProfileRoute
-  '/auth': typeof AuthIndexRoute
+  '/auth/': typeof AuthIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/auth/login': typeof AuthLoginIndexRoute
-  '/auth/signup': typeof AuthSignupIndexRoute
+  '/auth/login/': typeof AuthLoginIndexRoute
+  '/auth/signup/': typeof AuthSignupIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -107,10 +107,10 @@ export interface FileRouteTypes {
     | '/blog'
     | '/dashboard'
     | '/settings/profile'
-    | '/auth'
+    | '/auth/'
     | '/api/auth/$'
-    | '/auth/login'
-    | '/auth/signup'
+    | '/auth/login/'
+    | '/auth/signup/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -180,7 +180,7 @@ declare module '@tanstack/react-router' {
     '/auth/': {
       id: '/auth/'
       path: '/auth'
-      fullPath: '/auth'
+      fullPath: '/auth/'
       preLoaderRoute: typeof AuthIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -194,14 +194,14 @@ declare module '@tanstack/react-router' {
     '/auth/signup/': {
       id: '/auth/signup/'
       path: '/auth/signup'
-      fullPath: '/auth/signup'
+      fullPath: '/auth/signup/'
       preLoaderRoute: typeof AuthSignupIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/login/': {
       id: '/auth/login/'
       path: '/auth/login'
-      fullPath: '/auth/login'
+      fullPath: '/auth/login/'
       preLoaderRoute: typeof AuthLoginIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -231,10 +231,11 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }
