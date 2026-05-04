@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { auth } from "@/utils/auth";
+import { auth } from "@/lib/auth";
 import { z } from "zod";
 
 const UserSchema = z.object({
@@ -18,7 +18,7 @@ const ChangeEmailSchema = z.object({
 });
 
 const ChangePasswordSchema = z.object({
-  currentPassword: z.string().min(1),
+  currentPassword: z.string().min(8),
   newPassword: z.string().min(8),
 });
 
@@ -112,7 +112,11 @@ export const signInEmailFn = createServerFn({ method: "POST" })
     try {
       const user = await auth.api.signInEmail({
         headers: getRequestHeaders(),
-        body: { email: data.email, password: data.password, callbackURL: "/auth/login" },
+        body: {
+          email: data.email,
+          password: data.password,
+          callbackURL: "/auth/login",
+        },
       });
 
       if (!user) {
@@ -142,6 +146,18 @@ export const getSessionFn = createServerFn({ method: "GET" }).handler(
     return auth.api.getSession({
       headers: getRequestHeaders(),
     });
+  },
+);
+
+//Ensure User Session
+export const ensureSession = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const headers = getRequestHeaders();
+    const session = await auth.api.getSession({ headers });
+    if (!session) {
+      throw new Error("Unauthorized");
+    }
+    return session;
   },
 );
 
@@ -186,7 +202,10 @@ export const changeEmailFn = createServerFn({ method: "POST" })
       });
 
       if (!session?.user) {
-        return { success: false, error: "You must be signed in to change your email." };
+        return {
+          success: false,
+          error: "You must be signed in to change your email.",
+        };
       }
 
       if (session.user.emailVerified !== true) {

@@ -1,24 +1,30 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { Dashboard } from '@/components/dashboard/Dashboard'
-import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton'
-import { getSessionFn } from '@/utils/auth.functions'
-import { getDashboardDataFn } from '@/utils/dashboard.functions'
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { Dashboard } from "@/components/dashboard/Dashboard";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import { getSessionFn } from "@/utils/auth.functions";
+import { getDashboardDataFn } from "@/components/dashboard/dashboard.functions";
 
-export const Route = createFileRoute('/dashboard')({
+export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
     try {
-      const session = await getSessionFn()
+      const session = await getSessionFn();
       if (!session?.user || session.user.emailVerified !== true) {
-        throw redirect({ to: '/auth/login', search: { redirect: '/dashboard' } })
+        throw redirect({
+          to: "/auth/login",
+          search: { error: "Please log in to continue." },
+        });
       }
-      return { session }
+      return { session };
     } catch (_error) {
-      throw redirect({ to: '/auth/login', search: { redirect: '/dashboard' } })
+      throw redirect({
+        to: "/auth/login",
+        search: { error: "Please log in to continue." },
+      });
     }
   },
   loader: async () => {
-    return await getDashboardDataFn()
+    return await getDashboardDataFn();
   },
   pendingComponent: DashboardSkeleton,
   component: Dashboard,
-})
+});

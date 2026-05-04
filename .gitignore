@@ -11,5 +11,6 @@ count.txt
 .output
 .vinxi
 todos.json
-
+.netlify
+.output
 /generated/prisma
