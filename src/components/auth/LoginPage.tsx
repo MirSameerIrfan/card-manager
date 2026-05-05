@@ -3,7 +3,8 @@ import { AuthLayout } from '@/components/auth/AuthLayout'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { resendVerificationEmailFn, signInEmailFn } from '@/utils/auth.functions'
+import { resendVerificationEmailFn } from '@/utils/auth.functions'
+import { signIn } from '@/lib/auth-client'
 import { FieldInfo } from '@/components/auth/FieldInfo'
 
 function getVerificationErrorMessage(error: string): string {
@@ -42,14 +43,14 @@ export function LoginPage() {
       setSubmitInfo(null)
       setNeedsVerification(false)
       try {
-        const result = await signInEmailFn({
-          data: { email: value.email, password: value.password },
+        const result = await signIn.email({
+          email: value.email,
+          password: value.password,
         })
 
-        if (!result.success) {
-          const message = result.error ?? 'Invalid email or password'
-          const requiresVerification =
-            result.requiresVerification ?? message.toLowerCase().includes('verify your email')
+        if (result.error) {
+          const message = result.error.message ?? 'Invalid email or password'
+          const requiresVerification = message.toLowerCase().includes('verify your email')
           setSubmitError(message)
           setNeedsVerification(requiresVerification)
           return

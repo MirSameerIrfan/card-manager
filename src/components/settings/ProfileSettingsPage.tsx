@@ -1,7 +1,7 @@
 import { getRouteApi, useRouter } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react'
-import { useAuth } from '@/utils/auth-context'
+import { useSession } from '@/lib/auth-client'
 import { changeEmailFn, changePasswordFn, updateProfileNameFn } from '@/utils/auth.functions'
 
 const routeApi = getRouteApi('/settings/profile')
@@ -11,7 +11,8 @@ function isValidEmail(value: string) {
 }
 
 export function ProfileSettingsPage() {
-  const { user, refetchSession } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user ?? null
   const router = useRouter()
   const data = routeApi.useLoaderData()
 
@@ -78,7 +79,7 @@ export function ProfileSettingsPage() {
   const nameUnchanged = normalizedName === currentNameNormalized
 
   const refreshAppState = async () => {
-    await Promise.all([refetchSession(), router.invalidate()])
+    await router.invalidate()
   }
 
   const handleNameSubmit = async (event: React.FormEvent) => {

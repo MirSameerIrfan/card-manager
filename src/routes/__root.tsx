@@ -1,36 +1,14 @@
-import { HeadContent, Scripts, createRootRoute, useLoaderData, useRouterState } from '@tanstack/react-router'
+import { HeadContent, Scripts, createRootRoute, useRouterState } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { NotFound } from '@/components/NotFound'
 import { useEffect, useRef } from 'react'
 
 import Header from '../components/Header'
-import { AuthProvider, type AuthUser } from '@/utils/auth-context'
-import { getSessionFn } from '@/utils/auth.functions'
 
 import appCss from '../styles.css?url'
 
-async function rootLoader() {
-  try {
-    const session = await getSessionFn()
-    const user: AuthUser | null = session?.user
-      ? {
-        id: session.user.id,
-        name: session.user.name,
-        email: session.user.email,
-        image: session.user.image ?? null,
-        emailVerified: session.user.emailVerified,
-      }
-      : null
-
-    return { isLoggedIn: !!user && user.emailVerified === true, user }
-  } catch (_error) {
-    return { isLoggedIn: false, user: null }
-  }
-}
-
 export const Route = createRootRoute({
-  loader: rootLoader,
   head: () => ({
     meta: [
       {
@@ -62,10 +40,6 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { user } = useLoaderData({ from: '__root__' })
-  const isRoutePending = useRouterState({
-    select: (state) => state.status === 'pending',
-  })
   const currentPath = useRouterState({
     select: (state) => state.location.pathname,
   })
@@ -96,12 +70,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <AuthProvider initialUser={user}>
-          <Header isPending={isRoutePending} />
-          <div ref={contentRef}>
-            {children}
-          </div>
-        </AuthProvider>
+        <Header />
+        <div ref={contentRef}>
+          {children}
+        </div>
         <TanStackDevtools
           config={{
             position: 'bottom-right',
@@ -118,4 +90,3 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     </html>
   )
 }
-
