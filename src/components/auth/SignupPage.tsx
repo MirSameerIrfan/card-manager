@@ -3,7 +3,7 @@ import { AuthLayout } from '@/components/auth/AuthLayout'
 import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { signUpUser } from '@/utils/auth.functions'
+import { signUp } from '@/lib/auth-client'
 import { FieldInfo } from '@/components/auth/FieldInfo'
 
 export function SignupPage() {
@@ -26,20 +26,20 @@ export function SignupPage() {
       setSubmitSuccess(null)
 
       try {
-        const result = await signUpUser({
-          data: {
-            name: value.name,
-            email: value.email,
-            password: value.password,
-          },
+        const result = await signUp.email({
+          name: value.name,
+          email: value.email,
+          password: value.password,
+          callbackURL: '/auth/login',
         })
 
-        if (!result.success) {
-          setSubmitError(result.error ?? 'sign up failed')
+        if (result.error) {
+          setSubmitError(result.error.message ?? 'Sign up failed')
           return
         }
 
-        if (result.requiresVerification) {
+        // If token is null, email verification is required
+        if (!result.data?.token) {
           setSubmitSuccess('Account created. Please verify your email before signing in.')
           return
         }

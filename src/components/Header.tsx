@@ -14,8 +14,7 @@ import {
   Info,
   BookOpen,
 } from 'lucide-react'
-import { useAuth } from '@/utils/auth-context'
-import { signOutFn } from '@/utils/auth.functions'
+import { useSession, signOut } from '@/lib/auth-client'
 
 const navTabs = [
   { label: 'Home', to: '/', icon: Home },
@@ -24,13 +23,15 @@ const navTabs = [
   { label: 'Blog', to: '/blog', icon: BookOpen },
 ]
 
-export default function Header({ isPending = false }: { isPending?: boolean }) {
+export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
-  const { isLoggedIn, loading, user, refetchSession } = useAuth()
-  const [displayLoggedIn, setDisplayLoggedIn] = useState(isLoggedIn)
+  const { data: session, isPending: isSessionLoading } = useSession()
+  const isLoggedIn = !!session?.user && session.user.emailVerified === true
+  const user = session?.user ?? null
   const navigate = useNavigate()
   const userMenuRef = useRef<HTMLDivElement>(null)
 
@@ -43,11 +44,12 @@ export default function Header({ isPending = false }: { isPending?: boolean }) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Mark as mounted after hydration to prevent SSR mismatch
   useEffect(() => {
-    if (!isPending) {
-      setDisplayLoggedIn(isLoggedIn)
-    }
-  }, [isLoggedIn, isPending])
+    setMounted(true)
+  }, [])
+
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -74,8 +76,7 @@ export default function Header({ isPending = false }: { isPending?: boolean }) {
   const handleLogout = async () => {
     try {
       setIsUserMenuOpen(false)
-      await signOutFn()
-      await refetchSession()
+      await signOut()
       await navigate({ to: '/auth/login' })
     } catch (error) {
       console.error('Logout error:', error)
@@ -133,66 +134,64 @@ export default function Header({ isPending = false }: { isPending?: boolean }) {
           <div className="flex items-center gap-3">
             {/* Desktop Auth Buttons */}
             <div className="hidden md:flex items-center gap-3">
-              {isPending ? (
+              {!mounted || isSessionLoading ? (
                 <>
                   <div className="h-10 w-24 rounded-xl bg-gray-100 animate-pulse" />
                   <div className="h-10 w-28 rounded-xl bg-emerald-100 animate-pulse" />
                 </>
               ) : (
-                !loading && (
-                  displayLoggedIn ? (
-                    <div className="relative" ref={userMenuRef}>
-                      <button
-                        onClick={() => setIsUserMenuOpen((open) => !open)}
-                        className="inline-flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-800 transition-all hover:border-emerald-200 hover:bg-emerald-50"
-                        aria-haspopup="menu"
-                        aria-expanded={isUserMenuOpen}
-                        aria-label="Open user menu"
-                      >
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-sm font-bold text-white shadow-sm">
-                          {userInitial}
-                        </span>
-                        <ChevronDown size={16} className={`transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
-                      </button>
+                isLoggedIn ? (
+                  <div className="relative" ref={userMenuRef}>
+                    <button
+                      onClick={() => setIsUserMenuOpen((open) => !open)}
+                      className="inline-flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-800 transition-all hover:border-emerald-200 hover:bg-emerald-50"
+                      aria-haspopup="menu"
+                      aria-expanded={isUserMenuOpen}
+                      aria-label="Open user menu"
+                    >
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-sm font-bold text-white shadow-sm">
+                        {userInitial}
+                      </span>
+                      <ChevronDown size={16} className={`transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
 
-                      {isUserMenuOpen ? (
-                        <div className="absolute right-0 mt-2 w-52 rounded-xl border border-gray-200 bg-white/95 backdrop-blur-lg p-2 shadow-xl">
-                          <Link
-                            to="/settings/profile"
-                            onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
-                          >
-                            <Settings size={16} />
-                            Profile settings
-                          </Link>
-                          <button
-                            onClick={() => void handleLogout()}
-                            className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
-                          >
-                            <LogOut size={16} />
-                            Logout
-                          </button>
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <>
-                      <Link
-                        to="/auth/login"
-                        className="inline-flex items-center justify-center gap-2 px-5 py-2 text-emerald-600 font-semibold hover:text-emerald-700 transition-colors"
-                      >
-                        <LogIn size={18} />
-                        <span className="hidden sm:inline">Login</span>
-                      </Link>
-                      <Link
-                        to="/auth/signup"
-                        className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-md hover:shadow-lg hover:shadow-emerald-500/20"
-                      >
-                        <UserPlus size={18} />
-                        <span className="hidden sm:inline">Sign Up</span>
-                      </Link>
-                    </>
-                  )
+                    {isUserMenuOpen ? (
+                      <div className="absolute right-0 mt-2 w-52 rounded-xl border border-gray-200 bg-white/95 backdrop-blur-lg p-2 shadow-xl">
+                        <Link
+                          to="/settings/profile"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
+                        >
+                          <Settings size={16} />
+                          Profile settings
+                        </Link>
+                        <button
+                          onClick={() => void handleLogout()}
+                          className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+                        >
+                          <LogOut size={16} />
+                          Logout
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <>
+                    <Link
+                      to="/auth/login"
+                      className="inline-flex items-center justify-center gap-2 px-5 py-2 text-emerald-600 font-semibold hover:text-emerald-700 transition-colors"
+                    >
+                      <LogIn size={18} />
+                      <span className="hidden sm:inline">Login</span>
+                    </Link>
+                    <Link
+                      to="/auth/signup"
+                      className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-md hover:shadow-lg hover:shadow-emerald-500/20"
+                    >
+                      <UserPlus size={18} />
+                      <span className="hidden sm:inline">Sign Up</span>
+                    </Link>
+                  </>
                 )
               )}
             </div>
@@ -254,8 +253,8 @@ export default function Header({ isPending = false }: { isPending?: boolean }) {
 
         {/* Mobile Auth Buttons */}
         <div className="p-4 border-t border-gray-200 space-y-3">
-          {!loading && (
-            displayLoggedIn ? (
+          {mounted && !isSessionLoading && (
+            isLoggedIn ? (
               <>
                 <Link
                   to="/settings/profile"
