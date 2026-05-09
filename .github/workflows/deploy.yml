@@ -34,12 +34,18 @@ jobs:
       - name: Run linter
         run: npm run lint
 
+      - name: Run type-check
+        run: npm run type-check
+
       # - name: Run tests
       #   run: npm run test
 
-      - name: Build and Deploy to Netlify (Production)
+      - name: Deploy to Netlify (Production)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: npx netlify-cli@latest build && npx netlify-cli@latest deploy --prod --message "Deploy from GitHub Actions - ${{ github.sha }}"
+        run: |
+          npx prisma migrate deploy
+          npx netlify build
+          npx netlify deploy --prod --message "Deploy from GitHub Actions - ${{ github.sha }}"
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
@@ -53,9 +59,11 @@ jobs:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
-      - name: Build and Deploy Preview (Pull Request)
+      - name: Deploy Preview (Pull Request)
         if: github.event_name == 'pull_request'
-        run: npx netlify-cli@latest build && npx netlify-cli@latest deploy --message "PR Preview #${{ github.event.pull_request.number }} - ${{ github.sha }}"
+        run: |
+          npx netlify build
+          npx netlify deploy --message "PR Preview #${{ github.event.pull_request.number }} - ${{ github.sha }}"
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}

@@ -202,9 +202,9 @@ export function LoginPage() {
             />
             Remember me
           </label>
-          <Link to="#" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">
+          <a href="#" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">
             Forgot password?
-          </Link>
+          </a>
         </div>
 
         {/* Submit Button */}

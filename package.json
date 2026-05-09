@@ -8,6 +8,7 @@
     "start": "node --import ./.output/server/instrument.server.mjs .output/server/index.mjs",
     "preview": "vite preview",
     "test": "vitest run",
+    "type-check": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {
@@ -50,6 +51,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "eslint": "^9.39.2",
     "jsdom": "^27.0.0",
+    "netlify-cli": "^26.0.1",
     "prisma": "^7.3.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
