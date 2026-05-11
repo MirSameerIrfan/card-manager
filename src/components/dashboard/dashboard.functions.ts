@@ -21,7 +21,7 @@ export const getDashboardDataFn = createServerFn({ method: "GET" }).handler(
 
     // 2. Fetch data in parallel
     const [creditCards, loans, recurringBills] = await Promise.all([
-      prisma.creditCard.findMany({
+      prisma.credit_card.findMany({
         where: { userId },
         orderBy: { dueDate: "asc" },
       }),
@@ -29,7 +29,7 @@ export const getDashboardDataFn = createServerFn({ method: "GET" }).handler(
         where: { userId },
         orderBy: { nextPayment: "asc" },
       }),
-      prisma.recurringBill.findMany({
+      prisma.recurring_bill.findMany({
         where: { userId },
         orderBy: { dueDate: "asc" },
       }),
@@ -128,7 +128,7 @@ export const addPaymentFn = createServerFn({ method: "POST" })
 
     try {
       if (data.type === "credit_card") {
-        await prisma.creditCard.create({
+        await prisma.credit_card.create({
           data: {
             userId,
             name: data.name,
@@ -154,7 +154,7 @@ export const addPaymentFn = createServerFn({ method: "POST" })
           },
         });
       } else if (data.type === "recurring_bill") {
-        await prisma.recurringBill.create({
+        await prisma.recurring_bill.create({
           data: {
             userId,
             name: data.name,
@@ -196,7 +196,7 @@ export const deletePaymentFn = createServerFn({ method: "POST" })
 
     try {
       if (data.type === "credit_card") {
-        await prisma.creditCard.delete({
+        await prisma.credit_card.delete({
           where: { id: data.id, userId },
         });
       } else if (data.type === "loan") {
@@ -204,7 +204,7 @@ export const deletePaymentFn = createServerFn({ method: "POST" })
           where: { id: data.id, userId },
         });
       } else if (data.type === "recurring_bill") {
-        await prisma.recurringBill.delete({
+        await prisma.recurring_bill.delete({
           where: { id: data.id, userId },
         });
       }
