@@ -1,0 +1,6 @@
+[build]
+  command = "npx prisma generate && vite build && cp instrument.server.mjs .netlify/functions-internal/server/"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
