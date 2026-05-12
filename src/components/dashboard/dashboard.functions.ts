@@ -108,6 +108,7 @@ const AddPaymentSchema = z.object({
   status: z.string().optional(),
   category: z.string().optional(),
   autoPay: z.boolean().optional(),
+  frequency: z.enum(["monthly", "biweekly"]).optional(),
 });
 
 export const addPaymentFn = createServerFn({ method: "POST" })
@@ -163,6 +164,7 @@ export const addPaymentFn = createServerFn({ method: "POST" })
             dueDate: date,
             category: data.category || "Utilities",
             autoPay: data.autoPay || false,
+            frequency: data.frequency || "monthly",
             updatedAt: new Date(),
           },
         });
@@ -171,6 +173,75 @@ export const addPaymentFn = createServerFn({ method: "POST" })
     } catch (e) {
       console.error("Failed to add payment", e);
       return { success: false, error: "Failed to add payment" };
+    }
+  });
+
+const UpdatePaymentSchema = AddPaymentSchema.extend({
+  id: z.string(),
+});
+
+export const updatePaymentFn = createServerFn({ method: "POST" })
+  .inputValidator(UpdatePaymentSchema)
+  .handler(async ({ data }) => {
+    const req = getRequest();
+
+    const session = await auth.api.getSession({
+      headers: Object.fromEntries(req.headers.entries()),
+    });
+
+    if (!session?.user || session.user.emailVerified !== true) {
+      throw new Error("Unauthorized");
+    }
+
+    const userId = session.user.id;
+    const date = new Date(data.date);
+
+    try {
+      if (data.type === "credit_card") {
+        await prisma.credit_card.update({
+          where: { id: data.id, userId },
+          data: {
+            name: data.name,
+            provider: data.provider,
+            amountDue: data.amount,
+            dueDate: date,
+            minimumPayment: data.minimumPayment || 0,
+            status: data.status || "Due Soon",
+            updatedAt: new Date(),
+          },
+        });
+      } else if (data.type === "loan") {
+        await prisma.loan.update({
+          where: { id: data.id, userId },
+          data: {
+            name: data.name,
+            provider: data.provider,
+            monthlyPayment: data.amount,
+            nextPayment: date,
+            autoPay: data.autoPay || false,
+            updatedAt: new Date(),
+          },
+        });
+      } else if (data.type === "recurring_bill") {
+        await prisma.recurring_bill.update({
+          where: { id: data.id, userId },
+          data: {
+            name: data.name,
+            provider: data.provider,
+            amount: data.amount,
+            dueDate: date,
+            category: data.category || "Utilities",
+            autoPay: data.autoPay || false,
+            frequency: data.frequency || "monthly",
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      return { success: true };
+    } catch (e) {
+      console.error("Failed to update payment", e);
+      return { success: false, error: "Failed to update payment" };
     }
   });
 

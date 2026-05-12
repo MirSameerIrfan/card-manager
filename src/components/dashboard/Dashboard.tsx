@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { getRouteApi, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { AddPaymentModal } from "./AddPaymentModal";
+import { AddPaymentModal, type EditablePayment } from "./AddPaymentModal";
 import { deletePaymentFn } from "@/components/dashboard/dashboard.functions";
 import { PaymentCalendarModal } from "./PaymentCalendarModal";
 import { DashboardHeader } from "./DashboardHeader";
@@ -32,6 +32,9 @@ export function Dashboard() {
   const data = routeApi.useLoaderData();
   const router = useRouter();
   const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false);
+  const [paymentToEdit, setPaymentToEdit] = useState<EditablePayment | null>(
+    null,
+  );
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -114,7 +117,11 @@ export function Dashboard() {
     <main className="min-h-screen bg-linear-to-br from-emerald-50 via-white to-cyan-50 pb-20">
       <AddPaymentModal
         isOpen={isAddPaymentOpen}
-        onClose={() => setIsAddPaymentOpen(false)}
+        onClose={() => {
+          setIsAddPaymentOpen(false);
+          setPaymentToEdit(null);
+        }}
+        paymentToEdit={paymentToEdit}
       />
       <PaymentCalendarModal
         isOpen={isCalendarOpen}
@@ -132,7 +139,10 @@ export function Dashboard() {
           displayName={displayName}
           dueText={dueThisWeekText}
           onOpenCalendar={() => setIsCalendarOpen(true)}
-          onAddPayment={() => setIsAddPaymentOpen(true)}
+          onAddPayment={() => {
+            setPaymentToEdit(null);
+            setIsAddPaymentOpen(true);
+          }}
         />
 
         <StatsGrid stats={statsItems} />
@@ -152,6 +162,19 @@ export function Dashboard() {
               date={formatDate(card.dueDate)}
               status={card.status as PaymentStatus}
               icon={CreditCard}
+              onEdit={() => {
+                setPaymentToEdit({
+                  id: card.id,
+                  type: "credit_card",
+                  name: card.name,
+                  provider: card.provider,
+                  amount: card.amountDue,
+                  date: card.dueDate,
+                  minimumPayment: card.minimumPayment,
+                  status: card.status,
+                });
+                setIsAddPaymentOpen(true);
+              }}
               onDelete={() => void handleDelete(card.id, "credit_card")}
               isDeleting={deletingId === card.id}
             />
@@ -173,6 +196,18 @@ export function Dashboard() {
               date={formatDate(loan.nextPayment)}
               status={loan.autoPay ? "Auto-Pay" : "Due Soon"}
               icon={Landmark}
+              onEdit={() => {
+                setPaymentToEdit({
+                  id: loan.id,
+                  type: "loan",
+                  name: loan.name,
+                  provider: loan.provider,
+                  amount: loan.monthlyPayment,
+                  date: loan.nextPayment,
+                  autoPay: loan.autoPay,
+                });
+                setIsAddPaymentOpen(true);
+              }}
               onDelete={() => void handleDelete(loan.id, "loan")}
               isDeleting={deletingId === loan.id}
             />
@@ -194,6 +229,20 @@ export function Dashboard() {
               date={formatDate(bill.dueDate)}
               status={bill.autoPay ? "Auto-Pay" : "Due Soon"}
               icon={Receipt}
+              onEdit={() => {
+                setPaymentToEdit({
+                  id: bill.id,
+                  type: "recurring_bill",
+                  name: bill.name,
+                  provider: bill.provider,
+                  amount: bill.amount,
+                  date: bill.dueDate,
+                  category: bill.category,
+                  autoPay: bill.autoPay,
+                  frequency: bill.frequency,
+                });
+                setIsAddPaymentOpen(true);
+              }}
               onDelete={() => void handleDelete(bill.id, "recurring_bill")}
               isDeleting={deletingId === bill.id}
             />

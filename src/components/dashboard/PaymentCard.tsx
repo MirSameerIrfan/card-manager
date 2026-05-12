@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import { Trash } from 'lucide-react'
+import { Pencil, Trash } from 'lucide-react'
 
 export type PaymentStatus = 'Paid' | 'Due Soon' | 'Overdue' | 'Auto-Pay'
 
@@ -10,6 +10,7 @@ export type PaymentCardProps = {
   date: string
   status: PaymentStatus
   icon: ComponentType<{ className?: string }>
+  onEdit?: () => void
   onDelete?: () => void
   isDeleting?: boolean
 }
@@ -31,6 +32,7 @@ export function PaymentCard({
   date,
   status,
   icon: Icon,
+  onEdit,
   onDelete,
   isDeleting = false,
 }: PaymentCardProps) {
@@ -38,15 +40,28 @@ export function PaymentCard({
 
   return (
     <div className="group relative flex flex-col justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-200/50">
-      {onDelete ? (
-        <button
-          onClick={onDelete}
-          disabled={isDeleting}
-          className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-          title="Delete Payment"
-        >
-          <Trash className="w-4 h-4" />
-        </button>
+      {onEdit || onDelete ? (
+        <div className="absolute top-4 right-4 flex items-center gap-1 opacity-0 transition-all group-hover:opacity-100">
+          {onEdit ? (
+            <button
+              onClick={onEdit}
+              className="rounded-lg p-2 text-gray-400 transition-all hover:bg-emerald-50 hover:text-emerald-600"
+              title="Edit Payment"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+          ) : null}
+          {onDelete ? (
+            <button
+              onClick={onDelete}
+              disabled={isDeleting}
+              className="rounded-lg p-2 text-gray-400 transition-all hover:bg-red-50 hover:text-red-500"
+              title="Delete Payment"
+            >
+              <Trash className="h-4 w-4" />
+            </button>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="flex items-start justify-between">

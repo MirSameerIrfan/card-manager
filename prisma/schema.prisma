@@ -111,6 +111,7 @@ model recurring_bill {
   amount    Float
   dueDate   DateTime
   category  String
+  frequency String   @default("monthly")
   autoPay   Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime
