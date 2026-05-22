@@ -10,6 +10,7 @@ export type PaymentCardProps = {
   date: string
   status: PaymentStatus
   icon: ComponentType<{ className?: string }>
+  frequency?: string
   onEdit?: () => void
   onDelete?: () => void
   isDeleting?: boolean
@@ -32,6 +33,7 @@ export function PaymentCard({
   date,
   status,
   icon: Icon,
+  frequency,
   onEdit,
   onDelete,
   isDeleting = false,
@@ -74,6 +76,11 @@ export function PaymentCard({
             <p className="text-sm font-medium text-gray-500">{provider}</p>
           </div>
         </div>
+        {frequency && (
+          <span className="ml-auto rounded-full bg-violet-50 px-2.5 py-0.5 text-xs font-semibold capitalize text-violet-600 border border-violet-200">
+            {frequency}
+          </span>
+        )}
       </div>
 
       <div className="flex items-center justify-between border-t border-gray-100 pt-4">

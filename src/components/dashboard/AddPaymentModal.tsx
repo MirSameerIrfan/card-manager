@@ -10,11 +10,10 @@ import {
   DollarSign,
   Building2,
 } from "lucide-react";
-import { addPaymentFn } from "./dashboard.functions";
-import { updatePaymentFn } from "./dashboard.functions";
+import { addPaymentFn, updatePaymentFn } from "./dashboard.functions";
 
 type PaymentType = "credit_card" | "loan" | "recurring_bill";
-type RecurringFrequency = "monthly" | "biweekly";
+export type RecurringFrequency = "monthly" | "biweekly";
 
 export interface EditablePayment {
   id: string;
@@ -24,6 +23,7 @@ export interface EditablePayment {
   amount: number;
   date: string;
   minimumPayment?: number;
+  remainingBalance?: number;
   category?: string;
   autoPay?: boolean;
   status?: string;
@@ -54,6 +54,7 @@ export function AddPaymentModal({
 
   // Specifics
   const [minimumPayment, setMinimumPayment] = useState("");
+  const [remainingBalance, setRemainingBalance] = useState("");
   const [category, setCategory] = useState("");
   const [autoPay, setAutoPay] = useState(false);
 
@@ -67,12 +68,14 @@ export function AddPaymentModal({
       setName(paymentToEdit.name);
       setProvider(paymentToEdit.provider);
       setAmount(paymentToEdit.amount.toString());
-      setDate(paymentToEdit.date.slice(0, 10));
+      // Extract YYYY-MM-DD from ISO string to correctly pre-fill the date input
+      setDate(new Date(paymentToEdit.date).toISOString().slice(0, 10));
       setMinimumPayment(
         paymentToEdit.minimumPayment?.toString() || "",
       );
+      setRemainingBalance(paymentToEdit.remainingBalance?.toString() || "");
       setCategory(paymentToEdit.category || "");
-      setAutoPay(paymentToEdit.autoPay || false);
+      setAutoPay(paymentToEdit.autoPay ?? false);
       setFrequency(paymentToEdit.frequency || "monthly");
       return;
     }
@@ -83,6 +86,7 @@ export function AddPaymentModal({
     setAmount("");
     setDate("");
     setMinimumPayment("");
+    setRemainingBalance("");
     setCategory("");
     setAutoPay(false);
     setFrequency("monthly");
@@ -95,13 +99,18 @@ export function AddPaymentModal({
     setIsLoading(true);
 
     try {
+      // Parse YYYY-MM-DD as local noon to avoid UTC midnight timezone shifting the day
+      const [y, m, d] = date.split('-').map(Number);
+      const localNoon = new Date(y, m - 1, d, 12, 0, 0);
+
       const baseData = {
         type,
         name,
         provider,
         amount: parseFloat(amount),
-        date: new Date(date).toISOString(),
+        date: localNoon.toISOString(),
         minimumPayment: minimumPayment ? parseFloat(minimumPayment) : undefined,
+        remainingBalance: remainingBalance ? parseFloat(remainingBalance) : undefined,
         status: paymentToEdit?.status || "Due Soon",
         category: category || undefined,
         autoPay,
@@ -125,19 +134,20 @@ export function AddPaymentModal({
         );
       }
 
-      // Refresh data
-      await router.invalidate();
-      onClose();
-
-      // Reset form (optional, since it unmounts mostly)
+      // Reset form before closing so state is clean if modal re-opens immediately
       setName("");
       setProvider("");
       setAmount("");
       setDate("");
       setMinimumPayment("");
+      setRemainingBalance("");
       setCategory("");
       setAutoPay(false);
       setFrequency("monthly");
+
+      // Refresh data and close
+      await router.invalidate();
+      onClose();
     } catch (error: unknown) {
       console.error(error);
       const message =
@@ -165,14 +175,14 @@ export function AddPaymentModal({
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-              <h2 className="text-2xl font-black text-gray-900">
-                {isEditing ? "Edit Payment" : "Add Payment"}
-              </h2>
-              <p className="mt-1 text-sm text-gray-500">
-                {isEditing
-                  ? "Update your payment details."
-                  : "Track a new financial obligation."}
-              </p>
+            <h2 className="text-2xl font-black text-gray-900">
+              {isEditing ? "Edit Payment" : "Add Payment"}
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              {isEditing
+                ? "Update your payment details."
+                : "Track a new financial obligation."}
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -317,6 +327,25 @@ export function AddPaymentModal({
                     placeholder="0.00"
                     value={minimumPayment}
                     onChange={(e) => setMinimumPayment(e.target.value)}
+                    className="block w-full rounded-xl border-gray-200 bg-gray-50 pl-10 pr-4 py-2.5 text-gray-900 transition-colors focus:border-emerald-500 focus:bg-white focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+            )}
+
+            {type === "loan" && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700">
+                  Remaining Balance
+                </label>
+                <div className="relative mt-1">
+                  <DollarSign className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={remainingBalance}
+                    onChange={(e) => setRemainingBalance(e.target.value)}
                     className="block w-full rounded-xl border-gray-200 bg-gray-50 pl-10 pr-4 py-2.5 text-gray-900 transition-colors focus:border-emerald-500 focus:bg-white focus:ring-emerald-500"
                   />
                 </div>

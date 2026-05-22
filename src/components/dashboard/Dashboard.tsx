@@ -8,7 +8,11 @@ import {
 } from "lucide-react";
 import { getRouteApi, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { AddPaymentModal, type EditablePayment } from "./AddPaymentModal";
+import {
+  AddPaymentModal,
+  type EditablePayment,
+  type RecurringFrequency,
+} from "./AddPaymentModal";
 import { deletePaymentFn } from "@/components/dashboard/dashboard.functions";
 import { PaymentCalendarModal } from "./PaymentCalendarModal";
 import { DashboardHeader } from "./DashboardHeader";
@@ -20,6 +24,7 @@ import {
   formatCurrency,
   formatDate,
   getFirstName,
+  getPaymentStatus,
   getTimeOfDayGreeting,
 } from "./dashboard-utils";
 import type { StatCardProps } from "./StatCard";
@@ -169,7 +174,7 @@ export function Dashboard() {
                   name: card.name,
                   provider: card.provider,
                   amount: card.amountDue,
-                  date: card.dueDate,
+                  date: new Date(card.dueDate).toISOString(),
                   minimumPayment: card.minimumPayment,
                   status: card.status,
                 });
@@ -194,7 +199,7 @@ export function Dashboard() {
               provider={loan.provider}
               amount={formatCurrency(loan.monthlyPayment)}
               date={formatDate(loan.nextPayment)}
-              status={loan.autoPay ? "Auto-Pay" : "Due Soon"}
+              status={getPaymentStatus(loan.nextPayment, loan.autoPay)}
               icon={Landmark}
               onEdit={() => {
                 setPaymentToEdit({
@@ -203,7 +208,8 @@ export function Dashboard() {
                   name: loan.name,
                   provider: loan.provider,
                   amount: loan.monthlyPayment,
-                  date: loan.nextPayment,
+                  date: new Date(loan.nextPayment).toISOString(),
+                  remainingBalance: loan.remainingBalance,
                   autoPay: loan.autoPay,
                 });
                 setIsAddPaymentOpen(true);
@@ -227,8 +233,9 @@ export function Dashboard() {
               provider={bill.provider}
               amount={formatCurrency(bill.amount)}
               date={formatDate(bill.dueDate)}
-              status={bill.autoPay ? "Auto-Pay" : "Due Soon"}
+              status={getPaymentStatus(bill.dueDate, bill.autoPay)}
               icon={Receipt}
+              frequency={bill.frequency}
               onEdit={() => {
                 setPaymentToEdit({
                   id: bill.id,
@@ -236,10 +243,10 @@ export function Dashboard() {
                   name: bill.name,
                   provider: bill.provider,
                   amount: bill.amount,
-                  date: bill.dueDate,
+                  date: new Date(bill.dueDate).toISOString(),
                   category: bill.category,
                   autoPay: bill.autoPay,
-                  frequency: bill.frequency,
+                  frequency: bill.frequency as RecurringFrequency,
                 });
                 setIsAddPaymentOpen(true);
               }}
