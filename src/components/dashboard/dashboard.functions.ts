@@ -36,12 +36,16 @@ export const getDashboardDataFn = createServerFn({ method: "GET" }).handler(
     ]);
 
     // 3. Calculate Stats
-    // Total Due This Month (sum of all upcoming payments in the current month ??
-    // For simplicity, let's sum everything returned since our seed data is mostly Jan 2026
-    // In a real app, you'd filter by date range.
+    // Extract UTC date parts to avoid timezone offset shifting the day.
+    // e.g. "2026-05-12T00:00:00.000Z" must be treated as May 12, not May 11 in ET.
+    const localNow = new Date();
+    const today = new Date(localNow.getFullYear(), localNow.getMonth(), localNow.getDate());
 
-    let totalDue = 0;
-    let autoPayCount = 0;
+    const normalizeToDay = (date: Date | string) => {
+      const iso = new Date(date).toISOString();
+      const [year, month, day] = iso.split('T')[0].split('-').map(Number);
+      return new Date(year, month - 1, day);
+    };
 
     const allPayments = [
       ...creditCards.map((c) => ({
@@ -61,24 +65,21 @@ export const getDashboardDataFn = createServerFn({ method: "GET" }).handler(
       })),
     ];
 
-    allPayments.forEach((p) => {
-      totalDue += p.amount;
-      // Rough auto-pay check based on string or boolean source
-      if (p.status.toLowerCase().includes("auto-pay") || p.status === "Paid") {
-        // 'Paid' implies it might be done, but for the 'Auto-Pay Active' stat in the screenshot...
-        // The screenshot shows '6'.
-        // Our seed:
-        // Loans: 2 auto-pay
-        // Bills: 5 auto-pay
-        // Total 7?
-        // Let's just count explicitly auto-pay flags from DB
-      }
-    });
+    // Only count payments that are due today or in the future
+    const upcomingPayments = allPayments.filter(
+      (p) => normalizeToDay(p.date) >= today,
+    );
 
-    // Re-calculate Auto-Pay strictly from DB flags
-    const loanAutoPay = loans.filter((l) => l.autoPay).length;
-    const billAutoPay = recurringBills.filter((b) => b.autoPay).length;
-    autoPayCount = loanAutoPay + billAutoPay;
+    const totalDue = upcomingPayments.reduce((sum, p) => sum + p.amount, 0);
+
+    // Re-calculate Auto-Pay strictly from DB flags (only upcoming)
+    const loanAutoPay = loans.filter(
+      (l) => l.autoPay && normalizeToDay(l.nextPayment) >= today,
+    ).length;
+    const billAutoPay = recurringBills.filter(
+      (b) => b.autoPay && normalizeToDay(b.dueDate) >= today,
+    ).length;
+    const autoPayCount = loanAutoPay + billAutoPay;
 
     return {
       user: {
@@ -87,7 +88,7 @@ export const getDashboardDataFn = createServerFn({ method: "GET" }).handler(
       },
       stats: {
         totalDue,
-        upcomingPaymentsCount: allPayments.length,
+        upcomingPaymentsCount: upcomingPayments.length,
         autoPayCount,
       },
       creditCards,
@@ -108,6 +109,7 @@ const AddPaymentSchema = z.object({
   status: z.string().optional(),
   category: z.string().optional(),
   autoPay: z.boolean().optional(),
+  frequency: z.enum(["monthly", "biweekly"]).optional(),
 });
 
 export const addPaymentFn = createServerFn({ method: "POST" })
@@ -163,6 +165,7 @@ export const addPaymentFn = createServerFn({ method: "POST" })
             dueDate: date,
             category: data.category || "Utilities",
             autoPay: data.autoPay || false,
+            frequency: data.frequency || "monthly",
             updatedAt: new Date(),
           },
         });
@@ -171,6 +174,90 @@ export const addPaymentFn = createServerFn({ method: "POST" })
     } catch (e) {
       console.error("Failed to add payment", e);
       return { success: false, error: "Failed to add payment" };
+    }
+  });
+
+const UpdatePaymentSchema = AddPaymentSchema.extend({
+  id: z.string(),
+  remainingBalance: z.number().optional(),
+});
+
+export const updatePaymentFn = createServerFn({ method: "POST" })
+  .inputValidator(UpdatePaymentSchema)
+  .handler(async ({ data }) => {
+    const req = getRequest();
+
+    const session = await auth.api.getSession({
+      headers: Object.fromEntries(req.headers.entries()),
+    });
+
+    if (!session?.user || session.user.emailVerified !== true) {
+      throw new Error("Unauthorized");
+    }
+
+    const userId = session.user.id;
+    const date = new Date(data.date);
+
+    try {
+      if (data.type === "credit_card") {
+        // Verify ownership before updating — Prisma update() only accepts unique fields in where
+        const existing = await prisma.credit_card.findUnique({ where: { id: data.id } });
+        if (!existing || existing.userId !== userId) {
+          return { success: false, error: "Payment not found" };
+        }
+        await prisma.credit_card.update({
+          where: { id: data.id },
+          data: {
+            name: data.name,
+            provider: data.provider,
+            amountDue: data.amount,
+            dueDate: date,
+            minimumPayment: data.minimumPayment ?? 0,
+            status: data.status || "Due Soon",
+            updatedAt: new Date(),
+          },
+        });
+      } else if (data.type === "loan") {
+        const existing = await prisma.loan.findUnique({ where: { id: data.id } });
+        if (!existing || existing.userId !== userId) {
+          return { success: false, error: "Payment not found" };
+        }
+        await prisma.loan.update({
+          where: { id: data.id },
+          data: {
+            name: data.name,
+            provider: data.provider,
+            monthlyPayment: data.amount,
+            nextPayment: date,
+            remainingBalance: data.remainingBalance ?? existing.remainingBalance,
+            autoPay: data.autoPay ?? false,
+            updatedAt: new Date(),
+          },
+        });
+      } else if (data.type === "recurring_bill") {
+        const existing = await prisma.recurring_bill.findUnique({ where: { id: data.id } });
+        if (!existing || existing.userId !== userId) {
+          return { success: false, error: "Payment not found" };
+        }
+        await prisma.recurring_bill.update({
+          where: { id: data.id },
+          data: {
+            name: data.name,
+            provider: data.provider,
+            amount: data.amount,
+            dueDate: date,
+            category: data.category || "Utilities",
+            autoPay: data.autoPay ?? false,
+            frequency: data.frequency || "monthly",
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      return { success: true };
+    } catch (e) {
+      console.error("Failed to update payment", e);
+      return { success: false, error: "Failed to update payment" };
     }
   });
 

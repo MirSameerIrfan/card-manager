@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "@tanstack/react-router";
 import {
   CreditCard,
@@ -10,18 +10,40 @@ import {
   DollarSign,
   Building2,
 } from "lucide-react";
-import { addPaymentFn } from "./dashboard.functions";
+import { addPaymentFn, updatePaymentFn } from "./dashboard.functions";
 
 type PaymentType = "credit_card" | "loan" | "recurring_bill";
+export type RecurringFrequency = "monthly" | "biweekly";
+
+export interface EditablePayment {
+  id: string;
+  type: PaymentType;
+  name: string;
+  provider: string;
+  amount: number;
+  date: string;
+  minimumPayment?: number;
+  remainingBalance?: number;
+  category?: string;
+  autoPay?: boolean;
+  status?: string;
+  frequency?: RecurringFrequency;
+}
 
 interface AddPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
+  paymentToEdit?: EditablePayment | null;
 }
 
-export function AddPaymentModal({ isOpen, onClose }: AddPaymentModalProps) {
+export function AddPaymentModal({
+  isOpen,
+  onClose,
+  paymentToEdit = null,
+}: AddPaymentModalProps) {
   const router = useRouter();
   const [type, setType] = useState<PaymentType>("credit_card");
+  const [frequency, setFrequency] = useState<RecurringFrequency>("monthly");
   const [isLoading, setIsLoading] = useState(false);
 
   // Generic form state - in a real app use React Hook Form or TanStack Form
@@ -32,8 +54,43 @@ export function AddPaymentModal({ isOpen, onClose }: AddPaymentModalProps) {
 
   // Specifics
   const [minimumPayment, setMinimumPayment] = useState("");
+  const [remainingBalance, setRemainingBalance] = useState("");
   const [category, setCategory] = useState("");
   const [autoPay, setAutoPay] = useState(false);
+
+  const isEditing = paymentToEdit !== null;
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (paymentToEdit) {
+      setType(paymentToEdit.type);
+      setName(paymentToEdit.name);
+      setProvider(paymentToEdit.provider);
+      setAmount(paymentToEdit.amount.toString());
+      // Extract YYYY-MM-DD from ISO string to correctly pre-fill the date input
+      setDate(new Date(paymentToEdit.date).toISOString().slice(0, 10));
+      setMinimumPayment(
+        paymentToEdit.minimumPayment?.toString() || "",
+      );
+      setRemainingBalance(paymentToEdit.remainingBalance?.toString() || "");
+      setCategory(paymentToEdit.category || "");
+      setAutoPay(paymentToEdit.autoPay ?? false);
+      setFrequency(paymentToEdit.frequency || "monthly");
+      return;
+    }
+
+    setType("credit_card");
+    setName("");
+    setProvider("");
+    setAmount("");
+    setDate("");
+    setMinimumPayment("");
+    setRemainingBalance("");
+    setCategory("");
+    setAutoPay(false);
+    setFrequency("monthly");
+  }, [isOpen, paymentToEdit]);
 
   if (!isOpen) return null;
 
@@ -42,39 +99,63 @@ export function AddPaymentModal({ isOpen, onClose }: AddPaymentModalProps) {
     setIsLoading(true);
 
     try {
-      const res = await addPaymentFn({
-        data: {
-          type,
-          name,
-          provider,
-          amount: parseFloat(amount),
-          date: new Date(date).toISOString(),
-          minimumPayment: minimumPayment
-            ? parseFloat(minimumPayment)
-            : undefined,
-          status: "Due Soon", // Default
-          category: category || undefined,
-          autoPay,
-        },
-      });
+      // Parse YYYY-MM-DD as local noon to avoid UTC midnight timezone shifting the day
+      const [y, m, d] = date.split('-').map(Number);
+      const localNoon = new Date(y, m - 1, d, 12, 0, 0);
+
+      const baseData = {
+        type,
+        name,
+        provider,
+        amount: parseFloat(amount),
+        date: localNoon.toISOString(),
+        minimumPayment: minimumPayment ? parseFloat(minimumPayment) : undefined,
+        remainingBalance: remainingBalance ? parseFloat(remainingBalance) : undefined,
+        status: paymentToEdit?.status || "Due Soon",
+        category: category || undefined,
+        autoPay,
+        frequency: type === "recurring_bill" ? frequency : undefined,
+      };
+
+      const res = paymentToEdit
+        ? await updatePaymentFn({
+            data: {
+              id: paymentToEdit.id,
+              ...baseData,
+            },
+          })
+        : await addPaymentFn({
+            data: baseData,
+          });
 
       if (!res.success) {
-        throw new Error(res.error || "Failed to add payment");
+        throw new Error(
+          res.error || (isEditing ? "Failed to update payment" : "Failed to add payment"),
+        );
       }
 
-      // Refresh data
-      await router.invalidate();
-      onClose();
-
-      // Reset form (optional, since it unmounts mostly)
+      // Reset form before closing so state is clean if modal re-opens immediately
       setName("");
       setProvider("");
       setAmount("");
       setDate("");
+      setMinimumPayment("");
+      setRemainingBalance("");
+      setCategory("");
+      setAutoPay(false);
+      setFrequency("monthly");
+
+      // Refresh data and close
+      await router.invalidate();
+      onClose();
     } catch (error: unknown) {
       console.error(error);
       const message =
-        error instanceof Error ? error.message : "Failed to add payment";
+        error instanceof Error
+          ? error.message
+          : isEditing
+            ? "Failed to update payment"
+            : "Failed to add payment";
       alert(message);
     } finally {
       setIsLoading(false);
@@ -94,9 +175,13 @@ export function AddPaymentModal({ isOpen, onClose }: AddPaymentModalProps) {
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-black text-gray-900">Add Payment</h2>
+            <h2 className="text-2xl font-black text-gray-900">
+              {isEditing ? "Edit Payment" : "Add Payment"}
+            </h2>
             <p className="mt-1 text-sm text-gray-500">
-              Track a new financial obligation.
+              {isEditing
+                ? "Update your payment details."
+                : "Track a new financial obligation."}
             </p>
           </div>
           <button
@@ -113,11 +198,12 @@ export function AddPaymentModal({ isOpen, onClose }: AddPaymentModalProps) {
             <button
               type="button"
               onClick={() => setType("credit_card")}
+              disabled={isEditing}
               className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-sm font-semibold transition-all ${
                 type === "credit_card"
                   ? "border-emerald-500 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-500 ring-offset-2"
                   : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
-              }`}
+              } ${isEditing ? "cursor-not-allowed opacity-60" : ""}`}
             >
               <CreditCard className="h-6 w-6" />
               Card
@@ -125,11 +211,12 @@ export function AddPaymentModal({ isOpen, onClose }: AddPaymentModalProps) {
             <button
               type="button"
               onClick={() => setType("loan")}
+              disabled={isEditing}
               className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-sm font-semibold transition-all ${
                 type === "loan"
                   ? "border-emerald-500 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-500 ring-offset-2"
                   : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
-              }`}
+              } ${isEditing ? "cursor-not-allowed opacity-60" : ""}`}
             >
               <Landmark className="h-6 w-6" />
               Loan
@@ -137,11 +224,12 @@ export function AddPaymentModal({ isOpen, onClose }: AddPaymentModalProps) {
             <button
               type="button"
               onClick={() => setType("recurring_bill")}
+              disabled={isEditing}
               className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-sm font-semibold transition-all ${
                 type === "recurring_bill"
                   ? "border-emerald-500 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-500 ring-offset-2"
                   : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
-              }`}
+              } ${isEditing ? "cursor-not-allowed opacity-60" : ""}`}
             >
               <Receipt className="h-6 w-6" />
               Bill
@@ -245,18 +333,54 @@ export function AddPaymentModal({ isOpen, onClose }: AddPaymentModalProps) {
               </div>
             )}
 
-            {type === "recurring_bill" && (
+            {type === "loan" && (
               <div>
                 <label className="block text-sm font-semibold text-gray-700">
-                  Category
+                  Remaining Balance
                 </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Utilities"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="mt-1 block w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-900 transition-colors focus:border-emerald-500 focus:bg-white focus:ring-emerald-500"
-                />
+                <div className="relative mt-1">
+                  <DollarSign className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={remainingBalance}
+                    onChange={(e) => setRemainingBalance(e.target.value)}
+                    className="block w-full rounded-xl border-gray-200 bg-gray-50 pl-10 pr-4 py-2.5 text-gray-900 transition-colors focus:border-emerald-500 focus:bg-white focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+            )}
+
+            {type === "recurring_bill" && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Category
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Utilities"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="mt-1 block w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-900 transition-colors focus:border-emerald-500 focus:bg-white focus:ring-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Frequency
+                  </label>
+                  <select
+                    value={frequency}
+                    onChange={(e) =>
+                      setFrequency(e.target.value as RecurringFrequency)}
+                    className="mt-1 block w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-900 transition-colors focus:border-emerald-500 focus:bg-white focus:ring-emerald-500"
+                  >
+                    <option value="monthly">Monthly</option>
+                    <option value="biweekly">Biweekly</option>
+                  </select>
+                </div>
               </div>
             )}
 
@@ -284,7 +408,13 @@ export function AddPaymentModal({ isOpen, onClose }: AddPaymentModalProps) {
             disabled={isLoading}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-emerald-900/20 transition-all hover:translate-y-0.5 hover:bg-emerald-700 disabled:opacity-50"
           >
-            {isLoading ? "Adding..." : "Add Payment"}
+            {isLoading
+              ? isEditing
+                ? "Saving..."
+                : "Adding..."
+              : isEditing
+                ? "Save Changes"
+                : "Add Payment"}
             {!isLoading && <Check className="h-5 w-5" />}
           </button>
         </form>
