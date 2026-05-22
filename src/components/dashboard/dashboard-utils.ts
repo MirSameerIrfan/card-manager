@@ -4,12 +4,21 @@ export const formatCurrency = (amount: number) =>
     currency: 'USD',
   }).format(amount)
 
-export const formatDate = (date: Date | string) =>
-  new Date(date).toLocaleDateString('en-US', {
+/**
+ * Format a date stored as UTC midnight (e.g. "2026-05-12T00:00:00.000Z").
+ * We parse it as a local date-only string to avoid timezone shifting the day.
+ */
+export const formatDate = (date: Date | string) => {
+  // Extract the date portion in UTC to avoid timezone offset shifting the day
+  const iso = new Date(date).toISOString() // e.g. "2026-05-12T00:00:00.000Z"
+  const [year, month, day] = iso.split('T')[0].split('-').map(Number)
+  // Build a local date at noon to avoid any DST edge cases
+  return new Date(year, month - 1, day, 12).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   })
+}
 
 export const getTimeOfDayGreeting = () => {
   const hour = new Date().getHours()
@@ -27,13 +36,24 @@ export const getFirstName = (nameOrEmail?: string | null) => {
   return nameOrEmail.split(' ')[0] || 'there'
 }
 
+/**
+ * Normalize any date to local midnight (date-only, no time component).
+ * For dates stored as UTC midnight (from Postgres), we extract the UTC date
+ * parts to avoid the timezone offset shifting the day backward.
+ */
 const normalizeDate = (date: Date | string) => {
-  const parsed = new Date(date)
-  return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate())
+  const iso = new Date(date).toISOString()
+  const [year, month, day] = iso.split('T')[0].split('-').map(Number)
+  return new Date(year, month - 1, day)
 }
 
-const getWeekRangeMonday = (baseDate: Date = new Date()) => {
-  const start = normalizeDate(baseDate)
+/**
+ * Get the Monday-to-Sunday week range based on today's local date.
+ */
+const getWeekRangeMonday = () => {
+  const localToday = new Date()
+  const start = new Date(localToday.getFullYear(), localToday.getMonth(), localToday.getDate())
+
   const day = start.getDay()
   const diff = day === 0 ? -6 : 1 - day
   start.setDate(start.getDate() + diff)
@@ -45,12 +65,37 @@ const getWeekRangeMonday = (baseDate: Date = new Date()) => {
   return { start, end }
 }
 
+/**
+ * Count payments due within the current Monday–Sunday week that are also
+ * today or in the future.
+ */
 export const countDueThisWeekMonday = (items: Array<{ date: Date | string }>) => {
-  const today = normalizeDate(new Date())
+  const localToday = new Date()
+  const today = new Date(localToday.getFullYear(), localToday.getMonth(), localToday.getDate())
   const { start, end } = getWeekRangeMonday()
 
   return items.filter((item) => {
     const dueDate = normalizeDate(item.date)
     return dueDate >= today && dueDate >= start && dueDate <= end
   }).length
+}
+
+/**
+ * Derive the display status for a payment.
+ * - Overdue: due date is strictly before today (regardless of autoPay)
+ * - Auto-Pay: autoPay is on and due date is today or future
+ * - Due Soon: autoPay is off and due date is today or future
+ */
+export const getPaymentStatus = (
+  dueDate: Date | string,
+  autoPay: boolean,
+): 'Due Soon' | 'Overdue' | 'Auto-Pay' => {
+  const localToday = new Date()
+  const today = new Date(localToday.getFullYear(), localToday.getMonth(), localToday.getDate())
+  const due = normalizeDate(dueDate)
+
+  if (due < today) {
+    return 'Overdue'
+  }
+  return autoPay ? 'Auto-Pay' : 'Due Soon'
 }

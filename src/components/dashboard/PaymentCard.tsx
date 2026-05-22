@@ -74,13 +74,13 @@ export function PaymentCard({
           <div>
             <h3 className="font-bold text-gray-900 line-clamp-1">{name}</h3>
             <p className="text-sm font-medium text-gray-500">{provider}</p>
+            {frequency && (
+              <span className="mt-1 inline-flex rounded-full bg-violet-50 px-2 py-0.5 text-xs font-semibold capitalize text-violet-600 border border-violet-200">
+                {frequency}
+              </span>
+            )}
           </div>
         </div>
-        {frequency && (
-          <span className="ml-auto rounded-full bg-violet-50 px-2.5 py-0.5 text-xs font-semibold capitalize text-violet-600 border border-violet-200">
-            {frequency}
-          </span>
-        )}
       </div>
 
       <div className="flex items-center justify-between border-t border-gray-100 pt-4">
