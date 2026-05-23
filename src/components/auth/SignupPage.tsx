@@ -30,7 +30,7 @@ export function SignupPage() {
           name: value.name,
           email: value.email,
           password: value.password,
-          callbackURL: '/auth/login',
+          callbackURL: '/auth/verify-email',
         })
 
         if (result.error) {

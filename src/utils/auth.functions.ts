@@ -80,7 +80,7 @@ export const signUpUser = createServerFn({ method: "POST" })
           email: data.email,
           password: data.password,
           name: data.name,
-          callbackURL: "/auth/login",
+          callbackURL: "/auth/verify-email",
         },
       });
       return {
@@ -102,7 +102,7 @@ export const signInEmailFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => {
     const parsed = z
       .object({
-        email: z.email(),
+        email: z.string().email(),
         password: z.string().min(8),
       })
       .parse(data);
@@ -271,7 +271,7 @@ export const resendVerificationEmailFn = createServerFn({ method: "POST" })
         headers: getRequestHeaders(),
         body: {
           email: data.email.toLowerCase(),
-          callbackURL: "/dashboard",
+          callbackURL: "/auth/verify-email",
         },
       });
 
