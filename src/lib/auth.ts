@@ -4,7 +4,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 
 import { prisma } from "@/lib/prisma";
-import { sendVerificationEmail } from "@/lib/email";
+import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/email";
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -26,6 +26,14 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+    resetPasswordTokenExpiresIn: 60 * 60,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendPasswordResetEmail({
+        user: { email: user.email, name: user.name },
+        url,
+      });
+    },
   },
 
   emailVerification: {
@@ -45,6 +53,13 @@ export const auth = betterAuth({
       enabled: true,
       updateEmailWithoutVerification: false,
     },
+  },
+
+  // better-auth rate limits /api/auth/* in production (sign-in and the
+  // email-sending endpoints have stricter built-in rules). Counters live in the
+  // database because in-memory counters reset per serverless instance.
+  rateLimit: {
+    storage: "database",
   },
 
   // IMPORTANT: must be invoked + last
