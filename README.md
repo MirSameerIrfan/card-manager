@@ -68,6 +68,7 @@ Tired of late fees and missed payment deadlines? **MoneyScope** consolidates bil
 **🔐 Authentication**
 - Email/password sign up & sign in
 - Email verification flow
+- Forgot password / reset by email
 - Profile settings (name, email, password)
 - Session management with better-auth
 
@@ -98,6 +99,13 @@ cd moneyscope
 # Install dependencies
 npm install
 
+# Configure environment (see "Environment & Database" below)
+cp .env.example .env
+
+# Generate the Prisma client and create the database tables
+npx prisma generate
+npx prisma migrate deploy
+
 # Start development server
 npm run dev
 ```
@@ -118,8 +126,9 @@ Built with modern, cutting-edge technologies:
 | **Styling** | Tailwind CSS 4.0 |
 | **Build Tool** | Vite 7 |
 | **Server** | Nitro (TanStack Start) |
-| **Database** | PostgreSQL via Prisma ORM |
+| **Database** | Supabase PostgreSQL via Prisma ORM |
 | **Auth** | better-auth (email/password) |
+| **Monitoring** | Sentry |
 | **Calendar** | FullCalendar |
 | **Icons** | Lucide React |
 | **Testing** | Vitest |
@@ -138,6 +147,40 @@ Built with modern, cutting-edge technologies:
 | `npm run preview` | Preview production build |
 | `npm run lint` | Lint code with ESLint |
 
+### 🗄️ Environment & Database
+
+All configuration lives in `.env` (see [`.env.example`](.env.example) for every variable).
+
+**Database (Supabase Postgres via Prisma ORM)**
+
+The app uses the Prisma ORM against a Supabase-hosted Postgres database. In the Supabase dashboard, open your project, click **Connect**, and copy two connection strings:
+
+| Variable | Supabase connection | Used for |
+|----------|--------------------|----------|
+| `DATABASE_URL` | Transaction pooler (port `6543`) | The running app |
+| `DIRECT_URL` | Session pooler (port `5432`) | `prisma migrate` |
+
+Then run `npx prisma migrate deploy` to create the tables. The migrations enable row level security on every table, so Supabase's public Data API cannot read them; the app connects as the table owner and is unaffected.
+
+**Connection pooling**
+
+- The server keeps a single `pg` pool per instance (`src/lib/prisma.ts`), reused across requests and across dev hot reloads.
+- Limits are set with `DATABASE_POOL_MAX` (default `5`), `DATABASE_POOL_IDLE_TIMEOUT_MS` (default `10000`) and `DATABASE_POOL_CONNECTION_TIMEOUT_MS` (default `10000`, long enough for a cold serverless start).
+- On serverless hosts every instance has its own pool, so keep `DATABASE_POOL_MAX` small and use the Supabase pooler URL for `DATABASE_URL`.
+- `GET /api/health` runs a test query and reports pool usage (`max`, `total`, `idle`, `waiting`).
+- The pool is closed on `SIGTERM`/`SIGINT` when running `npm run start`.
+
+**Auth**
+
+- `BETTER_AUTH_URL` and `BETTER_AUTH_SECRET` are required in production.
+- Without `RESEND_API_KEY`, email verification and password reset links are printed to the server console instead of being emailed, which is how you complete those flows locally.
+- Password reset: `/auth/forgot-password` emails a link that is valid for 1 hour and can be used once; `/auth/reset-password` sets the new password and signs the user out of all sessions. The response is the same whether or not the email is registered.
+- Auth endpoints are rate limited in production (for example 3 reset requests per minute per IP). Counters are stored in the `rateLimit` table.
+
+**Error monitoring (Sentry)**
+
+Set `SENTRY_DSN` (server) and `VITE_SENTRY_DSN` (browser) to enable error reporting, and `SENTRY_AUTH_TOKEN` at build time to upload source maps. All three are optional: with no DSN, Sentry is disabled and the app runs normally. Default PII collection (IP addresses, cookies, request headers) is turned off.
+
 ### 🏗️ Project Structure
 
 ```
@@ -145,9 +188,9 @@ moneyscope/
 ├── src/
 │   ├── components/
 │   │   ├── about/           # About page (mission, values, timeline, team)
-│   │   ├── auth/            # Auth layout, login, signup, field info
+│   │   ├── auth/            # Auth layout, login, signup, password reset
 │   │   ├── blog/            # Blog page (posts, featured, newsletter)
-│   │   ├── dashboard/       # Dashboard, stats, payment cards, calendar
+│   │   ├── dashboard/       # Dashboard, stats, payment cards, calendar, server functions
 │   │   ├── landing/         # Hero, Features, Testimonials, CTA, Footer
 │   │   ├── settings/        # Profile settings page
 │   │   ├── Header.tsx       # Glassmorphism header with scroll effect
@@ -158,15 +201,17 @@ moneyscope/
 │   │   ├── about.tsx        # About page (/about)
 │   │   ├── blog.tsx         # Blog page (/blog)
 │   │   ├── dashboard.tsx    # Dashboard (/dashboard, authenticated)
-│   │   ├── auth/            # Auth routes (/auth/login, /auth/signup)
+│   │   ├── auth/            # Auth routes (login, signup, verify-email, forgot/reset password)
 │   │   ├── settings/        # Settings routes (/settings/profile)
-│   │   └── api/             # API routes (auth handler)
+│   │   └── api/             # API routes (auth handler, health check)
+│   ├── lib/
+│   │   ├── auth.ts          # better-auth server config
+│   │   ├── auth-client.ts   # better-auth browser client
+│   │   ├── prisma.ts        # Prisma client and pooled pg connection
+│   │   ├── db-pool.ts       # Pool settings read from the environment
+│   │   └── email.ts         # Verification and password reset emails
 │   ├── utils/
-│   │   ├── auth-context.tsx # React context for auth state
-│   │   ├── auth.ts          # better-auth client config
-│   │   ├── auth.server.ts   # Server-side auth functions
-│   │   ├── auth.functions.ts# Client-callable server functions
-│   │   ├── dashboard.functions.ts # Dashboard data server functions
+│   │   ├── auth.functions.ts# Auth server functions
 │   │   ├── route-guards.ts  # Auth redirect guards
 │   │   └── useScrollReveal.ts # IntersectionObserver scroll animation hook
 │   └── styles.css           # Global styles, keyframes, animations, dark mode vars
@@ -231,6 +276,7 @@ export const getPayments = createServerFn({ method: 'GET' })
 - [x] 📅 Payment calendar with daily totals
 - [x] ➕ Add/delete payments (credit cards, loans, bills)
 - [x] 👤 Profile settings (name, email, password)
+- [x] 🔑 Forgot password flow
 - [x] 📝 About page and Blog
 - [x] 🎨 Scroll animations and glassmorphism effects
 - [ ] 📱 Mobile app (React Native)

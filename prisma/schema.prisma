@@ -71,6 +71,16 @@ model Verification {
   @@map("verification")
 }
 
+model RateLimit {
+  id          String @id
+  key         String
+  count       Int
+  lastRequest BigInt
+
+  @@index([key])
+  @@map("rateLimit")
+}
+
 model credit_card {
   id             String   @id @default(uuid())
   userId         String

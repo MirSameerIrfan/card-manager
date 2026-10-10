@@ -17,9 +17,9 @@ export const getRouter = () => {
     Sentry.init({
       dsn: import.meta.env.VITE_SENTRY_DSN,
 
-      // Adds request headers and IP for users, for more info visit:
+      // Keep request headers and user IPs out of Sentry, for more info visit:
       // https://docs.sentry.io/platforms/javascript/guides/tanstackstart-react/configuration/options/#sendDefaultPii
-      sendDefaultPii: true,
+      sendDefaultPii: false,
     });
   }
 
