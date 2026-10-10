@@ -3,7 +3,7 @@ import type { PoolConfig } from "pg";
 export const POOL_DEFAULTS = {
   max: 5,
   idleTimeoutMillis: 10_000,
-  connectionTimeoutMillis: 5_000,
+  connectionTimeoutMillis: 10_000,
 };
 
 function readPositiveInt(value: string | undefined, fallback: number) {

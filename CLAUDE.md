@@ -36,7 +36,7 @@ Environment variables live in `.env` (gitignored); `.env.example` documents all 
 | --- | --- |
 | `DATABASE_URL` | Runtime Postgres connection. On Supabase this is the transaction pooler (port 6543). Required. |
 | `DIRECT_URL` | Connection used by `prisma migrate` (`prisma.config.ts` prefers it over `DATABASE_URL`). On Supabase this is the session pooler (port 5432). |
-| `DATABASE_POOL_MAX`, `DATABASE_POOL_IDLE_TIMEOUT_MS`, `DATABASE_POOL_CONNECTION_TIMEOUT_MS` | Per-instance pg pool limits (defaults 5 / 10000 / 5000). |
+| `DATABASE_POOL_MAX`, `DATABASE_POOL_IDLE_TIMEOUT_MS`, `DATABASE_POOL_CONNECTION_TIMEOUT_MS` | Per-instance pg pool limits (defaults 5 / 10000 / 10000). |
 | `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET` | App base URL and signing secret. Both required in production; the URL defaults to `http://localhost:3000`. |
 | `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | Auth emails. Without the key, verification and password reset links are logged to the server console instead — this is how you complete those flows locally. |
 | `SENTRY_DSN`, `VITE_SENTRY_DSN`, `SENTRY_AUTH_TOKEN` | Server, client, and build-time Sentry. Optional; Sentry is a no-op without a DSN. |

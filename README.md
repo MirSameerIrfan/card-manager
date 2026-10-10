@@ -165,7 +165,7 @@ Then run `npx prisma migrate deploy` to create the tables. The migrations enable
 **Connection pooling**
 
 - The server keeps a single `pg` pool per instance (`src/lib/prisma.ts`), reused across requests and across dev hot reloads.
-- Limits are set with `DATABASE_POOL_MAX` (default `5`), `DATABASE_POOL_IDLE_TIMEOUT_MS` (default `10000`) and `DATABASE_POOL_CONNECTION_TIMEOUT_MS` (default `5000`).
+- Limits are set with `DATABASE_POOL_MAX` (default `5`), `DATABASE_POOL_IDLE_TIMEOUT_MS` (default `10000`) and `DATABASE_POOL_CONNECTION_TIMEOUT_MS` (default `10000`, long enough for a cold serverless start).
 - On serverless hosts every instance has its own pool, so keep `DATABASE_POOL_MAX` small and use the Supabase pooler URL for `DATABASE_URL`.
 - `GET /api/health` runs a test query and reports pool usage (`max`, `total`, `idle`, `waiting`).
 - The pool is closed on `SIGTERM`/`SIGINT` when running `npm run start`.
