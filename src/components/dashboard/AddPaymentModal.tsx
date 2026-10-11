@@ -11,6 +11,7 @@ import {
   Building2,
 } from "lucide-react";
 import { addPaymentFn, updatePaymentFn } from "./dashboard.functions";
+import { toDateKey } from "./dashboard-utils";
 
 type PaymentType = "credit_card" | "loan" | "recurring_bill";
 export type RecurringFrequency = "monthly" | "biweekly";
@@ -45,6 +46,7 @@ export function AddPaymentModal({
   const [type, setType] = useState<PaymentType>("credit_card");
   const [frequency, setFrequency] = useState<RecurringFrequency>("monthly");
   const [isLoading, setIsLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Generic form state - in a real app use React Hook Form or TanStack Form
   const [name, setName] = useState("");
@@ -63,13 +65,15 @@ export function AddPaymentModal({
   useEffect(() => {
     if (!isOpen) return;
 
+    setSubmitError(null);
+
     if (paymentToEdit) {
       setType(paymentToEdit.type);
       setName(paymentToEdit.name);
       setProvider(paymentToEdit.provider);
       setAmount(paymentToEdit.amount.toString());
       // Extract YYYY-MM-DD from ISO string to correctly pre-fill the date input
-      setDate(new Date(paymentToEdit.date).toISOString().slice(0, 10));
+      setDate(toDateKey(paymentToEdit.date));
       setMinimumPayment(
         paymentToEdit.minimumPayment?.toString() || "",
       );
@@ -92,23 +96,33 @@ export function AddPaymentModal({
     setFrequency("monthly");
   }, [isOpen, paymentToEdit]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setSubmitError(null);
+    const fallbackError = isEditing
+      ? "Failed to update payment"
+      : "Failed to add payment";
 
     try {
-      // Parse YYYY-MM-DD as local noon to avoid UTC midnight timezone shifting the day
-      const [y, m, d] = date.split('-').map(Number);
-      const localNoon = new Date(y, m - 1, d, 12, 0, 0);
-
       const baseData = {
         type,
         name,
         provider,
         amount: parseFloat(amount),
-        date: localNoon.toISOString(),
+        // Sent as YYYY-MM-DD; the server stores it as UTC midnight
+        date,
         minimumPayment: minimumPayment ? parseFloat(minimumPayment) : undefined,
         remainingBalance: remainingBalance ? parseFloat(remainingBalance) : undefined,
         status: paymentToEdit?.status || "Due Soon",
@@ -129,9 +143,8 @@ export function AddPaymentModal({
           });
 
       if (!res.success) {
-        throw new Error(
-          res.error || (isEditing ? "Failed to update payment" : "Failed to add payment"),
-        );
+        setSubmitError(res.error || fallbackError);
+        return;
       }
 
       // Reset form before closing so state is clean if modal re-opens immediately
@@ -150,13 +163,7 @@ export function AddPaymentModal({
       onClose();
     } catch (error: unknown) {
       console.error(error);
-      const message =
-        error instanceof Error
-          ? error.message
-          : isEditing
-            ? "Failed to update payment"
-            : "Failed to add payment";
-      alert(message);
+      setSubmitError(`${fallbackError}. Please check the details and try again.`);
     } finally {
       setIsLoading(false);
     }
@@ -287,6 +294,7 @@ export function AddPaymentModal({
                   <input
                     required
                     type="number"
+                    min="0"
                     step="0.01"
                     placeholder="0.00"
                     value={amount}
@@ -323,6 +331,7 @@ export function AddPaymentModal({
                   <DollarSign className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
                   <input
                     type="number"
+                    min="0"
                     step="0.01"
                     placeholder="0.00"
                     value={minimumPayment}
@@ -342,6 +351,7 @@ export function AddPaymentModal({
                   <DollarSign className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
                   <input
                     type="number"
+                    min="0"
                     step="0.01"
                     placeholder="0.00"
                     value={remainingBalance}
@@ -402,6 +412,15 @@ export function AddPaymentModal({
               </div>
             )}
           </div>
+
+          {submitError ? (
+            <div
+              role="alert"
+              className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            >
+              {submitError}
+            </div>
+          ) : null}
 
           <button
             type="submit"

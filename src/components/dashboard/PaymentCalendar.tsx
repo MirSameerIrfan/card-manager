@@ -2,6 +2,7 @@ import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import type { EventContentArg, EventInput } from '@fullcalendar/core'
 import { useMemo } from 'react'
+import { toDateKey } from './dashboard-utils'
 
 type PaymentCalendarItem = {
   date: Date | string
@@ -32,13 +33,6 @@ const formatCurrency = (amount: number) =>
     maximumFractionDigits: 0,
   }).format(amount)
 
-const toDateKey = (date: Date) => {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
 const renderEventContent = (eventInfo: EventContentArg) => {
   const { total, count, types } = eventInfo.event.extendedProps as DayAggregate
   const parts = [
@@ -59,14 +53,20 @@ const renderEventContent = (eventInfo: EventContentArg) => {
 
 export function PaymentCalendar({ payments, className }: PaymentCalendarProps) {
   const events = useMemo<EventInput[]>(() => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    // Due dates are UTC midnight, so compare calendar days rather than instants.
+    const now = new Date()
+    const todayKey = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      String(now.getDate()).padStart(2, '0'),
+    ].join('-')
 
     const aggregates = payments.reduce<Record<string, DayAggregate>>((acc, item) => {
       const date = new Date(item.date)
-      if (Number.isNaN(date.getTime()) || date < today) return acc
+      if (Number.isNaN(date.getTime())) return acc
 
       const key = toDateKey(date)
+      if (key < todayKey) return acc
       if (!acc[key]) {
         acc[key] = {
           dateKey: key,

@@ -17,7 +17,7 @@ import { deletePaymentFn } from "@/components/dashboard/dashboard.functions";
 import { PaymentCalendarModal } from "./PaymentCalendarModal";
 import { DashboardHeader } from "./DashboardHeader";
 import { StatsGrid } from "./StatsGrid";
-import { PaymentCard, type PaymentStatus } from "./PaymentCard";
+import { PaymentCard } from "./PaymentCard";
 import { PaymentsSection } from "./PaymentsSection";
 import {
   countDueThisWeekMonday,
@@ -79,7 +79,7 @@ export function Dashboard() {
 
   const statsItems: StatCardProps[] = [
     {
-      label: "Total Due This Month",
+      label: "Total Upcoming",
       value: formatCurrency(data.stats.totalDue),
       icon: DollarSign,
       tone: "emerald",
@@ -165,7 +165,7 @@ export function Dashboard() {
               provider={card.provider}
               amount={formatCurrency(card.amountDue)}
               date={formatDate(card.dueDate)}
-              status={card.status as PaymentStatus}
+              status={getPaymentStatus(card.dueDate, false)}
               icon={CreditCard}
               onEdit={() => {
                 setPaymentToEdit({
