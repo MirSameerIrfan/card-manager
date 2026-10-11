@@ -3,6 +3,8 @@ import {
   formatDate,
   countDueThisWeekMonday,
   getPaymentStatus,
+  parseDueDate,
+  toDateKey,
 } from './dashboard-utils'
 
 // ---------------------------------------------------------------------------
@@ -99,36 +101,31 @@ describe('countDueThisWeekMonday', () => {
 })
 
 // ---------------------------------------------------------------------------
-// Date round-trip: the fix for Bug 2 — parse YYYY-MM-DD as local noon
-// This simulates what AddPaymentModal now does on submit.
+// parseDueDate / toDateKey — due dates are stored as UTC midnight
 // ---------------------------------------------------------------------------
-describe('Date localNoon round-trip (Bug 2 fix)', () => {
-  it('parses YYYY-MM-DD as local noon without day drift', () => {
-    const dateStr = '2026-05-12'
-    const [y, m, d] = dateStr.split('-').map(Number)
-    const localNoon = new Date(y, m - 1, d, 12, 0, 0)
-
-    // The ISO string will vary by system timezone but the UTC date-only portion
-    // should match when we extract it the same way the server/formatDate does
-    const isoBack = localNoon.toISOString()
-    const [year, month, day] = isoBack.split('T')[0].split('-').map(Number)
-
-    // In UTC+14 (max offset), noon local = midnight next day UTC, so UTC date is May 13
-    // In UTC-12 (min offset), noon local = midnight that day UTC, so UTC date is May 12 or 11
-    // The correct fix anchors to local date — check local interpretation
-    const localDate = new Date(year, month - 1, day, 12)
-    // The local date interpretation of the round-tripped value should be within 1 day
-    const diff = Math.abs(localDate.getDate() - d)
-    expect(diff).toBeLessThanOrEqual(1)
+describe('parseDueDate', () => {
+  it('parses a date input value as UTC midnight', () => {
+    expect(parseDueDate('2026-05-12')?.toISOString()).toBe('2026-05-12T00:00:00.000Z')
   })
 
-  it('old approach (new Date(YYYY-MM-DD)) shifts day in negative UTC offsets', () => {
-    // new Date("2026-05-12") = 2026-05-12T00:00:00.000Z
-    // In UTC-5 (EST), this renders as May 11 locally
-    const utcDate = new Date('2026-05-12')
-    // The UTC ISO string is correct
-    expect(utcDate.toISOString().startsWith('2026-05-12')).toBe(true)
-    // But local date may differ — we just document this behavior, not assert timezone
-    // The localNoon approach always stores a noon UTC timestamp which rounds to the right day
+  it('round-trips through toDateKey and formatDate without shifting the day', () => {
+    const stored = parseDueDate('2026-01-31')
+    expect(stored).not.toBeNull()
+    expect(toDateKey(stored!)).toBe('2026-01-31')
+    expect(formatDate(stored!)).toBe('Jan 31, 2026')
+  })
+
+  it('rejects values that are not a real calendar day', () => {
+    expect(parseDueDate('')).toBeNull()
+    expect(parseDueDate('2026-02-30')).toBeNull()
+    expect(parseDueDate('2026-05-12T12:00:00.000Z')).toBeNull()
+    expect(parseDueDate('12/05/2026')).toBeNull()
+  })
+})
+
+describe('toDateKey', () => {
+  it('reads the calendar day from the UTC parts of a stored date', () => {
+    expect(toDateKey('2026-05-12T00:00:00.000Z')).toBe('2026-05-12')
+    expect(toDateKey(new Date('2026-12-31T00:00:00.000Z'))).toBe('2026-12-31')
   })
 })

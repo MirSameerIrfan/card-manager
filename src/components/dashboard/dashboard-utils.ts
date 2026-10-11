@@ -20,6 +20,23 @@ export const formatDate = (date: Date | string) => {
   })
 }
 
+/**
+ * Calendar day ("YYYY-MM-DD") of a stored due date, read from its UTC parts.
+ */
+export const toDateKey = (date: Date | string) =>
+  new Date(date).toISOString().slice(0, 10)
+
+/**
+ * Parse a date input value ("YYYY-MM-DD") into the UTC-midnight Date we store.
+ * Returns null for anything that is not a real calendar day.
+ */
+export const parseDueDate = (value: string) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null
+  const date = new Date(`${value}T00:00:00.000Z`)
+  if (Number.isNaN(date.getTime()) || toDateKey(date) !== value) return null
+  return date
+}
+
 export const getTimeOfDayGreeting = () => {
   const hour = new Date().getHours()
   if (hour < 12) return 'Good morning'

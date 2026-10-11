@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { X } from 'lucide-react'
 import { PaymentCalendar } from './PaymentCalendar'
 
@@ -18,6 +19,15 @@ export function PaymentCalendarModal({
   onClose,
   payments,
 }: PaymentCalendarModalProps) {
+  useEffect(() => {
+    if (!isOpen) return
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   return (

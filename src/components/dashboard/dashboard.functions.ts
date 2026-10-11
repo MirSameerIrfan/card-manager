@@ -3,6 +3,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { parseDueDate } from "./dashboard-utils";
 
 export const getDashboardDataFn = createServerFn({ method: "GET" }).handler(
   async () => {
@@ -103,9 +104,10 @@ const AddPaymentSchema = z.object({
   name: z.string().min(1),
   provider: z.string().min(1),
   amount: z.number().min(0),
-  date: z.string(), // ISO date string
+  date: z.string().refine((value) => parseDueDate(value) !== null), // YYYY-MM-DD
   // Type specific fields
-  minimumPayment: z.number().optional(),
+  minimumPayment: z.number().min(0).optional(),
+  remainingBalance: z.number().min(0).optional(),
   status: z.string().optional(),
   category: z.string().optional(),
   autoPay: z.boolean().optional(),
@@ -126,7 +128,8 @@ export const addPaymentFn = createServerFn({ method: "POST" })
     }
 
     const userId = session.user.id;
-    const date = new Date(data.date);
+    // Due dates are stored as UTC midnight; the schema guarantees this parses.
+    const date = parseDueDate(data.date) ?? new Date(data.date);
 
     try {
       if (data.type === "credit_card") {
@@ -150,7 +153,7 @@ export const addPaymentFn = createServerFn({ method: "POST" })
             provider: data.provider,
             monthlyPayment: data.amount,
             nextPayment: date,
-            remainingBalance: 0, // Default or add field? Let's assume 0 for now or add to schema
+            remainingBalance: data.remainingBalance ?? 0,
             autoPay: data.autoPay || false,
             updatedAt: new Date(),
           },
@@ -179,7 +182,6 @@ export const addPaymentFn = createServerFn({ method: "POST" })
 
 const UpdatePaymentSchema = AddPaymentSchema.extend({
   id: z.string(),
-  remainingBalance: z.number().optional(),
 });
 
 export const updatePaymentFn = createServerFn({ method: "POST" })
@@ -196,7 +198,8 @@ export const updatePaymentFn = createServerFn({ method: "POST" })
     }
 
     const userId = session.user.id;
-    const date = new Date(data.date);
+    // Due dates are stored as UTC midnight; the schema guarantees this parses.
+    const date = parseDueDate(data.date) ?? new Date(data.date);
 
     try {
       if (data.type === "credit_card") {
