@@ -7,6 +7,13 @@ import {
   toDateKey,
 } from './dashboard-utils'
 
+// Due dates are stored as UTC midnight of their calendar day, so build test
+// dates the same way. Local midnight is the previous UTC day east of UTC.
+const storedDay = (offsetDays: number) => {
+  const now = new Date()
+  return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() + offsetDays))
+}
+
 // ---------------------------------------------------------------------------
 // formatDate — must never shift the calendar day due to timezone
 // ---------------------------------------------------------------------------
@@ -36,20 +43,9 @@ describe('formatDate', () => {
 // getPaymentStatus — overdue, due-soon, auto-pay logic
 // ---------------------------------------------------------------------------
 describe('getPaymentStatus', () => {
-  const localNow = new Date()
-  const todayMidnight = new Date(
-    localNow.getFullYear(),
-    localNow.getMonth(),
-    localNow.getDate(),
-  )
-
-  // A date clearly in the past
-  const yesterday = new Date(todayMidnight)
-  yesterday.setDate(yesterday.getDate() - 1)
-
-  // A date clearly in the future
-  const tomorrow = new Date(todayMidnight)
-  tomorrow.setDate(tomorrow.getDate() + 1)
+  const todayMidnight = storedDay(0)
+  const yesterday = storedDay(-1)
+  const tomorrow = storedDay(1)
 
   it('returns Overdue for a past date regardless of autoPay', () => {
     expect(getPaymentStatus(yesterday.toISOString(), true)).toBe('Overdue')
@@ -78,14 +74,8 @@ describe('getPaymentStatus', () => {
 // countDueThisWeekMonday — only future/today dates in the Mon–Sun window
 // ---------------------------------------------------------------------------
 describe('countDueThisWeekMonday', () => {
-  const localNow = new Date()
-  const todayMidnight = new Date(
-    localNow.getFullYear(),
-    localNow.getMonth(),
-    localNow.getDate(),
-  )
-  const yesterday = new Date(todayMidnight)
-  yesterday.setDate(yesterday.getDate() - 1)
+  const todayMidnight = storedDay(0)
+  const yesterday = storedDay(-1)
 
   it('does not count past dates', () => {
     expect(countDueThisWeekMonday([{ date: yesterday }])).toBe(0)

@@ -1,8 +1,9 @@
 import { getRouteApi, useRouter } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react'
-import { useSession } from '@/lib/auth-client'
-import { changeEmailFn, changePasswordFn, updateProfileNameFn } from '@/utils/auth.functions'
+import { authClient, useSession } from '@/lib/auth-client'
+import { getAuthErrorMessage } from '@/utils/auth-errors'
+import { updateProfileNameFn } from '@/utils/auth.functions'
 
 const routeApi = getRouteApi('/settings/profile')
 
@@ -132,9 +133,15 @@ export function ProfileSettingsPage() {
     setIsUpdatingEmail(true)
     try {
       const requestedEmail = normalizedEmail
-      const result = await changeEmailFn({ data: { newEmail: normalizedEmail } })
-      if (!result.success) {
-        setEmailErrorMessage(result.error ?? 'Unable to update your email.')
+      // Email and password changes go through authClient so better-auth's
+      // rate limiter applies. /change-email needs a session, which better-auth
+      // only issues to users with a verified email.
+      const { error } = await authClient.changeEmail({
+        newEmail: normalizedEmail,
+        callbackURL: '/settings/profile',
+      })
+      if (error) {
+        setEmailErrorMessage(getAuthErrorMessage(error, 'Unable to update your email.'))
         return
       }
 
@@ -163,15 +170,14 @@ export function ProfileSettingsPage() {
 
     setIsUpdatingPassword(true)
     try {
-      const result = await changePasswordFn({
-        data: {
-          currentPassword,
-          newPassword,
-        },
+      const { error } = await authClient.changePassword({
+        currentPassword,
+        newPassword,
+        revokeOtherSessions: false,
       })
 
-      if (!result.success) {
-        setPasswordErrorMessage(result.error ?? 'Unable to update your password.')
+      if (error) {
+        setPasswordErrorMessage(getAuthErrorMessage(error, 'Unable to update your password.'))
         return
       }
 
