@@ -3,15 +3,17 @@
 ## Before Committing
 
 - [ ] Run `npm run test` — all tests pass
-- [ ] Run `npm run build` — no TypeScript errors
+- [ ] Run `npm run lint` — no ESLint errors
+- [ ] Run `npx tsc --noEmit` — no TypeScript errors (`npm run build` does not type-check)
+- [ ] Run `npm run build` — production build succeeds
 - [ ] Verify `src/routeTree.gen.ts` was auto-regenerated (if routes changed)
 
 ---
 
 ## Project Overview
 
-**Bill & Payment Reminder**: Personal finance tracker for recurring payments (credit cards, loans, bills).  
-**Stack**: React 19 + TanStack Start + Vite + TypeScript + Tailwind CSS + Nitro
+**MoneyScope** (repo `card-manager`), a bill & payment reminder: personal finance tracker for recurring payments (credit cards, loans, bills).  
+**Stack**: React 19 + TanStack Start + Vite 7 + TypeScript + Tailwind CSS 4 + Nitro + Prisma 7 (PostgreSQL) + better-auth + Sentry
 
 ---
 
@@ -21,13 +23,28 @@
 
 - Routes in `src/routes/` auto-generate `src/routeTree.gen.ts` (do NOT edit)
 - Pattern: `createFileRoute('/path')({ component: MyComponent })`
+- Route files stay thin (`beforeLoad` guard, `loader`, zod search-param validation); the page component lives in `src/components/<area>/`
 - Root layout: `src/routes/__root.tsx` (Header + devtools)
 
 ### Server Functions (Type-Safe RPC)
 
-- Location: `src/data/` directory
-- Pattern: `createServerFn({ method: 'GET/POST' }).handler(async () => { ... })`
-- Client imports get full type inference—no API routes needed
+- Location: `src/utils/auth.functions.ts` (auth and profile), and feature files colocated with their components, e.g. `src/components/dashboard/dashboard.functions.ts`
+- Pattern: `createServerFn({ method: 'GET' | 'POST' }).inputValidator(zodSchema).handler(async ({ data }) => { ... })`
+- Called directly from loaders and components with full type inference—no API routes needed. The only API routes are the better-auth catch-all (`src/routes/api/auth/$.ts`) and `GET /api/health`
+
+### Data & State
+
+- PostgreSQL (Supabase-hosted) via Prisma 7. Schema in `prisma/schema.prisma`; the client is generated into `generated/prisma/` (gitignored), so run `npx prisma generate` after install and after schema changes
+- Import `prisma` from `@/lib/prisma` (one shared pg pool and client); never construct another `PrismaClient`
+- Loader data is the source of truth (`getRouteApi('/dashboard').useLoaderData()`). After a mutation, call `await router.invalidate()` to re-run loaders
+
+### Auth
+
+- better-auth: server instance in `src/lib/auth.ts`, browser client in `src/lib/auth-client.ts` (`useSession`, `signOut`)
+- Sign-in, forgot password and reset password call `authClient` from the page instead of a server function, so the request goes through `/api/auth/*` where better-auth's rate limiter applies (it does not apply to `auth.api.*` calls)
+- Server functions call `auth.api.*` and forward the incoming request headers (`getRequest()` → `Object.fromEntries(req.headers.entries())`) so the session cookie is read and set
+- Email verification is required: a session alone is not enough. Protected routes check `session.user.emailVerified === true` in `beforeLoad` (redirect to `/auth/login`), and protected server functions check it again (throw `Unauthorized`). New protected routes and server functions need both
+- Guest-only routes (`/`, `/auth/login`, `/auth/signup`) use `redirectIfAuthenticated()` from `src/utils/route-guards.ts`
 
 ### Styling & Components
 
@@ -40,15 +57,20 @@
 
 ## Commands & Conventions
 
-| Command         | Purpose                         |
-| --------------- | ------------------------------- |
-| `npm run dev`   | Start dev server (port 3000)    |
-| `npm run build` | Production build (Vite + Nitro) |
-| `npm run test`  | Run Vitest tests                |
+| Command                  | Purpose                                         |
+| ------------------------ | ----------------------------------------------- |
+| `npm run dev`            | Start dev server (port 3000)                    |
+| `npm run build`          | Production build (Vite + Nitro), no type-check  |
+| `npm run test`           | Run Vitest tests                                |
+| `npm run lint`           | Run ESLint (type-aware)                         |
+| `npx tsc --noEmit`       | Type-check                                      |
+| `npx prisma generate`    | Generate the Prisma client (after schema edits) |
+| `npx prisma migrate dev` | Create/apply a migration locally                |
 
 **TypeScript Strict Mode** (enforced):
 
 - `noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch`
+- Prefix intentionally unused names with `_`; ESLint errors on floating promises, so use `void` for fire-and-forget calls in handlers
 - Use path aliases: `@/components/Header` (not relative imports)
 
 ---
@@ -57,17 +79,19 @@
 
 **Add a new page**:
 
-1. Create `src/routes/page-name.tsx` with `createFileRoute('/page-name')({ component: Component })`
-2. Add Link in `src/components/Header.tsx`
-3. Routes auto-regenerate
+1. Create `src/routes/page-name.tsx` with `createFileRoute('/page-name')({ component: Component })`, pointing `component` at a page component in `src/components/<area>/`
+2. If it needs a signed-in user, add a `beforeLoad` guard that checks `session.user.emailVerified === true` (see `src/routes/dashboard.tsx`)
+3. Add an entry to `navTabs` in `src/components/Header.tsx` if it belongs in the nav
+4. Routes auto-regenerate
 
 **Add a server function**:
 
-1. Create `src/data/my-function.ts`
-2. Export `createServerFn({ method: 'POST' }).handler(async (input) => { ... })`
-3. Import and call from client—fully typed
+1. Add it to the feature's colocated `*.functions.ts` file (e.g. `src/components/dashboard/dashboard.functions.ts`), or to `src/utils/auth.functions.ts` for auth
+2. Export `createServerFn({ method: 'POST' }).inputValidator(zodSchema).handler(async ({ data }) => { ... })`
+3. For user data: get the session with `auth.api.getSession({ headers })`, require `emailVerified === true`, scope Prisma queries by `userId`, and verify ownership before updates
+4. Import and call from a loader or component—fully typed. Call `router.invalidate()` after a mutation
 
-**State management**: React hooks + TanStack Query (no Redux/Zustand)
+**State management**: Route loaders + `router.invalidate()`, plus local React state (no TanStack Query, Redux or Zustand)
 
 ---
 
@@ -76,7 +100,8 @@
 - ⚠️ Do NOT edit `src/routeTree.gen.ts`
 - ✅ Always import `Link` from `@tanstack/react-router`
 - ✅ Devtools (Router + React) enabled in dev—use for debugging
-- ✅ No persistent storage yet; MVP uses localStorage only
+- ✅ Data is persisted in PostgreSQL via Prisma (`@/lib/prisma`); a migration that adds a table must also enable row level security on it
+- ✅ Payment tables' `updatedAt` has no `@updatedAt`; set it explicitly on writes
 - ✅ Do NOT use React Server Components.
 
 ---
@@ -107,6 +132,7 @@ bg-linear-to-br from-emerald-600 via-teal-600 to-cyan-600 // CTAs
 
 ### Typography
 
+- **Fonts**: Sora for headings (applied to `h1`–`h6` and `.font-display` in `src/styles.css`), Manrope for body
 - **Headings**: `font-black` (900 weight) for impact
 - **Sizes**:
   - Hero H1: `text-5xl sm:text-6xl lg:text-7xl`
