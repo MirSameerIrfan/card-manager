@@ -116,3 +116,20 @@ export const getPaymentStatus = (
   }
   return autoPay ? 'Auto-Pay' : 'Due Soon'
 }
+
+/**
+ * Totals for the stat cards: every payment that is not Overdue, by the same
+ * browser-local "today" as getPaymentStatus.
+ */
+export const getUpcomingStats = (
+  items: Array<{ date: Date | string; amount: number; autoPay: boolean }>,
+) => {
+  const upcoming = items.filter(
+    (item) => getPaymentStatus(item.date, item.autoPay) !== 'Overdue',
+  )
+  return {
+    totalDue: upcoming.reduce((sum, item) => sum + item.amount, 0),
+    upcomingPaymentsCount: upcoming.length,
+    autoPayCount: upcoming.filter((item) => item.autoPay).length,
+  }
+}

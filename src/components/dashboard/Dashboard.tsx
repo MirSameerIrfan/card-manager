@@ -26,6 +26,7 @@ import {
   getFirstName,
   getPaymentStatus,
   getTimeOfDayGreeting,
+  getUpcomingStats,
 } from "./dashboard-utils";
 import type { StatCardProps } from "./StatCard";
 
@@ -50,25 +51,27 @@ export function Dashboard() {
     ...data.creditCards.map((card) => ({
       date: new Date(card.dueDate),
       amount: card.amountDue,
+      autoPay: false,
       type: "credit_card" as const,
     })),
     ...data.loans.map((loan) => ({
       date: new Date(loan.nextPayment),
       amount: loan.monthlyPayment,
+      autoPay: loan.autoPay,
       type: "loan" as const,
     })),
     ...data.recurringBills.map((bill) => ({
       date: new Date(bill.dueDate),
       amount: bill.amount,
+      autoPay: bill.autoPay,
       type: "recurring_bill" as const,
     })),
   ];
 
-  const dueThisWeekCount = countDueThisWeekMonday([
-    ...data.creditCards.map((card) => ({ date: card.dueDate })),
-    ...data.loans.map((loan) => ({ date: loan.nextPayment })),
-    ...data.recurringBills.map((bill) => ({ date: bill.dueDate })),
-  ]);
+  // Computed here rather than on the server so "today" is the user's day, the
+  // same one the payment status badges use.
+  const stats = getUpcomingStats(upcomingPayments);
+  const dueThisWeekCount = countDueThisWeekMonday(upcomingPayments);
 
   const dueThisWeekText =
     dueThisWeekCount === 0
@@ -80,19 +83,19 @@ export function Dashboard() {
   const statsItems: StatCardProps[] = [
     {
       label: "Total Upcoming",
-      value: formatCurrency(data.stats.totalDue),
+      value: formatCurrency(stats.totalDue),
       icon: DollarSign,
       tone: "emerald",
     },
     {
       label: "Upcoming Payments",
-      value: data.stats.upcomingPaymentsCount.toString(),
+      value: stats.upcomingPaymentsCount.toString(),
       icon: Bell,
       tone: "teal",
     },
     {
       label: "Auto-Pay Active",
-      value: data.stats.autoPayCount.toString(),
+      value: stats.autoPayCount.toString(),
       icon: ArrowUpRight,
       tone: "cyan",
     },

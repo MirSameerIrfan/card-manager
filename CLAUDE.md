@@ -98,7 +98,7 @@ Under `npm run dev`, any `/api/auth/*` response with status 401 (for example a w
 
 ### Dates
 
-Due dates are stored as UTC midnight. Formatting and comparison code extracts the UTC year/month/day and rebuilds a local date so the day does not shift in negative-offset timezones (`dashboard-utils.ts`, and the same normalisation in `getDashboardDataFn`). Use those helpers rather than `new Date(x).toLocaleDateString()` or direct comparisons. Display status (`Overdue` / `Auto-Pay` / `Due Soon`) is derived at render time by `getPaymentStatus`, not read from the database.
+Due dates are stored as UTC midnight. Formatting and comparison code in `dashboard-utils.ts` extracts the UTC year/month/day and rebuilds a local date so the day does not shift in negative-offset timezones. Use those helpers rather than `new Date(x).toLocaleDateString()` or direct comparisons. Anything that depends on "today" is computed in the browser at render time: the status badges (`getPaymentStatus`; `Overdue` / `Auto-Pay` / `Due Soon`, never read from the database), the stat cards (`getUpcomingStats`) and "due this week". The server runs in UTC and does not know the user's day, so keep "today" logic out of server functions.
 
 ### Deployment
 

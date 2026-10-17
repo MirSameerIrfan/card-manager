@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
   formatDate,
   countDueThisWeekMonday,
   getPaymentStatus,
+  getUpcomingStats,
   parseDueDate,
   toDateKey,
 } from './dashboard-utils'
@@ -117,5 +118,83 @@ describe('toDateKey', () => {
   it('reads the calendar day from the UTC parts of a stored date', () => {
     expect(toDateKey('2026-05-12T00:00:00.000Z')).toBe('2026-05-12')
     expect(toDateKey(new Date('2026-12-31T00:00:00.000Z'))).toBe('2026-12-31')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getUpcomingStats — stat card totals by the user's calendar day
+// ---------------------------------------------------------------------------
+
+/** Set `TZ` for the enclosing describe block and restore it afterwards. */
+const useTimezone = (timeZone: string) => {
+  let previous: string | undefined
+  beforeAll(() => {
+    previous = process.env.TZ
+    process.env.TZ = timeZone
+  })
+  afterAll(() => {
+    if (previous === undefined) delete process.env.TZ
+    else process.env.TZ = previous
+  })
+}
+
+describe('getUpcomingStats', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('returns zeros when there are no payments', () => {
+    expect(getUpcomingStats([])).toEqual({
+      totalDue: 0,
+      upcomingPaymentsCount: 0,
+      autoPayCount: 0,
+    })
+  })
+
+  it('leaves overdue payments out and counts auto-pay among the rest', () => {
+    expect(
+      getUpcomingStats([
+        { date: storedDay(-1), amount: 1, autoPay: true },
+        { date: storedDay(0), amount: 10, autoPay: false },
+        { date: storedDay(0), amount: 100, autoPay: true },
+        { date: storedDay(30), amount: 1000, autoPay: true },
+      ]),
+    ).toEqual({ totalDue: 1110, upcomingPaymentsCount: 3, autoPayCount: 2 })
+  })
+
+  // Payments due yesterday, today and tomorrow, stored as UTC midnight. Only
+  // today and tomorrow count, by the user's day whatever their timezone: at
+  // 23:30 in New York it is already the next day in UTC, where the server
+  // used to compute these totals (#38).
+  describe.each([
+    ['Pacific/Pago_Pago', 660],
+    ['America/Los_Angeles', 420],
+    ['America/New_York', 240],
+    ['UTC', 0],
+    ['Asia/Kolkata', -330],
+    ['Pacific/Kiritimati', -840],
+  ])('in %s', (timeZone, offsetMinutes) => {
+    useTimezone(timeZone)
+
+    it('is running in that timezone', () => {
+      expect(new Date(2026, 4, 12, 12).getTimezoneOffset()).toBe(offsetMinutes)
+    })
+
+    it.each([
+      [0, 30],
+      [12, 0],
+      [23, 30],
+    ])('counts payments due today or later at %i:%i local time on May 12', (hours, minutes) => {
+      vi.useFakeTimers({ toFake: ['Date'] })
+      vi.setSystemTime(new Date(2026, 4, 12, hours, minutes))
+
+      expect(
+        getUpcomingStats([
+          { date: new Date('2026-05-11T00:00:00.000Z'), amount: 1, autoPay: true },
+          { date: new Date('2026-05-12T00:00:00.000Z'), amount: 10, autoPay: true },
+          { date: new Date('2026-05-13T00:00:00.000Z'), amount: 100, autoPay: false },
+        ]),
+      ).toEqual({ totalDue: 110, upcomingPaymentsCount: 2, autoPayCount: 1 })
+    })
   })
 })

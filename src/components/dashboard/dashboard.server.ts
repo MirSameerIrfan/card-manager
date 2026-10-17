@@ -58,61 +58,10 @@ export async function getDashboardData(
     }),
   ]);
 
-  // 3. Calculate Stats
-  // Extract UTC date parts to avoid timezone offset shifting the day.
-  // e.g. "2026-05-12T00:00:00.000Z" must be treated as May 12, not May 11 in ET.
-  const localNow = new Date();
-  const today = new Date(localNow.getFullYear(), localNow.getMonth(), localNow.getDate());
-
-  const normalizeToDay = (date: Date | string) => {
-    const iso = new Date(date).toISOString();
-    const [year, month, day] = iso.split('T')[0].split('-').map(Number);
-    return new Date(year, month - 1, day);
-  };
-
-  const allPayments = [
-    ...creditCards.map((c) => ({
-      amount: c.amountDue,
-      date: c.dueDate,
-      status: c.status,
-    })),
-    ...loans.map((l) => ({
-      amount: l.monthlyPayment,
-      date: l.nextPayment,
-      status: l.autoPay ? "Auto-pay on" : "Manual",
-    })),
-    ...recurringBills.map((b) => ({
-      amount: b.amount,
-      date: b.dueDate,
-      status: b.autoPay ? "Auto-pay on" : "Manual",
-    })),
-  ];
-
-  // Only count payments that are due today or in the future
-  const upcomingPayments = allPayments.filter(
-    (p) => normalizeToDay(p.date) >= today,
-  );
-
-  const totalDue = upcomingPayments.reduce((sum, p) => sum + p.amount, 0);
-
-  // Re-calculate Auto-Pay strictly from DB flags (only upcoming)
-  const loanAutoPay = loans.filter(
-    (l) => l.autoPay && normalizeToDay(l.nextPayment) >= today,
-  ).length;
-  const billAutoPay = recurringBills.filter(
-    (b) => b.autoPay && normalizeToDay(b.dueDate) >= today,
-  ).length;
-  const autoPayCount = loanAutoPay + billAutoPay;
-
   return {
     user: {
       name: user.name ?? null,
       email: user.email ?? null,
-    },
-    stats: {
-      totalDue,
-      upcomingPaymentsCount: upcomingPayments.length,
-      autoPayCount,
     },
     creditCards,
     loans,
