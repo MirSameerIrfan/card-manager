@@ -22,6 +22,7 @@ npx vitest run -t "name of test"                                  # one test by 
 
 npx prisma generate      # REQUIRED after install and after schema changes
 npx prisma migrate dev   # create/apply a migration locally
+npm run seed             # (re)create demo@example.com / password1234 in DATABASE_URL
 ```
 
 `npm run build` does not type-check. Run `npx tsc --noEmit` for that; it should report no errors. Before committing, run `npm run test`, `npm run lint` and `npm run build`.
@@ -81,7 +82,7 @@ The built server does not load `.env` by itself. To run a production build local
 - Updates verify ownership with a `findUnique` + `userId` comparison before writing; keep that check on any new mutation.
 - `src/lib/prisma.ts` owns a single pg `Pool` and `PrismaClient`, cached on `globalThis` so dev HMR does not leak pools. Import `prisma` from there; never construct another client. `GET /api/health` reports pool usage.
 - Every table has row level security enabled with no policies, so only the owning role (the app) can read it; Supabase's Data API roles cannot. A migration that adds a table must also enable RLS on it.
-- `prisma/seed.ts` creates a demo user and sample payments, but no seed command is configured and it has not been run recently; check it before relying on it.
+- `npm run seed` (`prisma db seed`; the command is `migrations.seed` in `prisma.config.ts`, run with tsx) runs `prisma/seed.ts` against whatever `DATABASE_URL` points at. It deletes and recreates the demo user **demo@example.com / password1234**, already email-verified, with sample credit cards, loans and recurring bills whose due dates are relative to today (one overdue, the rest due soon or auto-pay). Re-run it to reset the demo data and refresh the dates. Prisma 7's `migrate dev` and `migrate reset` do not run it.
 
 ### Dev server quirk
 

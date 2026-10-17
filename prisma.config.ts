@@ -7,6 +7,9 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    // Run with `npm run seed` / `npx prisma db seed`; in Prisma 7, `migrate dev`
+    // and `migrate reset` no longer run it. tsx resolves the seed's `@/` imports.
+    seed: "tsx prisma/seed.ts",
   },
   datasource: {
     // Migrations need a session-level connection; DATABASE_URL may point at a
