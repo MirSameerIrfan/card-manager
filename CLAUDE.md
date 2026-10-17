@@ -57,8 +57,8 @@ The built server does not load `.env` by itself. To run a production build local
 
 ### Where server functions live
 
-- `src/utils/auth.functions.ts` — sign up/in/out, session lookup, profile name/email/password changes, resend verification.
-- Sign-in, forgot password and reset password do not use server functions: the pages call `authClient` so the request goes through `/api/auth/*`, where better-auth's rate limiter applies (it does not apply to `auth.api.*` calls).
+- `src/utils/auth.functions.ts` — session lookup, sign out, profile name change.
+- Anything that checks a password or sends an email (sign up, sign in, resend verification, change email, change password, forgot/reset password) does not use a server function: the pages call `authClient` so the request goes through `/api/auth/*`, where better-auth's rate limiter applies (it does not apply to `auth.api.*` calls). Don't add a server function that wraps one of these: server function ids are a SHA-256 of the file path and export name, so anyone can call one even if no page imports it. `getAuthErrorMessage` in `src/utils/auth-errors.ts` maps `authClient` errors to UI messages.
 - `src/components/dashboard/dashboard.functions.ts` — dashboard read plus add/update/delete payment, colocated with the dashboard components.
 
 `README.md`, `CONTRIBUTING.md` and `.github/copilot-instructions.md` reference `src/data/`, `src/utils/auth-context.tsx`, `src/utils/auth.server.ts`, and "localStorage only" persistence. None of that matches the current code — trust the layout above.

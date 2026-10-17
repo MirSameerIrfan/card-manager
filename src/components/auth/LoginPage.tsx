@@ -3,8 +3,8 @@ import { AuthLayout } from '@/components/auth/AuthLayout'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { resendVerificationEmailFn } from '@/utils/auth.functions'
-import { signIn } from '@/lib/auth-client'
+import { authClient, signIn } from '@/lib/auth-client'
+import { getAuthErrorMessage } from '@/utils/auth-errors'
 import { FieldInfo } from '@/components/auth/FieldInfo'
 
 function getVerificationErrorMessage(error: string): string {
@@ -74,9 +74,13 @@ export function LoginPage() {
     setSubmitError(null)
     setSubmitInfo(null)
     try {
-      const result = await resendVerificationEmailFn({ data: { email } })
-      if (!result.success) {
-        setSubmitError(result.error ?? 'Unable to resend verification email.')
+      // Called through authClient so better-auth's rate limiter applies.
+      const { error } = await authClient.sendVerificationEmail({
+        email,
+        callbackURL: '/auth/verify-email',
+      })
+      if (error) {
+        setSubmitError(getAuthErrorMessage(error, 'Unable to resend verification email.'))
         return
       }
 
