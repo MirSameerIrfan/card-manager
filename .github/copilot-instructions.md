@@ -41,7 +41,7 @@
 ### Auth
 
 - better-auth: server instance in `src/lib/auth.ts`, browser client in `src/lib/auth-client.ts` (`useSession`, `signOut`)
-- Sign-in, forgot password and reset password call `authClient` from the page instead of a server function, so the request goes through `/api/auth/*` where better-auth's rate limiter applies (it does not apply to `auth.api.*` calls)
+- Anything that checks a password or sends an email (sign up, sign in, resend verification, change email, change password, forgot/reset password) calls `authClient` from the page instead of a server function, so the request goes through `/api/auth/*` where better-auth's rate limiter applies (it does not apply to `auth.api.*` calls). Don't wrap these in a server function: its id is a SHA-256 of the file path and export name, so anyone can call it even if no page imports it
 - Server functions call `auth.api.*` and forward the incoming request headers (`getRequest()` → `Object.fromEntries(req.headers.entries())`) so the session cookie is read and set
 - Email verification is required: a session alone is not enough. Protected routes check `session.user.emailVerified === true` in `beforeLoad` (redirect to `/auth/login`), and protected server functions check it again (throw `Unauthorized`). New protected routes and server functions need both
 - Guest-only routes (`/`, `/auth/login`, `/auth/signup`) use `redirectIfAuthenticated()` from `src/utils/route-guards.ts`
