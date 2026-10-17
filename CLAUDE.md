@@ -11,8 +11,8 @@ Stack: React 19, TanStack Start (file-based router + server functions) on Nitro,
 ## Commands
 
 ```bash
-npm run dev      # dev server on http://localhost:3000 (loads Sentry via instrument.server.mjs)
-npm run build    # vite build, then copies instrument.server.mjs into .output/server
+npm run dev      # dev server on http://localhost:3000
+npm run build    # vite build into .output
 npm run start    # run the built server from .output
 npm run test     # vitest run
 npm run lint     # eslint (type-aware, uses tsconfig.json)
@@ -44,7 +44,7 @@ Environment variables live in `.env` (gitignored); `.env.example` documents all 
 
 The database is Supabase-hosted Postgres accessed through the Prisma ORM (no Supabase client or Supabase Auth). The development project is `card-manager` (ref `phnxlkpdwfldhhyatohp`, region us-east-2); the app connects as the dedicated role `card_manager_app`, which owns the tables, through the pooler host `aws-0-us-east-2.pooler.supabase.com`. With no Supabase credentials, `npx prisma dev --name card-manager` starts a local throwaway Postgres to develop against.
 
-The built server does not load `.env` by itself. To run a production build locally: `NODE_ENV=production node --env-file=.env --import ./.output/server/instrument.server.mjs .output/server/index.mjs`.
+The built server does not load `.env` by itself. To run a production build locally: `NODE_ENV=production node --env-file=.env .output/server/index.mjs`.
 
 ## Architecture
 
@@ -54,7 +54,7 @@ The built server does not load `.env` by itself. To run a production build local
 - Route files are thin: they declare `beforeLoad` guards, `loader`, search-param validation (zod), and point `component` at a page component in `src/components/<area>/`.
 - All data access goes through **server functions** (`createServerFn`), called directly from loaders and components. There are no REST endpoints except the better-auth catch-all at `src/routes/api/auth/$.ts`.
 - After any mutation, components call `router.invalidate()` to re-run loaders. There is no TanStack Query cache or client store; loader data is the source of truth (`getRouteApi("/dashboard").useLoaderData()`).
-- `src/server.ts` and `src/start.ts` wrap the server entry and all requests/server functions in Sentry middleware.
+- `src/server.ts` and `src/start.ts` wrap the server entry and all requests/server functions in Sentry middleware. `src/server.ts` imports `instrument.server.mjs` (the server `Sentry.init`) as its first import; that is how Sentry starts in every environment, since Netlify cannot start Node with `--import`.
 
 ### Where server functions live
 
@@ -94,7 +94,7 @@ Due dates are stored as UTC midnight. Formatting and comparison code extracts th
 
 ### Deployment
 
-`vite.config.ts` switches Nitro to the `netlify` preset when `NETLIFY` is set. `netlify.toml` runs `prisma generate` before the build and copies `instrument.server.mjs` into the function bundle so Sentry is preloaded; the local `build`/`start` scripts do the equivalent for `.output/server`.
+`vite.config.ts` switches Nitro to the `netlify` preset when `NETLIFY` is set, and `netlify.toml` runs `prisma generate` before the build. Nitro bundles every dependency except the ones in `traceDeps`, which it loads from `node_modules`. `require-in-the-middle` and `import-in-the-middle` must stay in that list: Sentry patches module loading with them, and once bundled as ESM they break every later `require`, including `pg`, so the database stops working. After changing `traceDeps` or the Sentry setup, check a Netlify-preset build (`NETLIFY=1 npx vite build`) still reaches the database with `SENTRY_DSN` set.
 
 ## Conventions
 

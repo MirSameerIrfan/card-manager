@@ -12,7 +12,11 @@ const config = defineConfig({
     devtools(),
     nitro({
       wasm: false,
-      traceDeps: ["pg"],
+      // Loaded from node_modules instead of bundled. Sentry (initialised in
+      // src/server.ts) patches module loading with require-in-the-middle, a
+      // CommonJS package that crashes every later require (pg included) when
+      // bundled as ESM.
+      traceDeps: ["pg", "require-in-the-middle", "import-in-the-middle"],
       preset: process.env.NETLIFY ? "netlify" : undefined,
     }),
     // this is the plugin that enables path aliases

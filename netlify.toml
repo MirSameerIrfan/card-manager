@@ -1,5 +1,5 @@
 [build]
-  command = "npx prisma generate && vite build && cp instrument.server.mjs .netlify/functions-internal/server/"
+  command = "npx prisma generate && vite build"
   publish = "dist"
 
 [build.environment]
