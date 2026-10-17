@@ -21,8 +21,9 @@ This project and everyone participating in it is governed by our commitment to p
 ## 🚀 Getting Started
 
 Before you begin:
-- Make sure you have [Node.js](https://nodejs.org/) 20+ installed
-- Familiarize yourself with [React](https://reactjs.org/), [TypeScript](https://www.typescriptlang.org/), and [TanStack Router](https://tanstack.com/router)
+- Make sure you have [Node.js](https://nodejs.org/) 20.19+ or 22.12+ installed (required by Vite 7 and Prisma 7)
+- Have a PostgreSQL database to develop against: a [Supabase](https://supabase.com/) project, or a local throwaway one started with `npx prisma dev --name card-manager`
+- Familiarize yourself with [React](https://reactjs.org/), [TypeScript](https://www.typescriptlang.org/), [TanStack Router](https://tanstack.com/router) and [TanStack Start](https://tanstack.com/start)
 - Read the [README.md](README.md) to understand the project structure
 
 ## 💡 How Can I Contribute?
@@ -66,17 +67,28 @@ Unsure where to begin? Look for issues labeled:
    npm install
    ```
 
-3. **Create a new branch** for your feature:
+3. **Configure your environment**: copy `.env.example` to `.env` and set at least `DATABASE_URL` and `DIRECT_URL` (see "Environment & Database" in the [README](README.md)). Without `RESEND_API_KEY`, verification and password reset links are printed to the server console, which is how you complete those flows locally:
+   ```bash
+   cp .env.example .env
+   ```
+
+4. **Generate the Prisma client and create the database tables** (the app will not build or run until the client has been generated into `generated/prisma/`):
+   ```bash
+   npx prisma generate
+   npx prisma migrate deploy
+   ```
+
+5. **Create a new branch** for your feature:
    ```bash
    git checkout -b feature/amazing-feature
    ```
 
-4. **Start the development server**:
+6. **Start the development server**:
    ```bash
    npm run dev
    ```
 
-5. **Make your changes** and test them thoroughly
+7. **Make your changes** and test them thoroughly
 
 ## 📏 Coding Standards
 
@@ -103,9 +115,12 @@ Unsure where to begin? Look for issues labeled:
 
 ### File Structure
 
-- Place components in `src/components/`
-- Place routes in `src/routes/`
-- Place server functions in `src/data/`
+- Place components in `src/components/<area>/`
+- Place routes in `src/routes/`; keep route files thin (guards, loader, search-param validation) and point `component` at a page component
+- Place server functions (`createServerFn`) in a `*.functions.ts` file colocated with the feature, e.g. `src/components/dashboard/dashboard.functions.ts`; auth server functions live in `src/utils/auth.functions.ts`
+- Access the database only through server functions, importing `prisma` from `@/lib/prisma`. After a mutation, call `router.invalidate()` so route loaders re-run
+- Protected routes and server functions must both check `session.user.emailVerified === true`
+- After changing `prisma/schema.prisma`, run `npx prisma migrate dev` and `npx prisma generate`; a migration that adds a table must also enable row level security on it
 - Use path aliases: `@/components/Header` instead of relative imports
 
 ### Code Quality
@@ -113,7 +128,7 @@ Unsure where to begin? Look for issues labeled:
 - Run ESLint before committing: `npm run lint`
 - Ensure all tests pass: `npm run test`
 - Build succeeds: `npm run build`
-- No TypeScript errors
+- No TypeScript errors: `npx tsc --noEmit` (the build does not type-check)
 - No console.log statements in production code
 
 ## 📝 Commit Message Guidelines
@@ -157,7 +172,7 @@ refactor(api): simplify payment data fetching
    - ✅ Tests pass (`npm run test`)
    - ✅ Build succeeds (`npm run build`)
    - ✅ No linting errors (`npm run lint`)
-   - ✅ No TypeScript errors
+   - ✅ No TypeScript errors (`npx tsc --noEmit`)
 
 4. **Keep PRs focused**: One feature/fix per PR
 5. **Write a clear PR description**:

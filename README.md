@@ -142,7 +142,8 @@ Built with modern, cutting-edge technologies:
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Start development server on port 3000 |
-| `npm run build` | Build for production |
+| `npm run build` | Build for production (does not type-check; run `npx tsc --noEmit` for that) |
+| `npm run start` | Run the production build from `.output/` |
 | `npm run test` | Run test suite |
 | `npm run preview` | Preview production build |
 | `npm run lint` | Lint code with ESLint |
@@ -161,6 +162,10 @@ The app uses the Prisma ORM against a Supabase-hosted Postgres database. In the 
 | `DIRECT_URL` | Session pooler (port `5432`) | `prisma migrate` |
 
 Then run `npx prisma migrate deploy` to create the tables. The migrations enable row level security on every table, so Supabase's public Data API cannot read them; the app connects as the table owner and is unaffected.
+
+No Supabase project? `npx prisma dev --name card-manager` starts a local throwaway Postgres to develop against.
+
+The Prisma client is generated into `generated/prisma/` (gitignored), so run `npx prisma generate` after every install and after any change to `prisma/schema.prisma`.
 
 **Connection pooling**
 
@@ -196,7 +201,7 @@ moneyscope/
 │   │   ├── Header.tsx       # Glassmorphism header with scroll effect
 │   │   └── NotFound.tsx     # Animated 404 page
 │   ├── routes/              # File-based routing (auto-generates route tree)
-│   │   ├── __root.tsx       # Root layout with AuthProvider
+│   │   ├── __root.tsx       # Root layout (Header, devtools, route transitions)
 │   │   ├── index.tsx        # Landing page (/)
 │   │   ├── about.tsx        # About page (/about)
 │   │   ├── blog.tsx         # Blog page (/blog)
@@ -214,7 +219,10 @@ moneyscope/
 │   │   ├── auth.functions.ts# Auth server functions
 │   │   ├── route-guards.ts  # Auth redirect guards
 │   │   └── useScrollReveal.ts # IntersectionObserver scroll animation hook
+│   ├── router.tsx           # Router setup (and browser Sentry init)
+│   ├── server.ts / start.ts # Server entry and global middleware (Sentry)
 │   └── styles.css           # Global styles, keyframes, animations, dark mode vars
+├── generated/prisma/        # Generated Prisma client (gitignored; `npx prisma generate`)
 ├── prisma/                  # Database schema and migrations
 ├── public/                  # Static assets (logo, favicon, manifest)
 └── vite.config.ts           # Vite configuration
@@ -235,16 +243,25 @@ export const Route = createFileRoute('/about')({
 ```
 
 #### Server Functions
-Type-safe server functions with full IntelliSense:
+All data access goes through type-safe server functions with full IntelliSense. They live next to the feature that uses them (`src/components/dashboard/dashboard.functions.ts`, `src/utils/auth.functions.ts`) and are called directly from route loaders and components. Protected server functions re-check the session and email verification, and read and write PostgreSQL through Prisma:
 ```tsx
 import { createServerFn } from '@tanstack/react-start'
+import { getRequest } from '@tanstack/react-start/server'
+import { auth } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 
-export const getPayments = createServerFn({ method: 'GET' })
+export const getLoansFn = createServerFn({ method: 'GET' })
   .handler(async () => {
-    // Server-side logic
-    return payments
+    const session = await auth.api.getSession({
+      headers: Object.fromEntries(getRequest().headers.entries()),
+    })
+    if (!session?.user || session.user.emailVerified !== true) {
+      throw new Error('Unauthorized')
+    }
+    return prisma.loan.findMany({ where: { userId: session.user.id } })
   })
 ```
+Loader data is the source of truth: after a mutation, components call `router.invalidate()` so the route loaders re-run.
 
 #### Styling Guide
 **Typography**
@@ -274,15 +291,15 @@ export const getPayments = createServerFn({ method: 'GET' })
 - [x] 🔐 User authentication with email verification
 - [x] 📊 Dashboard with payment tracking
 - [x] 📅 Payment calendar with daily totals
-- [x] ➕ Add/delete payments (credit cards, loans, bills)
+- [x] ➕ Add/edit/delete payments (credit cards, loans, bills)
 - [x] 👤 Profile settings (name, email, password)
 - [x] 🔑 Forgot password flow
 - [x] 📝 About page and Blog
 - [x] 🎨 Scroll animations and glassmorphism effects
+- [x] 💾 Cloud storage in PostgreSQL, synced across devices
 - [ ] 📱 Mobile app (React Native)
 - [ ] 🔔 Push notifications for upcoming payments
 - [ ] 📊 Payment history and analytics
-- [ ] 💾 Cloud sync across devices
 - [ ] 📈 Spending insights and reports
 - [ ] 🌐 Multi-currency support
 
@@ -323,7 +340,7 @@ This project is open source and available under the [MIT License](LICENSE).
 
 Built with amazing open-source projects:
 - [React](https://reactjs.org/) - UI library
-- [TanStack](https://tanstack.com/) - Router, Query, Form, and Start
+- [TanStack](https://tanstack.com/) - Router, Form, and Start
 - [Tailwind CSS](https://tailwindcss.com/) - Styling framework
 - [Vite](https://vitejs.dev/) - Build tool
 - [Prisma](https://www.prisma.io/) - Database ORM
