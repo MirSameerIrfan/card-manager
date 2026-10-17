@@ -10,11 +10,21 @@
  * and payments) and recreated. Due dates are relative to today, so re-running
  * also refreshes the dashboard's mix of overdue / due soon / auto-pay payments.
  *
- * It writes to whatever DATABASE_URL points at.
+ * It only runs against a database on this machine (see assertLocalDatabase).
  */
 import "dotenv/config";
 import { auth } from "@/lib/auth";
 import { pool, prisma } from "@/lib/prisma";
+
+/** The seed deletes users, so refuse anything but a local database. */
+function assertLocalDatabase() {
+  const { hostname } = new URL(process.env.DATABASE_URL ?? "");
+  if (!["localhost", "127.0.0.1", "[::1]"].includes(hostname)) {
+    throw new Error(
+      `Refusing to seed ${hostname}: the seed only runs against a local database.`,
+    );
+  }
+}
 
 const DEMO_USER = {
   email: "demo@example.com",
@@ -58,6 +68,7 @@ async function createDemoUser() {
 }
 
 async function main() {
+  assertLocalDatabase();
   console.log("Seeding demo data...");
 
   const { count } = await prisma.user.deleteMany({

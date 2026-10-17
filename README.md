@@ -99,18 +99,21 @@ cd moneyscope
 # Install dependencies
 npm install
 
-# Configure environment (see "Environment & Database" below)
+# Configure the local environment, then set BETTER_AUTH_SECRET in .env
+# (openssl rand -hex 32). See "Environment & Database" below.
 cp .env.example .env
 
-# Generate the Prisma client and create the database tables
+# Start a local Postgres, generate the Prisma client, create the tables and demo data
+npm run db:start
 npx prisma generate
-npx prisma migrate deploy
+npx prisma migrate dev
+npm run seed
 
 # Start development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser. 🎉
+Open [http://localhost:3000](http://localhost:3000) and sign in with **demo@example.com / password1234**. 🎉
 
 ---
 
@@ -147,23 +150,36 @@ Built with modern, cutting-edge technologies:
 | `npm run test` | Run test suite |
 | `npm run preview` | Preview production build |
 | `npm run lint` | Lint code with ESLint |
+| `npm run db:start` / `npm run db:stop` | Start / stop the local Postgres |
+| `npm run seed` | Reset the demo user and sample payments in the local database |
+| `npm run db:migrate:prod` | Apply pending migrations to the production database |
 
 ### 🗄️ Environment & Database
 
-All configuration lives in `.env` (see [`.env.example`](.env.example) for every variable).
+There are two environments, each with its own database:
 
-**Database (Supabase Postgres via Prisma ORM)**
+| | Local | Production |
+|---|---|---|
+| Runs | `npm run dev` | Netlify |
+| Database | Postgres on your machine | Supabase Postgres |
+| Settings | `.env` (see [`.env.example`](.env.example)) | Netlify environment variables |
+| Email | Links printed to the terminal | Resend |
+| Migrations | `npx prisma migrate dev` | `npm run db:migrate:prod` |
 
-The app uses the Prisma ORM against a Supabase-hosted Postgres database. In the Supabase dashboard, open your project, click **Connect**, and copy two connection strings:
+**Local database**
 
-| Variable | Supabase connection | Used for |
-|----------|--------------------|----------|
-| `DATABASE_URL` | Transaction pooler (port `6543`) | The running app |
-| `DIRECT_URL` | Session pooler (port `5432`) | `prisma migrate` |
+`npm run db:start` starts a Postgres in the background with `npx prisma dev`, on the fixed ports `.env.example` expects; `npm run db:stop` stops it, and the data is kept between restarts. `npm run seed` resets the demo user and refuses to run against anything but a local database.
 
-Then run `npx prisma migrate deploy` to create the tables. The migrations enable row level security on every table, so Supabase's public Data API cannot read them; the app connects as the table owner and is unaffected.
+**Production database (Supabase)**
 
-No Supabase project? `npx prisma dev --name card-manager` starts a local throwaway Postgres to develop against.
+The app uses the Prisma ORM against a Supabase-hosted Postgres database. In the Supabase dashboard, open the project, click **Connect**, and copy two connection strings:
+
+| Variable | Supabase connection | Set in |
+|----------|--------------------|--------|
+| `DATABASE_URL` | Transaction pooler (port `6543`) | Netlify environment variables and `.env.production` |
+| `DIRECT_URL` | Session pooler (port `5432`) | `.env.production` |
+
+`.env.production` is gitignored and only read by `npm run db:migrate:prod`, which applies pending migrations to Supabase. Deploys never migrate, so run it before deploying code that needs a new migration. The migrations enable row level security on every table, so Supabase's public Data API cannot read them; the app connects as the table owner and is unaffected.
 
 The Prisma client is generated into `generated/prisma/` (gitignored), so run `npx prisma generate` after every install and after any change to `prisma/schema.prisma`.
 

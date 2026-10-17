@@ -11,6 +11,7 @@ Stack: React 19, TanStack Start (file-based router + server functions) on Nitro,
 ## Commands
 
 ```bash
+npm run db:start # start the local Postgres (npx prisma dev, background); db:stop stops it
 npm run dev      # dev server on http://localhost:3000
 npm run build    # vite build into .output
 npm run start    # run the built server from .output
@@ -22,7 +23,8 @@ npx vitest run -t "name of test"                                  # one test by 
 
 npx prisma generate      # REQUIRED after install and after schema changes
 npx prisma migrate dev   # create/apply a migration locally
-npm run seed             # (re)create demo@example.com / password1234 in DATABASE_URL
+npm run seed             # (re)create demo@example.com / password1234 in the local database
+npm run db:migrate:prod  # apply pending migrations to production (Supabase), using .env.production
 ```
 
 `npm run build` does not type-check. Run `npx tsc --noEmit` for that; it should report no errors. Before committing, run `npm run test`, `npm run lint` and `npm run build`.
@@ -31,20 +33,26 @@ npm run seed             # (re)create demo@example.com / password1234 in DATABAS
 
 The Prisma client is generated into `generated/prisma/` (gitignored) and imported from there by `src/lib/prisma.ts`. A fresh clone will not build or run until `npx prisma generate` has been run.
 
-Environment variables live in `.env` (gitignored); `.env.example` documents all of them.
+There are two environments, each with its own database:
+
+- **Local**: `.env` (gitignored) points at a Postgres on this machine, started by `npm run db:start` (`npx prisma dev --name card-manager` on fixed ports 51213–51215). New setup: `cp .env.example .env`, set `BETTER_AUTH_SECRET`, `npm run db:start`, `npx prisma migrate dev`, `npm run seed`.
+- **Production**: Netlify, against the Supabase project. Its settings are Netlify environment variables. The only production values on disk are the Supabase URLs in `.env.production` (gitignored), read only by `npm run db:migrate:prod`. Migrations reach production only through that command; nothing applies them on deploy.
+
+Keep `.env` pointed at the local database. `prisma.config.ts` prefers `DIRECT_URL` over `DATABASE_URL`, so a Supabase `DIRECT_URL` left in `.env` sends every local migrate to production. `prisma/seed.ts` refuses any non-local host because it deletes users.
 
 | Variable | Used for |
 | --- | --- |
-| `DATABASE_URL` | Runtime Postgres connection. On Supabase this is the transaction pooler (port 6543). Required. |
-| `DIRECT_URL` | Connection used by `prisma migrate` (`prisma.config.ts` prefers it over `DATABASE_URL`). On Supabase this is the session pooler (port 5432). |
+| `DATABASE_URL` | Runtime Postgres connection. Locally the `prisma dev` server; in production the Supabase transaction pooler (port 6543). Required. |
+| `SHADOW_DATABASE_URL` | Local only: the empty database `prisma migrate dev` diffs against (the `prisma dev` shadow port). Without it `migrate dev` fails. |
+| `DIRECT_URL` | `.env.production` only: the Supabase session pooler (port 5432), used by `prisma migrate` in preference to `DATABASE_URL`. |
 | `DATABASE_POOL_MAX`, `DATABASE_POOL_IDLE_TIMEOUT_MS`, `DATABASE_POOL_CONNECTION_TIMEOUT_MS` | Per-instance pg pool limits (defaults 5 / 10000 / 10000). |
 | `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET` | App base URL and signing secret. Both required in production; the URL defaults to `http://localhost:3000`. |
 | `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | Auth emails. Without the key, verification and password reset links are logged to the server console instead — this is how you complete those flows locally. |
 | `SENTRY_DSN`, `VITE_SENTRY_DSN`, `SENTRY_AUTH_TOKEN` | Server, client, and build-time Sentry. Optional; Sentry is a no-op without a DSN. |
 
-The database is Supabase-hosted Postgres accessed through the Prisma ORM (no Supabase client or Supabase Auth). The development project is `card-manager` (ref `phnxlkpdwfldhhyatohp`, region us-east-2); the app connects as the dedicated role `card_manager_app`, which owns the tables, through the pooler host `aws-0-us-east-2.pooler.supabase.com`. With no Supabase credentials, `npx prisma dev --name card-manager` starts a local throwaway Postgres to develop against.
+The production database is Supabase-hosted Postgres accessed through the Prisma ORM (no Supabase client or Supabase Auth): project `card-manager` (ref `phnxlkpdwfldhhyatohp`, region us-east-2, free plan), where the app connects as the dedicated role `card_manager_app`, which owns the tables, through the pooler host `aws-0-us-east-2.pooler.supabase.com`.
 
-The built server does not load `.env` by itself. To run a production build locally: `NODE_ENV=production node --env-file=.env .output/server/index.mjs`.
+The built server does not load `.env` by itself. To run a production build locally against the local database: `NODE_ENV=production node --env-file=.env .output/server/index.mjs`.
 
 ## Architecture
 
@@ -82,7 +90,7 @@ The built server does not load `.env` by itself. To run a production build local
 - Updates verify ownership with a `findUnique` + `userId` comparison before writing; keep that check on any new mutation.
 - `src/lib/prisma.ts` owns a single pg `Pool` and `PrismaClient`, cached on `globalThis` so dev HMR does not leak pools. Import `prisma` from there; never construct another client. `GET /api/health` reports pool usage.
 - Every table has row level security enabled with no policies, so only the owning role (the app) can read it; Supabase's Data API roles cannot. A migration that adds a table must also enable RLS on it.
-- `npm run seed` (`prisma db seed`; the command is `migrations.seed` in `prisma.config.ts`, run with tsx) runs `prisma/seed.ts` against whatever `DATABASE_URL` points at. It deletes and recreates the demo user **demo@example.com / password1234**, already email-verified, with sample credit cards, loans and recurring bills whose due dates are relative to today (one overdue, the rest due soon or auto-pay). Re-run it to reset the demo data and refresh the dates. Prisma 7's `migrate dev` and `migrate reset` do not run it.
+- `npm run seed` (`prisma db seed`; the command is `migrations.seed` in `prisma.config.ts`, run with tsx) runs `prisma/seed.ts` against the local `DATABASE_URL` (it refuses other hosts). It deletes and recreates the demo user **demo@example.com / password1234**, already email-verified, with sample credit cards, loans and recurring bills whose due dates are relative to today (one overdue, the rest due soon or auto-pay). Re-run it to reset the demo data and refresh the dates. Prisma 7's `migrate dev` and `migrate reset` do not run it.
 
 ### Dev server quirk
 

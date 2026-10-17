@@ -15,5 +15,8 @@ export default defineConfig({
     // Migrations need a session-level connection; DATABASE_URL may point at a
     // transaction pooler, so prefer DIRECT_URL when it is set.
     url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
+    // `prisma migrate dev` diffs against an empty database; the local
+    // `prisma dev` server provides one on its own port.
+    shadowDatabaseUrl: process.env["SHADOW_DATABASE_URL"],
   },
 });

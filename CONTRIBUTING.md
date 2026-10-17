@@ -22,7 +22,7 @@ This project and everyone participating in it is governed by our commitment to p
 
 Before you begin:
 - Make sure you have [Node.js](https://nodejs.org/) 20.19+ or 22.12+ installed (required by Vite 7 and Prisma 7)
-- Have a PostgreSQL database to develop against: a [Supabase](https://supabase.com/) project, or a local throwaway one started with `npx prisma dev --name card-manager`
+- No database install is needed: `npm run db:start` runs a local Postgres with `npx prisma dev`
 - Familiarize yourself with [React](https://reactjs.org/), [TypeScript](https://www.typescriptlang.org/), [TanStack Router](https://tanstack.com/router) and [TanStack Start](https://tanstack.com/start)
 - Read the [README.md](README.md) to understand the project structure
 
@@ -67,15 +67,17 @@ Unsure where to begin? Look for issues labeled:
    npm install
    ```
 
-3. **Configure your environment**: copy `.env.example` to `.env` and set at least `DATABASE_URL` and `DIRECT_URL` (see "Environment & Database" in the [README](README.md)). Without `RESEND_API_KEY`, verification and password reset links are printed to the server console, which is how you complete those flows locally:
+3. **Configure your environment**: copy `.env.example` to `.env` and set `BETTER_AUTH_SECRET` (`openssl rand -hex 32`). The database URLs already point at the local Postgres (see "Environment & Database" in the [README](README.md)). Without `RESEND_API_KEY`, verification and password reset links are printed to the server console, which is how you complete those flows locally:
    ```bash
    cp .env.example .env
    ```
 
-4. **Generate the Prisma client and create the database tables** (the app will not build or run until the client has been generated into `generated/prisma/`):
+4. **Start the local database, generate the Prisma client and create the tables and demo data** (the app will not build or run until the client has been generated into `generated/prisma/`):
    ```bash
+   npm run db:start
    npx prisma generate
-   npx prisma migrate deploy
+   npx prisma migrate dev
+   npm run seed
    ```
 
 5. **Create a new branch** for your feature:

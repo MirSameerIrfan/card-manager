@@ -7,6 +7,9 @@
     "build": "vite build",
     "start": "node .output/server/index.mjs",
     "seed": "prisma db seed",
+    "db:start": "prisma dev --name card-manager --detach --port 51213 --db-port 51214 --shadow-db-port 51215",
+    "db:stop": "prisma dev stop card-manager",
+    "db:migrate:prod": "node --env-file=.env.production node_modules/prisma/build/index.js migrate deploy",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint . --ext .ts,.tsx"
