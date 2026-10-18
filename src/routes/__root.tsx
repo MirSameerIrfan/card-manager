@@ -2,7 +2,7 @@ import { HeadContent, Scripts, createRootRoute, useRouterState } from '@tanstack
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { NotFound } from '@/components/NotFound'
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 
 import Header from '../components/Header'
 
@@ -40,28 +40,28 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  // resolvedLocation changes once the new page has rendered. location changes
+  // at the click, while the old page is still on screen waiting for the new
+  // route to load, so fading on it replayed the old page like a reload.
   const currentPath = useRouterState({
-    select: (state) => state.location.pathname,
+    select: (state) => state.resolvedLocation?.pathname ?? state.location.pathname,
   })
 
   const prevPathRef = useRef(currentPath)
   const contentRef = useRef<HTMLDivElement>(null)
 
-  // Only animate on actual route changes
-  useEffect(() => {
-    if (prevPathRef.current !== currentPath) {
-      prevPathRef.current = currentPath
-      const el = contentRef.current
-      if (el) {
-        el.style.opacity = '0'
-        el.style.transform = 'translateY(8px)'
-        requestAnimationFrame(() => {
-          el.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out'
-          el.style.opacity = '1'
-          el.style.transform = 'translateY(0)'
-        })
-      }
-    }
+  // Fade the new page in; a layout effect runs before it is first painted.
+  useLayoutEffect(() => {
+    if (prevPathRef.current === currentPath) return
+    prevPathRef.current = currentPath
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    contentRef.current?.animate(
+      [
+        { opacity: 0, transform: 'translateY(8px)' },
+        { opacity: 1, transform: 'none' },
+      ],
+      { duration: 300, easing: 'ease-out' },
+    )
   }, [currentPath])
 
   return (

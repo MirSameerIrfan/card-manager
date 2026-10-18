@@ -13,6 +13,9 @@ export const getRouter = () => {
     context: {},
 
     scrollRestoration: true,
+    // Start loading a route's code and beforeLoad check when a link is
+    // hovered or focused, so the page is ready by the time it is clicked.
+    defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
   });
   if (!router.isServer) {
