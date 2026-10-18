@@ -1,5 +1,5 @@
 [build]
-  command = "npx prisma generate && vite build && node scripts/smoke-netlify.mjs"
+  command = "npx prisma generate && npx tsc --noEmit && npm run test && vite build && node scripts/smoke-netlify.mjs"
   publish = "dist"
 
 [build.environment]

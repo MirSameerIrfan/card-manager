@@ -103,7 +103,7 @@ Due dates are stored as UTC midnight. Formatting and comparison code in `dashboa
 
 ### Deployment
 
-`vite.config.ts` switches Nitro to the `netlify` preset when `NETLIFY` is set, and `netlify.toml` runs `prisma generate` before the build. Nitro bundles every dependency except the ones in `traceDeps`, which it loads from `node_modules`. `require-in-the-middle` and `import-in-the-middle` must stay in that list: Sentry patches module loading with them, and once bundled as ESM they break every later `require`, including `pg`, so the database stops working. `scripts/smoke-netlify.mjs` runs at the end of the Netlify build and fails it (keeping the previous deploy live) if the bundle cannot serve `/` or load `pg` with Sentry running; run it locally after `NETLIFY=1 npx vite build`.
+`vite.config.ts` switches Nitro to the `netlify` preset when `NETLIFY` is set, and `netlify.toml` runs `prisma generate`, `tsc --noEmit` and the tests before the build, so a type error or failing test fails the deploy and the previous one stays live. Nitro bundles every dependency except the ones in `traceDeps`, which it loads from `node_modules`. `require-in-the-middle` and `import-in-the-middle` must stay in that list: Sentry patches module loading with them, and once bundled as ESM they break every later `require`, including `pg`, so the database stops working. `scripts/smoke-netlify.mjs` runs at the end of the Netlify build and fails it (keeping the previous deploy live) if the bundle cannot serve `/` or load `pg` with Sentry running; run it locally after `NETLIFY=1 npx vite build`.
 
 `@tanstack/react-start` is held at `~1.168` because 1.169 requires Vite 8. `@tanstack/react-router` is pinned to the exact version that release depends on; a different version installs a second copy of the router. Upgrade the two together.
 
@@ -112,7 +112,7 @@ Due dates are stored as UTC midnight. Formatting and comparison code in `dashboa
 - Import with the `@/` alias (maps to `src/`), not long relative paths.
 - TypeScript is strict with `noUnusedLocals`/`noUnusedParameters`; ESLint errors on floating or misused promises. Prefix intentionally unused names with `_`, and use `void` for fire-and-forget promises in handlers.
 - No React Server Components and no UI component library — components are hand-built with Tailwind and `lucide-react` icons. Forms use TanStack Form.
-- Tests are colocated `*.test.ts` files covering pure utilities; there is no vitest config or component test setup.
+- Tests are colocated `*.test.ts` files covering pure utilities; there is no component test setup. `vitest.config.ts` only sets up the `@/` alias, so tests don't load the app's Vite plugins.
 - Commits follow Conventional Commits (`feat(scope): …`, `fix(#issue): …`).
 
 ### Styling
