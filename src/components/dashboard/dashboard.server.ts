@@ -69,18 +69,21 @@ export async function getDashboardData(
   };
 }
 
+// Capped so one account can't fill the database with megabyte-long strings.
+const shortText = z.string().max(100);
+
 // Add Payment Mutation
 export const AddPaymentSchema = z.object({
   type: z.enum(["credit_card", "loan", "recurring_bill"]),
-  name: z.string().min(1),
-  provider: z.string().min(1),
+  name: shortText.min(1),
+  provider: shortText.min(1),
   amount: z.number().min(0),
   date: z.string().refine((value) => parseDueDate(value) !== null), // YYYY-MM-DD
   // Type specific fields
   minimumPayment: z.number().min(0).optional(),
   remainingBalance: z.number().min(0).optional(),
-  status: z.string().optional(),
-  category: z.string().optional(),
+  status: shortText.optional(),
+  category: shortText.optional(),
   autoPay: z.boolean().optional(),
   frequency: z.enum(["monthly", "biweekly"]).optional(),
 });

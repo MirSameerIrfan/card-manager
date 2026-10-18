@@ -6,8 +6,14 @@ import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
 
 export default createServerEntry(
   wrapFetchWithSentry({
-    fetch(request: Request) {
-      return handler.fetch(request);
+    async fetch(request: Request) {
+      const original = await handler.fetch(request);
+      // Copied because some responses (Response.redirect) have read-only headers.
+      const response = new Response(original.body, original);
+      // No framing by other sites, so they can't overlay the app to steal clicks.
+      response.headers.set("X-Frame-Options", "DENY");
+      response.headers.set("Content-Security-Policy", "frame-ancestors 'none'");
+      return response;
     },
   }),
 );

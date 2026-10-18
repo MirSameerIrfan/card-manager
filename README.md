@@ -196,7 +196,7 @@ The Prisma client is generated into `generated/prisma/` (gitignored), so run `np
 - `BETTER_AUTH_URL` and `BETTER_AUTH_SECRET` are required in production.
 - Without `RESEND_API_KEY`, email verification and password reset links are printed to the server console instead of being emailed, which is how you complete those flows locally.
 - Password reset: `/auth/forgot-password` emails a link that is valid for 1 hour and can be used once; `/auth/reset-password` sets the new password and signs the user out of all sessions. The response is the same whether or not the email is registered.
-- Auth endpoints are rate limited in production (for example 3 reset requests per minute per IP). Counters are stored in the `rateLimit` table.
+- Auth endpoints are rate limited in production per client IP (as reported by Netlify), for example 3 sign-in attempts per 10 seconds. Counters are stored in the `rateLimit` table.
 
 **Error monitoring (Sentry)**
 

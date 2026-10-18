@@ -30,7 +30,7 @@ export const auth = betterAuth({
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
       await sendPasswordResetEmail({
-        user: { email: user.email, name: user.name },
+        user: { email: user.email },
         url,
       });
     },
@@ -39,7 +39,7 @@ export const auth = betterAuth({
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
       await sendVerificationEmail({
-        user: { email: user.email, name: user.name },
+        user: { email: user.email },
         url,
       });
     },
@@ -60,6 +60,23 @@ export const auth = betterAuth({
   // database because in-memory counters reset per serverless instance.
   rateLimit: {
     storage: "database",
+  },
+
+  advanced: {
+    // Key rate limits on the IP Netlify saw. The default, X-Forwarded-For, is
+    // set by the client, so a new fake IP per request escaped the limit.
+    ipAddress: { ipAddressHeaders: ["x-nf-client-connection-ip"] },
+    // Send auth emails after responding: awaiting them made the response for a
+    // registered email slower, which told anyone which emails have accounts.
+    // Netlify stops the function once it responds unless given the promise.
+    backgroundTasks: {
+      handler: (promise) =>
+        (
+          globalThis as {
+            Netlify?: { context: { waitUntil(p: Promise<unknown>): void } | null };
+          }
+        ).Netlify?.context?.waitUntil(promise),
+    },
   },
 
   // IMPORTANT: must be invoked + last

@@ -173,7 +173,7 @@ export function ProfileSettingsPage() {
       const { error } = await authClient.changePassword({
         currentPassword,
         newPassword,
-        revokeOtherSessions: false,
+        revokeOtherSessions: true,
       })
 
       if (error) {

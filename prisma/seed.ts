@@ -55,7 +55,7 @@ async function createDemoUser() {
     email: DEMO_USER.email,
     name: DEMO_USER.name,
     emailVerified: true,
-  });
+  }, { method: "email-password" });
 
   await ctx.internalAdapter.linkAccount({
     userId: user.id,

@@ -62,7 +62,7 @@ The built server does not load `.env` by itself. To run a production build local
 - Route files are thin: they declare `beforeLoad` guards, `loader`, search-param validation (zod), and point `component` at a page component in `src/components/<area>/`.
 - All data access goes through **server functions** (`createServerFn`), called directly from loaders and components. There are no REST endpoints except the better-auth catch-all at `src/routes/api/auth/$.ts`.
 - After any mutation, components call `router.invalidate()` to re-run loaders. There is no TanStack Query cache or client store; loader data is the source of truth (`getRouteApi("/dashboard").useLoaderData()`).
-- `src/server.ts` and `src/start.ts` wrap the server entry and all requests/server functions in Sentry middleware. `src/server.ts` imports `instrument.server.mjs` (the server `Sentry.init`) as its first import; that is how Sentry starts in every environment, since Netlify cannot start Node with `--import`.
+- `src/server.ts` and `src/start.ts` wrap the server entry and all requests/server functions in Sentry middleware. `src/server.ts` imports `instrument.server.mjs` (the server `Sentry.init`) as its first import; that is how Sentry starts in every environment, since Netlify cannot start Node with `--import`. `src/server.ts` also adds `X-Frame-Options: DENY` and `frame-ancestors 'none'` to every response so other sites can't frame the app.
 
 ### Where server functions live
 
@@ -78,7 +78,8 @@ The built server does not load `.env` by itself. To run a production build local
 - A session alone is not enough: every protected path checks `session.user.emailVerified === true`. This is enforced twice — in the route's `beforeLoad` (redirect to `/auth/login`) and again inside each server function (throws `Unauthorized`). New protected routes and server functions need both.
 - `redirectIfAuthenticated()` in `src/utils/route-guards.ts` is the guard for guest-only routes (`/`, `/auth/login`, `/auth/signup`); it deliberately swallows session-lookup errors and re-throws redirects.
 - Password reset: `/auth/forgot-password` → emailed link → better-auth validates it at `/api/auth/reset-password/:token` and redirects to `/auth/reset-password` with `?token=` or `?error=`. Resetting revokes all of the user's sessions.
-- Rate limiting is better-auth's built-in limiter, production only, keyed by client IP, with counters in the `rateLimit` table.
+- Rate limiting is better-auth's built-in limiter, production only, with counters in the `rateLimit` table. It is keyed by `x-nf-client-connection-ip`, the IP Netlify saw, not `X-Forwarded-For`, which the client sets. Requests without that header (a local production build) share one bucket per path.
+- Auth emails are sent after the response (`advanced.backgroundTasks`, handed to Netlify's `waitUntil`), so response time doesn't reveal whether an email has an account. Emails don't include the user's name: anyone can sign up with someone else's address and a name of their choosing.
 - `/auth/verify-email` handles three cases (error param, token param, or bare redirect after better-auth verified server-side); see the comments in that route before changing the flow.
 
 ### Data model
@@ -103,6 +104,8 @@ Due dates are stored as UTC midnight. Formatting and comparison code in `dashboa
 ### Deployment
 
 `vite.config.ts` switches Nitro to the `netlify` preset when `NETLIFY` is set, and `netlify.toml` runs `prisma generate` before the build. Nitro bundles every dependency except the ones in `traceDeps`, which it loads from `node_modules`. `require-in-the-middle` and `import-in-the-middle` must stay in that list: Sentry patches module loading with them, and once bundled as ESM they break every later `require`, including `pg`, so the database stops working. `scripts/smoke-netlify.mjs` runs at the end of the Netlify build and fails it (keeping the previous deploy live) if the bundle cannot serve `/` or load `pg` with Sentry running; run it locally after `NETLIFY=1 npx vite build`.
+
+`@tanstack/react-start` is held at `~1.168` because 1.169 requires Vite 8. `@tanstack/react-router` and `@tanstack/router-plugin` are pinned to the exact versions that release depends on; a different version installs a second copy of the router. Upgrade the three together.
 
 ## Conventions
 

@@ -1,4 +1,6 @@
-type EmailRecipient = { email: string; name: string };
+// No user name in emails: anyone can sign up with someone else's address and
+// a "name" like "Your account is locked, call …", which we would then deliver.
+type EmailRecipient = { email: string };
 
 type AuthEmailPayload = {
   user: EmailRecipient;
@@ -36,7 +38,7 @@ async function sendAuthEmail({
   const resendApiKey = process.env.RESEND_API_KEY;
   const from =
     process.env.RESEND_FROM_EMAIL || "MoneyScope <onboarding@resend.dev>";
-  const greeting = `Hi ${user.name || "there"},`;
+  const greeting = "Hi there,";
 
   const text = [greeting, "", intro, "", `${linkLabel}: ${url}`, "", footer].join(
     "\n",
