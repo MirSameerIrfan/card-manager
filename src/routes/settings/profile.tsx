@@ -24,6 +24,7 @@ export const Route = createFileRoute('/settings/profile')({
         id: session.user.id,
         name: session.user.name,
         email: session.user.email,
+        paymentReminders: session.user.paymentReminders,
       },
     }
   },

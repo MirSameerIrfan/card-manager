@@ -60,3 +60,21 @@ export const updateProfileNameFn = createServerFn({ method: "POST" })
       };
     }
   });
+
+export const updatePaymentRemindersFn = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ enabled: z.boolean() }))
+  .handler(async ({ data }) => {
+    try {
+      await auth.api.updateUser({
+        headers: getRequestHeaders(),
+        body: { paymentReminders: data.enabled },
+      });
+      return { success: true, error: null };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Unable to update your reminders.",
+      };
+    }
+  });

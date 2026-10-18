@@ -8,19 +8,21 @@ datasource db {
 }
 
 model User {
-  id              String            @id
-  name            String
-  email           String            @unique
-  emailVerified   Boolean           @default(false)
-  image           String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  accounts        Account[]
-  credit_card     credit_card[]
-  loan            loan[]
-  recurring_bill  recurring_bill[]
-  payment_history payment_history[]
-  sessions        Session[]
+  id               String            @id
+  name             String
+  email            String            @unique
+  emailVerified    Boolean           @default(false)
+  image            String?
+  // Daily email about payments due soon (src/lib/reminders.ts); on by default
+  paymentReminders Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  accounts         Account[]
+  credit_card      credit_card[]
+  loan             loan[]
+  recurring_bill   recurring_bill[]
+  payment_history  payment_history[]
+  sessions         Session[]
 
   @@map("user")
 }
