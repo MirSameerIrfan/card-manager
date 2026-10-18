@@ -105,7 +105,7 @@ Due dates are stored as UTC midnight. Formatting and comparison code in `dashboa
 
 `vite.config.ts` switches Nitro to the `netlify` preset when `NETLIFY` is set, and `netlify.toml` runs `prisma generate` before the build. Nitro bundles every dependency except the ones in `traceDeps`, which it loads from `node_modules`. `require-in-the-middle` and `import-in-the-middle` must stay in that list: Sentry patches module loading with them, and once bundled as ESM they break every later `require`, including `pg`, so the database stops working. `scripts/smoke-netlify.mjs` runs at the end of the Netlify build and fails it (keeping the previous deploy live) if the bundle cannot serve `/` or load `pg` with Sentry running; run it locally after `NETLIFY=1 npx vite build`.
 
-`@tanstack/react-start` is held at `~1.168` because 1.169 requires Vite 8. `@tanstack/react-router` and `@tanstack/router-plugin` are pinned to the exact versions that release depends on; a different version installs a second copy of the router. Upgrade the three together.
+`@tanstack/react-start` is held at `~1.168` because 1.169 requires Vite 8. `@tanstack/react-router` is pinned to the exact version that release depends on; a different version installs a second copy of the router. Upgrade the two together.
 
 ## Conventions
 
