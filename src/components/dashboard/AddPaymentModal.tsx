@@ -252,6 +252,7 @@ export function AddPaymentModal({
               <input
                 required
                 type="text"
+                maxLength={100}
                 placeholder={
                   type === "credit_card"
                     ? "e.g. Chase Sapphire"
@@ -274,6 +275,7 @@ export function AddPaymentModal({
                 <input
                   required
                   type="text"
+                  maxLength={100}
                   placeholder={
                     type === "credit_card" ? "••••4589" : "e.g. Honda Finance"
                   }
@@ -370,6 +372,7 @@ export function AddPaymentModal({
                   </label>
                   <input
                     type="text"
+                    maxLength={100}
                     placeholder="e.g. Utilities"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
