@@ -190,7 +190,7 @@ export async function updatePayment(
           provider: data.provider,
           monthlyPayment: data.amount,
           nextPayment: date,
-          remainingBalance: data.remainingBalance ?? existing.remainingBalance,
+          remainingBalance: data.remainingBalance ?? 0,
           autoPay: data.autoPay ?? false,
           updatedAt: new Date(),
         },

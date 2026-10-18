@@ -562,19 +562,19 @@ describe('updatePayment', () => {
     })
   })
 
-  it("keeps a loan's stored remaining balance when none is sent", async () => {
+  it("clears a loan's remaining balance to 0 when the field is left empty (#39)", async () => {
     const { tables, db } = createFakeDb()
     tables.loan.findUnique.mockResolvedValue(
       loanRow({ id: 'payment-1', remainingBalance: 9000, autoPay: true }),
     )
 
+    // The edit form omits remainingBalance and autoPay when they are empty/off
     await updatePayment(db, verifiedSession, { ...common, type: 'loan' })
 
     expect(tables.loan.update).toHaveBeenCalledWith({
       where: { id: 'payment-1' },
-      // autoPay is not kept: an omitted flag turns auto-pay off
       data: expect.objectContaining({
-        remainingBalance: 9000,
+        remainingBalance: 0,
         autoPay: false,
       }),
     })
