@@ -37,6 +37,27 @@ export const parseDueDate = (value: string) => {
   return date
 }
 
+/**
+ * The due date one period after a stored due date: two weeks later for
+ * biweekly bills, otherwise the same day next month. A day the next month
+ * doesn't have becomes its last day (Jan 31 -> Feb 28), and stays there.
+ */
+export const nextDueDate = (date: Date | string, frequency = 'monthly') => {
+  const next = new Date(date)
+  if (frequency === 'biweekly') {
+    next.setUTCDate(next.getUTCDate() + 14)
+    return next
+  }
+  const day = next.getUTCDate()
+  next.setUTCDate(1)
+  next.setUTCMonth(next.getUTCMonth() + 1)
+  const lastDay = new Date(
+    Date.UTC(next.getUTCFullYear(), next.getUTCMonth() + 1, 0),
+  ).getUTCDate()
+  next.setUTCDate(Math.min(day, lastDay))
+  return next
+}
+
 export const getTimeOfDayGreeting = () => {
   const hour = new Date().getHours()
   if (hour < 12) return 'Good morning'

@@ -313,9 +313,10 @@ Loader data is the source of truth: after a mutation, components call `router.in
 - [x] 📝 About page and Blog
 - [x] 🎨 Scroll animations and glassmorphism effects
 - [x] 💾 Cloud storage in PostgreSQL, synced across devices
+- [x] ✅ Mark payments as paid, with a payment history
 - [ ] 📱 Mobile app (React Native)
 - [ ] 🔔 Push notifications for upcoming payments
-- [ ] 📊 Payment history and analytics
+- [ ] 📊 Payment analytics
 - [ ] 📈 Spending insights and reports
 - [ ] 🌐 Multi-currency support
 

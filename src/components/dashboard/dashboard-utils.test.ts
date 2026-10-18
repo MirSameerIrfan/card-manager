@@ -4,6 +4,7 @@ import {
   countDueThisWeekMonday,
   getPaymentStatus,
   getUpcomingStats,
+  nextDueDate,
   parseDueDate,
   toDateKey,
 } from './dashboard-utils'
@@ -111,6 +112,36 @@ describe('parseDueDate', () => {
     expect(parseDueDate('2026-02-30')).toBeNull()
     expect(parseDueDate('2026-05-12T12:00:00.000Z')).toBeNull()
     expect(parseDueDate('12/05/2026')).toBeNull()
+  })
+})
+
+describe('nextDueDate', () => {
+  const next = (day: string, frequency?: string) =>
+    toDateKey(nextDueDate(`${day}T00:00:00.000Z`, frequency))
+
+  it('moves a monthly due date to the same day next month', () => {
+    expect(next('2026-05-12')).toBe('2026-06-12')
+    expect(next('2026-05-12', 'monthly')).toBe('2026-06-12')
+  })
+
+  it('rolls December over into January of the next year', () => {
+    expect(next('2026-12-15')).toBe('2027-01-15')
+  })
+
+  it("uses the last day when next month doesn't have the day", () => {
+    expect(next('2026-01-31')).toBe('2026-02-28')
+    expect(next('2028-01-31')).toBe('2028-02-29')
+    expect(next('2026-03-31')).toBe('2026-04-30')
+  })
+
+  it('moves a biweekly due date 14 days, across a month end', () => {
+    expect(next('2026-05-25', 'biweekly')).toBe('2026-06-08')
+  })
+
+  it('returns UTC midnight, like every stored due date', () => {
+    expect(nextDueDate('2026-05-12T00:00:00.000Z').toISOString()).toBe(
+      '2026-06-12T00:00:00.000Z',
+    )
   })
 })
 

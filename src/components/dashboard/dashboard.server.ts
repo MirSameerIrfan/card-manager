@@ -6,12 +6,12 @@
 // the client.
 import { z } from "zod";
 import type { prisma } from "@/lib/prisma";
-import { parseDueDate } from "./dashboard-utils";
+import { nextDueDate, parseDueDate } from "./dashboard-utils";
 
 /** The payment tables these functions read and write. */
 export type PaymentDb = Pick<
   typeof prisma,
-  "credit_card" | "loan" | "recurring_bill"
+  "credit_card" | "loan" | "recurring_bill" | "payment_history" | "$transaction"
 >;
 
 /** The parts of a better-auth session these functions rely on. */
@@ -43,7 +43,7 @@ export async function getDashboardData(
   const userId = user.id;
 
   // 2. Fetch data in parallel
-  const [creditCards, loans, recurringBills] = await Promise.all([
+  const [creditCards, loans, recurringBills, paymentHistory] = await Promise.all([
     db.credit_card.findMany({
       where: { userId },
       orderBy: { dueDate: "asc" },
@@ -56,6 +56,11 @@ export async function getDashboardData(
       where: { userId },
       orderBy: { dueDate: "asc" },
     }),
+    db.payment_history.findMany({
+      where: { userId },
+      orderBy: [{ paidOn: "desc" }, { createdAt: "desc" }],
+      take: 10,
+    }),
   ]);
 
   return {
@@ -66,6 +71,7 @@ export async function getDashboardData(
     creditCards,
     loans,
     recurringBills,
+    paymentHistory,
   };
 }
 
@@ -252,5 +258,83 @@ export async function deletePayment(
   } catch (e) {
     console.error("Failed to delete payment", e);
     return { success: false, error: "Failed to delete payment" };
+  }
+}
+
+export const MarkPaidSchema = DeletePaymentSchema.extend({
+  // The user's calendar day (YYYY-MM-DD) from the browser, which knows it.
+  paidOn: z.string().refine((value) => parseDueDate(value) !== null),
+});
+
+/**
+ * Record a payment in payment_history and move it to its next due date: one
+ * month later (two weeks for biweekly bills). A loan's remaining balance
+ * goes down by the payment.
+ */
+export async function markPaymentPaid(
+  db: PaymentDb,
+  session: DashboardSession,
+  data: z.infer<typeof MarkPaidSchema>,
+) {
+  const userId = requireVerifiedUser(session).id;
+  const paidOn = parseDueDate(data.paidOn) ?? new Date(data.paidOn);
+  const record = (name: string, amount: number, dueDate: Date) =>
+    db.payment_history.create({
+      data: {
+        userId,
+        paymentType: data.type,
+        paymentId: data.id,
+        name,
+        amount,
+        dueDate,
+        paidOn,
+      },
+    });
+
+  try {
+    if (data.type === "credit_card") {
+      const existing = await db.credit_card.findUnique({ where: { id: data.id } });
+      if (!existing || existing.userId !== userId) return { success: false, error: "Payment not found" };
+      await db.$transaction([
+        record(existing.name, existing.amountDue, existing.dueDate),
+        db.credit_card.update({
+          where: { id: data.id },
+          data: { dueDate: nextDueDate(existing.dueDate), updatedAt: new Date() },
+        }),
+      ]);
+    } else if (data.type === "loan") {
+      const existing = await db.loan.findUnique({ where: { id: data.id } });
+      if (!existing || existing.userId !== userId) return { success: false, error: "Payment not found" };
+      const balance = existing.remainingBalance - existing.monthlyPayment;
+      await db.$transaction([
+        record(existing.name, existing.monthlyPayment, existing.nextPayment),
+        db.loan.update({
+          where: { id: data.id },
+          data: {
+            nextPayment: nextDueDate(existing.nextPayment),
+            // Rounded to cents so repeated payments don't drift (9000 - 300.1)
+            remainingBalance: Math.max(0, Math.round(balance * 100) / 100),
+            updatedAt: new Date(),
+          },
+        }),
+      ]);
+    } else if (data.type === "recurring_bill") {
+      const existing = await db.recurring_bill.findUnique({ where: { id: data.id } });
+      if (!existing || existing.userId !== userId) return { success: false, error: "Payment not found" };
+      await db.$transaction([
+        record(existing.name, existing.amount, existing.dueDate),
+        db.recurring_bill.update({
+          where: { id: data.id },
+          data: {
+            dueDate: nextDueDate(existing.dueDate, existing.frequency),
+            updatedAt: new Date(),
+          },
+        }),
+      ]);
+    }
+    return { success: true };
+  } catch (e) {
+    console.error("Failed to mark payment as paid", e);
+    return { success: false, error: "Failed to mark payment as paid" };
   }
 }

@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import { Pencil, Trash } from 'lucide-react'
+import { CircleCheck, Pencil, Trash } from 'lucide-react'
 
 export type PaymentStatus = 'Paid' | 'Due Soon' | 'Overdue' | 'Auto-Pay'
 
@@ -14,6 +14,8 @@ export type PaymentCardProps = {
   onEdit?: () => void
   onDelete?: () => void
   isDeleting?: boolean
+  onMarkPaid?: () => void
+  isMarkingPaid?: boolean
 }
 
 const themeByStatus: Record<
@@ -37,13 +39,25 @@ export function PaymentCard({
   onEdit,
   onDelete,
   isDeleting = false,
+  onMarkPaid,
+  isMarkingPaid = false,
 }: PaymentCardProps) {
   const theme = themeByStatus[status]
 
   return (
     <div className="group relative flex flex-col justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-200/50">
-      {onEdit || onDelete ? (
+      {onEdit || onDelete || onMarkPaid ? (
         <div className="absolute top-4 right-4 flex items-center gap-1 opacity-0 transition-all group-hover:opacity-100">
+          {onMarkPaid ? (
+            <button
+              onClick={onMarkPaid}
+              disabled={isMarkingPaid}
+              className="rounded-lg p-2 text-gray-400 transition-all hover:bg-emerald-50 hover:text-emerald-600"
+              title="Mark as Paid"
+            >
+              <CircleCheck className="h-4 w-4" />
+            </button>
+          ) : null}
           {onEdit ? (
             <button
               onClick={onEdit}

@@ -13,11 +13,15 @@ import {
   type EditablePayment,
   type RecurringFrequency,
 } from "./AddPaymentModal";
-import { deletePaymentFn } from "@/components/dashboard/dashboard.functions";
+import {
+  deletePaymentFn,
+  markPaymentPaidFn,
+} from "@/components/dashboard/dashboard.functions";
 import { PaymentCalendarModal } from "./PaymentCalendarModal";
 import { DashboardHeader } from "./DashboardHeader";
 import { StatsGrid } from "./StatsGrid";
 import { PaymentCard } from "./PaymentCard";
+import { PaymentHistory } from "./PaymentHistory";
 import { PaymentsSection } from "./PaymentsSection";
 import {
   countDueThisWeekMonday,
@@ -44,6 +48,7 @@ export function Dashboard() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [markingPaidId, setMarkingPaidId] = useState<string | null>(null);
   const greeting = getTimeOfDayGreeting();
   const displayName = getFirstName(data.user?.name ?? data.user?.email);
 
@@ -121,6 +126,23 @@ export function Dashboard() {
     }
   };
 
+  const handleMarkPaid = async (id: string, type: PaymentType, name: string) => {
+    if (!confirm(`Mark "${name}" as paid? Its due date moves to the next period.`)) return;
+
+    setMarkingPaidId(id);
+    try {
+      // The user's calendar day (YYYY-MM-DD); the server only knows UTC.
+      const paidOn = new Date().toLocaleDateString("en-CA");
+      const res = await markPaymentPaidFn({ data: { id, type, paidOn } });
+      if (!res.success) throw new Error(res.error || "Failed");
+      await router.invalidate();
+    } catch (_error) {
+      alert("Failed to mark as paid");
+    } finally {
+      setMarkingPaidId(null);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-linear-to-br from-emerald-50 via-white to-cyan-50 pb-20">
       <AddPaymentModal
@@ -185,6 +207,8 @@ export function Dashboard() {
               }}
               onDelete={() => void handleDelete(card.id, "credit_card")}
               isDeleting={deletingId === card.id}
+              onMarkPaid={() => void handleMarkPaid(card.id, "credit_card", card.name)}
+              isMarkingPaid={markingPaidId === card.id}
             />
           ))}
         </PaymentsSection>
@@ -219,6 +243,8 @@ export function Dashboard() {
               }}
               onDelete={() => void handleDelete(loan.id, "loan")}
               isDeleting={deletingId === loan.id}
+              onMarkPaid={() => void handleMarkPaid(loan.id, "loan", loan.name)}
+              isMarkingPaid={markingPaidId === loan.id}
             />
           ))}
         </PaymentsSection>
@@ -255,9 +281,15 @@ export function Dashboard() {
               }}
               onDelete={() => void handleDelete(bill.id, "recurring_bill")}
               isDeleting={deletingId === bill.id}
+              onMarkPaid={() => void handleMarkPaid(bill.id, "recurring_bill", bill.name)}
+              isMarkingPaid={markingPaidId === bill.id}
             />
           ))}
         </PaymentsSection>
+
+        {data.paymentHistory.length > 0 && (
+          <PaymentHistory payments={data.paymentHistory} />
+        )}
       </div>
     </main>
   );

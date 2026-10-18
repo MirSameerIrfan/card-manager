@@ -84,7 +84,7 @@ The built server does not load `.env` by itself. To run a production build local
 
 ### Data model
 
-`prisma/schema.prisma` has the better-auth tables (`User`, `Session`, `Account`, `Verification`, `RateLimit`, mapped to better-auth's table names) plus three payment tables with snake_case model names: `credit_card`, `loan`, `recurring_bill`, each owned by `userId`.
+`prisma/schema.prisma` has the better-auth tables (`User`, `Session`, `Account`, `Verification`, `RateLimit`, mapped to better-auth's table names) plus three payment tables with snake_case model names: `credit_card`, `loan`, `recurring_bill`, each owned by `userId`. `payment_history` has one row per "Mark as paid" (`markPaymentPaid`), which also moves the payment to its next due date (`nextDueDate` in `dashboard-utils.ts`: a month, or two weeks for biweekly bills) and takes a loan's payment off its remaining balance. History rows copy the payment's name and amount, so they outlive edits and deletes. `paidOn` is the user's calendar day, sent by the browser.
 
 - The three payment types have different column names for the same concept (`amountDue`/`monthlyPayment`/`amount`, `dueDate`/`nextPayment`/`dueDate`). The server functions and `Dashboard.tsx` branch on a `type: "credit_card" | "loan" | "recurring_bill"` discriminator and map to a common shape; a new field usually has to be threaded through all three branches in add, update, and the dashboard mapping.
 - `updatedAt` on the payment tables has no `@updatedAt`, so writes must set it explicitly.

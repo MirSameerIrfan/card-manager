@@ -11,10 +11,12 @@ import {
 import {
   AddPaymentSchema,
   DeletePaymentSchema,
+  MarkPaidSchema,
   UpdatePaymentSchema,
   addPayment,
   deletePayment,
   getDashboardData,
+  markPaymentPaid,
   updatePayment,
   type DashboardSession,
   type PaymentDb,
@@ -59,8 +61,15 @@ const createFakeDb = () => {
     credit_card: table(),
     loan: table(),
     recurring_bill: table(),
+    payment_history: table(),
   }
-  return { tables, db: tables as unknown as PaymentDb }
+  // The array form: every write was already started; this just awaits them
+  const $transaction = vi.fn((writes: unknown[]) => Promise.all(writes))
+  return {
+    tables,
+    $transaction,
+    db: { ...tables, $transaction } as unknown as PaymentDb,
+  }
 }
 
 type FakeTables = ReturnType<typeof createFakeDb>['tables']
@@ -206,6 +215,15 @@ describe('auth gate', () => {
         `deletePayment (${type})`,
         (db, session) => deletePayment(db, session, { id: 'payment-1', type }),
       ],
+      [
+        `markPaymentPaid (${type})`,
+        (db, session) =>
+          markPaymentPaid(db, session, {
+            id: 'payment-1',
+            type,
+            paidOn: '2026-05-12',
+          }),
+      ],
     ]),
   ]
 
@@ -241,10 +259,16 @@ describe('getDashboardData', () => {
       where: { userId: USER_ID },
       orderBy: { dueDate: 'asc' },
     })
+    expect(tables.payment_history.findMany).toHaveBeenCalledWith({
+      where: { userId: USER_ID },
+      orderBy: [{ paidOn: 'desc' }, { createdAt: 'desc' }],
+      take: 10,
+    })
     expect(dbCalls(tables)).toEqual([
       'credit_card.findMany',
       'loan.findMany',
       'recurring_bill.findMany',
+      'payment_history.findMany',
     ])
   })
 
@@ -683,6 +707,148 @@ describe('deletePayment', () => {
       )
     },
   )
+})
+
+// ---------------------------------------------------------------------------
+// markPaymentPaid — records the payment and moves it to the next period
+// ---------------------------------------------------------------------------
+describe('markPaymentPaid', () => {
+  const paid = (type: PaymentType, id = 'payment-1') => ({
+    id,
+    type,
+    paidOn: '2026-05-12',
+  })
+
+  it('records a credit card payment and moves it to next month, in one transaction', async () => {
+    const { tables, db, $transaction } = createFakeDb()
+    tables.credit_card.findUnique.mockResolvedValue(cardRow({ id: 'payment-1' }))
+
+    const result = await markPaymentPaid(db, verifiedSession, paid('credit_card'))
+
+    expect(result).toEqual({ success: true })
+    expect(tables.payment_history.create).toHaveBeenCalledWith({
+      data: {
+        userId: USER_ID,
+        paymentType: 'credit_card',
+        paymentId: 'payment-1',
+        name: 'Sapphire',
+        amount: 100,
+        dueDate: utc('2026-05-20'),
+        paidOn: utc('2026-05-12'),
+      },
+    })
+    expect(tables.credit_card.update).toHaveBeenCalledWith({
+      where: { id: 'payment-1' },
+      data: { dueDate: utc('2026-06-20'), updatedAt: NOW },
+    })
+    expect($transaction).toHaveBeenCalledTimes(1)
+    expect($transaction.mock.calls[0][0]).toHaveLength(2)
+  })
+
+  it("moves a loan a month and takes the payment off its balance, rounded to cents", async () => {
+    const { tables, db } = createFakeDb()
+    tables.loan.findUnique.mockResolvedValue(
+      loanRow({ id: 'payment-1', monthlyPayment: 300.1, remainingBalance: 9000 }),
+    )
+
+    await markPaymentPaid(db, verifiedSession, paid('loan'))
+
+    expect(tables.payment_history.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ amount: 300.1, dueDate: utc('2026-05-20') }),
+    })
+    expect(tables.loan.update).toHaveBeenCalledWith({
+      where: { id: 'payment-1' },
+      data: {
+        nextPayment: utc('2026-06-20'),
+        remainingBalance: 8699.9,
+        updatedAt: NOW,
+      },
+    })
+  })
+
+  it("doesn't take a loan's balance below 0", async () => {
+    const { tables, db } = createFakeDb()
+    tables.loan.findUnique.mockResolvedValue(
+      loanRow({ id: 'payment-1', monthlyPayment: 300, remainingBalance: 100 }),
+    )
+
+    await markPaymentPaid(db, verifiedSession, paid('loan'))
+
+    expect(tables.loan.update).toHaveBeenCalledWith({
+      where: { id: 'payment-1' },
+      data: expect.objectContaining({ remainingBalance: 0 }),
+    })
+  })
+
+  it.each([
+    ['monthly', utc('2026-06-20')],
+    ['biweekly', utc('2026-06-03')],
+  ])('moves a %s bill to its next due date', async (frequency, next) => {
+    const { tables, db } = createFakeDb()
+    tables.recurring_bill.findUnique.mockResolvedValue(
+      billRow({ id: 'payment-1', frequency }),
+    )
+
+    await markPaymentPaid(db, verifiedSession, paid('recurring_bill'))
+
+    expect(tables.recurring_bill.update).toHaveBeenCalledWith({
+      where: { id: 'payment-1' },
+      data: { dueDate: next, updatedAt: NOW },
+    })
+  })
+
+  it.each(PAYMENT_TYPES)(
+    "writes nothing for a %s that is missing or someone else's",
+    async (type) => {
+      const { tables, db, $transaction } = createFakeDb()
+      tables.credit_card.findUnique.mockResolvedValue(cardRow({ userId: OTHER_USER_ID }))
+      tables.loan.findUnique.mockResolvedValue(loanRow({ userId: OTHER_USER_ID }))
+      tables.recurring_bill.findUnique.mockResolvedValue(null)
+
+      const result = await markPaymentPaid(db, verifiedSession, paid(type))
+
+      expect(result).toEqual({ success: false, error: 'Payment not found' })
+      expect(dbCalls(tables)).toEqual([`${type}.findUnique`])
+      expect($transaction).not.toHaveBeenCalled()
+    },
+  )
+
+  it('returns a failure result when the transaction fails', async () => {
+    const { tables, db, $transaction } = createFakeDb()
+    tables.credit_card.findUnique.mockResolvedValue(cardRow({ id: 'payment-1' }))
+    const error = new Error('connection lost')
+    $transaction.mockRejectedValue(error)
+
+    const result = await markPaymentPaid(db, verifiedSession, paid('credit_card'))
+
+    expect(result).toEqual({
+      success: false,
+      error: 'Failed to mark payment as paid',
+    })
+    expect(console.error).toHaveBeenCalledWith(
+      'Failed to mark payment as paid',
+      error,
+    )
+  })
+})
+
+describe('MarkPaidSchema', () => {
+  it('accepts an id, a type and a calendar day', () => {
+    expect(
+      MarkPaidSchema.safeParse({ id: 'payment-1', type: 'loan', paidOn: '2026-05-12' })
+        .success,
+    ).toBe(true)
+  })
+
+  it.each([
+    ['a missing paidOn', {}],
+    ['a full timestamp', { paidOn: '2026-05-12T10:00:00.000Z' }],
+    ['a day that does not exist', { paidOn: '2026-02-30' }],
+  ])('rejects %s', (_label, override) => {
+    expect(
+      MarkPaidSchema.safeParse({ id: 'payment-1', type: 'loan', ...override }).success,
+    ).toBe(false)
+  })
 })
 
 // ---------------------------------------------------------------------------

@@ -5,10 +5,12 @@ import { prisma } from "@/lib/prisma";
 import {
   AddPaymentSchema,
   DeletePaymentSchema,
+  MarkPaidSchema,
   UpdatePaymentSchema,
   addPayment,
   deletePayment,
   getDashboardData,
+  markPaymentPaid,
   updatePayment,
 } from "./dashboard.server";
 
@@ -43,4 +45,10 @@ export const deletePaymentFn = createServerFn({ method: "POST" })
   .inputValidator(DeletePaymentSchema)
   .handler(async ({ data }) =>
     deletePayment(prisma, await getRequestSession(), data),
+  );
+
+export const markPaymentPaidFn = createServerFn({ method: "POST" })
+  .inputValidator(MarkPaidSchema)
+  .handler(async ({ data }) =>
+    markPaymentPaid(prisma, await getRequestSession(), data),
   );

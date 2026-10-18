@@ -8,18 +8,19 @@ datasource db {
 }
 
 model User {
-  id             String           @id
-  name           String
-  email          String           @unique
-  emailVerified  Boolean          @default(false)
-  image          String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  accounts       Account[]
-  credit_card    credit_card[]
-  loan           loan[]
-  recurring_bill recurring_bill[]
-  sessions       Session[]
+  id              String            @id
+  name            String
+  email           String            @unique
+  emailVerified   Boolean           @default(false)
+  image           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  accounts        Account[]
+  credit_card     credit_card[]
+  loan            loan[]
+  recurring_bill  recurring_bill[]
+  payment_history payment_history[]
+  sessions        Session[]
 
   @@map("user")
 }
@@ -128,4 +129,21 @@ model recurring_bill {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// One row per "Mark as paid". The payment may be renamed or deleted later, so
+// the row keeps its own copy of the name and amount.
+model payment_history {
+  id          String   @id @default(uuid())
+  userId      String
+  paymentType String
+  paymentId   String
+  name        String
+  amount      Float
+  dueDate     DateTime
+  paidOn      DateTime
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, paidOn])
 }
