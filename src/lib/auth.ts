@@ -15,6 +15,15 @@ if (isProduction && !process.env.BETTER_AUTH_URL) {
   );
 }
 
+// better-auth has the same check, but it reads NODE_ENV at runtime, which
+// Netlify doesn't set; without it, auth would run on better-auth's public
+// default secret and anyone could sign email verification links.
+if (isProduction && !process.env.BETTER_AUTH_SECRET) {
+  throw new Error(
+    "[auth] BETTER_AUTH_SECRET environment variable is required in production.",
+  );
+}
+
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
   basePath: "/api/auth",
