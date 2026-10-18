@@ -59,6 +59,9 @@ export const auth = betterAuth({
   // email-sending endpoints have stricter built-in rules). Counters live in the
   // database because in-memory counters reset per serverless instance.
   rateLimit: {
+    // better-auth's default reads NODE_ENV at runtime, which Netlify doesn't
+    // set, so it was off in production. isProduction is fixed at build time.
+    enabled: isProduction,
     storage: "database",
   },
 
