@@ -36,12 +36,14 @@ interface AddPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   paymentToEdit?: EditablePayment | null;
+  smartAddAvailable?: boolean;
 }
 
 export function AddPaymentModal({
   isOpen,
   onClose,
   paymentToEdit = null,
+  smartAddAvailable = false,
 }: AddPaymentModalProps) {
   const router = useRouter();
   const [type, setType] = useState<PaymentType>("credit_card");
@@ -214,7 +216,9 @@ export function AddPaymentModal({
         </div>
 
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
-          {isEditing ? null : <SmartAddPanel onFill={fillFromBill} />}
+          {isEditing ? null : (
+            <SmartAddPanel available={smartAddAvailable} onFill={fillFromBill} />
+          )}
 
           {/* Type Selector */}
           <div className="grid grid-cols-3 gap-3">

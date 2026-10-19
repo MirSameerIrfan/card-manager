@@ -7,7 +7,7 @@ export function TermsPage() {
     <LegalPage title="Terms of Service" effectiveDate="October 19, 2026">
       <p>
         These Terms of Service ("Terms") are an agreement between you and Mir Sameer Irfan, an
-        individual based in Canada who operates MoneyScope ("MoneyScope", "we", "us"). They
+        individual based in Ontario, Canada, who operates MoneyScope ("MoneyScope", "we", "us"). They
         govern your use of money-scope.app and the MoneyScope service (the "Service"). By
         creating an account or using the Service, you agree to these Terms and to our{' '}
         <Link to="/privacy">Privacy Policy</Link>. If you do not agree, do not use the Service.
@@ -156,16 +156,15 @@ export function TermsPage() {
 
       <h2>14. General</h2>
       <p>
-        These Terms are governed by the laws of Canada and of the province or territory in Canada
-        where MoneyScope's operator resides, without regard to conflict of laws rules, and the
-        courts of that province or territory have jurisdiction over any dispute, unless the
-        consumer protection law that applies to you gives you a right to bring proceedings
-        elsewhere.
+        These Terms are governed by the laws of the Province of Ontario and the federal laws of
+        Canada that apply there, without regard to conflict of laws rules. The courts of Ontario
+        have jurisdiction over any dispute, unless the consumer protection law that applies to
+        you gives you a right to bring proceedings where you live.
       </p>
       <p>
         Nothing in these Terms excludes or limits any right or remedy that cannot be excluded or
-        limited under applicable law, including the consumer protection laws of your province or
-        territory. If any part of these Terms is found unenforceable, it will be enforced to the
+        limited under applicable law, including Ontario's Consumer Protection Act, 2002 and the
+        consumer protection laws of your own province or territory. If any part of these Terms is found unenforceable, it will be enforced to the
         fullest extent permitted, and the rest of the Terms will remain in effect. Our failure to
         enforce a provision is not a waiver of it. You may not transfer these Terms; we may
         transfer them in connection with a reorganization, incorporation, or sale of the Service.

@@ -299,6 +299,17 @@ describe('getDashboardData', () => {
     })
     expect(result.user).toEqual({ name: null, email: null })
   })
+
+  it.each([
+    ['set', 'sk-ant-test', true],
+    ['empty', '', false],
+  ])('reports Smart add as available only when ANTHROPIC_API_KEY is %s', async (_label, key, available) => {
+    vi.stubEnv('ANTHROPIC_API_KEY', key)
+    const { db } = createFakeDb()
+    const result = await getDashboardData(db, verifiedSession)
+    expect(result.smartAddAvailable).toBe(available)
+    vi.unstubAllEnvs()
+  })
 })
 
 // ---------------------------------------------------------------------------

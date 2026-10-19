@@ -72,6 +72,8 @@ export async function getDashboardData(
     loans,
     recurringBills,
     paymentHistory,
+    // Smart add shows as "coming soon" until ANTHROPIC_API_KEY is set
+    smartAddAvailable: Boolean(process.env.ANTHROPIC_API_KEY),
   };
 }
 

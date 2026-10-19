@@ -9,7 +9,7 @@ export function PrivacyPolicyPage() {
     <LegalPage title="Privacy Policy" effectiveDate="October 19, 2026">
       <p>
         MoneyScope ("MoneyScope", "we", "us") is a bill and payment tracker operated by Mir
-        Sameer Irfan, an individual based in Canada. This policy explains what personal
+        Sameer Irfan, an individual based in Ontario, Canada. This policy explains what personal
         information MoneyScope collects, why, who it is shared with, and the choices you have.
         It applies to money-scope.app and the MoneyScope service. Questions:{' '}
         <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
@@ -28,8 +28,9 @@ export function PrivacyPolicyPage() {
           numbers; MoneyScope does not need them.
         </li>
         <li>
-          <strong>Smart add:</strong> if you use "Fill in from a bill", the text, photo, or PDF
-          you add is sent to Anthropic's Claude to read the payment details. MoneyScope does not
+          <strong>Smart add (coming soon):</strong> once it is available, if you use "Fill in
+          from a bill", the text, photo, or PDF you add is sent to Anthropic's Claude to read the
+          payment details. MoneyScope does not
           store it; we only record that you made a request, to limit daily use.
         </li>
         <li>
@@ -71,7 +72,8 @@ export function PrivacyPolicyPage() {
         <li><strong>Resend</strong> delivers our emails.</li>
         <li><strong>Sentry</strong> receives the error reports described above.</li>
         <li>
-          <strong>Anthropic</strong> receives what you submit to Smart add, only when you use it,
+          <strong>Anthropic</strong> will receive what you submit to Smart add once it is
+          available, only when you use it,
           and processes it under its commercial terms, which do not allow it to train its models
           on that content.
         </li>

@@ -20,8 +20,14 @@ const readAsBase64 = (file: File) =>
 const isFileType = (type: string): type is FileType =>
   (SMART_ADD_FILE_TYPES as readonly string[]).includes(type)
 
+type SmartAddPanelProps = {
+  /** false until the server has an Anthropic API key: shows "coming soon" */
+  available: boolean
+  onFill: (payment: ExtractedPayment) => void
+}
+
 /** Paste a bill or upload a photo/PDF of it; Claude suggests the payment. */
-export function SmartAddPanel({ onFill }: { onFill: (payment: ExtractedPayment) => void }) {
+export function SmartAddPanel({ available, onFill }: SmartAddPanelProps) {
   const [text, setText] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [isReading, setIsReading] = useState(false)
@@ -62,6 +68,24 @@ export function SmartAddPanel({ onFill }: { onFill: (payment: ExtractedPayment) 
     } finally {
       setIsReading(false)
     }
+  }
+
+  if (!available) {
+    return (
+      <div className="space-y-1 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
+        <p className="flex items-center gap-2 text-sm font-bold text-gray-900">
+          <Sparkles className="h-4 w-4 text-emerald-600" />
+          Fill in from a bill with Claude
+          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+            Coming soon
+          </span>
+        </p>
+        <p className="text-sm text-gray-600">
+          Soon you'll be able to paste a bill or upload a photo of it, and Claude will fill in
+          this form for you.
+        </p>
+      </div>
+    )
   }
 
   return (

@@ -152,6 +152,7 @@ export function Dashboard() {
           setPaymentToEdit(null);
         }}
         paymentToEdit={paymentToEdit}
+        smartAddAvailable={data.smartAddAvailable}
       />
       <PaymentCalendarModal
         isOpen={isCalendarOpen}
