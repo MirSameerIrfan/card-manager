@@ -9,17 +9,11 @@ export const Route = createFileRoute("/dashboard")({
     try {
       const session = await getSessionFn();
       if (!session?.user || session.user.emailVerified !== true) {
-        throw redirect({
-          to: "/auth/login",
-          search: { error: "Please log in to continue." },
-        });
+        throw redirect({ to: "/auth/login" });
       }
       return { session };
     } catch (_error) {
-      throw redirect({
-        to: "/auth/login",
-        search: { error: "Please log in to continue." },
-      });
+      throw redirect({ to: "/auth/login" });
     }
   },
   loader: async () => {

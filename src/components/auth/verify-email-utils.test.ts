@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { getVerifyEmailErrorMessage } from './verify-email-utils'
+import {
+  getLoginVerificationErrorMessage,
+  getVerifyEmailErrorMessage,
+} from './verify-email-utils'
 
 // ---------------------------------------------------------------------------
 // getVerifyEmailErrorMessage — error code → user-facing message mapping
@@ -115,5 +118,22 @@ describe('VerifyEmailPage — callback redirect cases (logic contracts)', () => 
   it('Case 3: session with no user means verification not confirmed', () => {
     const mockSession = { data: null }
     expect(mockSession.data).toBeNull()
+  })
+})
+
+describe('getLoginVerificationErrorMessage', () => {
+  it.each(['token_expired', 'invalid_token', 'user_not_found'])(
+    'has a message for the verification code %s',
+    (code) => {
+      expect(getLoginVerificationErrorMessage(code)).toEqual(expect.any(String))
+    },
+  )
+
+  it.each([
+    ['no parameter', undefined],
+    ['the old dashboard redirect message', 'Please log in to continue.'],
+    ['text someone put in a link', 'Your account is locked, call 555-0100'],
+  ])('ignores %s', (_label, code) => {
+    expect(getLoginVerificationErrorMessage(code)).toBeNull()
   })
 })

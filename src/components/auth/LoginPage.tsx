@@ -6,29 +6,15 @@ import { useForm } from '@tanstack/react-form'
 import { authClient, signIn } from '@/lib/auth-client'
 import { getAuthErrorMessage } from '@/utils/auth-errors'
 import { FieldInfo } from '@/components/auth/FieldInfo'
-
-function getVerificationErrorMessage(error: string): string {
-  switch (error) {
-    case 'token_expired':
-      return 'Your verification link has expired. Please request a new one below.'
-    case 'invalid_token':
-      return 'Your verification link is invalid. Please request a new one below.'
-    case 'user_not_found':
-      return 'No account was found for this verification link. Please sign up again.'
-    default:
-      return 'Email verification failed. Please request a new verification link below.'
-  }
-}
+import { getLoginVerificationErrorMessage } from '@/components/auth/verify-email-utils'
 
 export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const search = useSearch({ from: '/auth/login/' })
-  const verificationError = search.error
-  const [submitError, setSubmitError] = useState<string | null>(
-    verificationError ? getVerificationErrorMessage(verificationError) : null,
-  )
+  const verificationError = getLoginVerificationErrorMessage(search.error)
+  const [submitError, setSubmitError] = useState<string | null>(verificationError)
   const [submitInfo, setSubmitInfo] = useState<string | null>(null)
-  const [needsVerification, setNeedsVerification] = useState(!!verificationError)
+  const [needsVerification, setNeedsVerification] = useState(verificationError !== null)
   const [isResendingVerification, setIsResendingVerification] = useState(false)
   const navigate = useNavigate()
   const router = useRouter()
