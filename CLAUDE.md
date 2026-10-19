@@ -48,6 +48,7 @@ Keep `.env` pointed at the local database. `prisma.config.ts` prefers `DIRECT_UR
 | `DATABASE_POOL_MAX`, `DATABASE_POOL_IDLE_TIMEOUT_MS`, `DATABASE_POOL_CONNECTION_TIMEOUT_MS` | Per-instance pg pool limits (defaults 5 / 10000 / 10000). |
 | `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET` | App base URL and signing secret. Both required in production; the URL defaults to `http://localhost:3000`. |
 | `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | Auth emails. Without the key, verification and password reset links are logged to the server console instead — this is how you complete those flows locally. |
+| `ANTHROPIC_API_KEY` | Claude API key for Smart add. Optional; without it Smart add reports it isn't available. |
 | `SENTRY_DSN`, `VITE_SENTRY_DSN`, `SENTRY_AUTH_TOKEN` | Server, client, and build-time Sentry. Optional; Sentry is a no-op without a DSN. |
 
 The production database is Supabase-hosted Postgres accessed through the Prisma ORM (no Supabase client or Supabase Auth): project `card-manager` (ref `phnxlkpdwfldhhyatohp`, region us-east-2, free plan), where the app connects as the dedicated role `card_manager_app`, which owns the tables, through the pooler host `aws-0-us-east-2.pooler.supabase.com`.
@@ -68,7 +69,8 @@ The built server does not load `.env` by itself. To run a production build local
 
 - `src/utils/auth.functions.ts` — session lookup, sign out, profile name change, payment reminder on/off.
 - Anything that checks a password or sends an email (sign up, sign in, resend verification, change email, change password, forgot/reset password) does not use a server function: the pages call `authClient` so the request goes through `/api/auth/*`, where better-auth's rate limiter applies (it does not apply to `auth.api.*` calls). Don't add a server function that wraps one of these: server function ids are a SHA-256 of the file path and export name, so anyone can call one even if no page imports it. `getAuthErrorMessage` in `src/utils/auth-errors.ts` maps `authClient` errors to UI messages.
-- `src/components/dashboard/dashboard.functions.ts` — dashboard read plus add/update/delete payment, colocated with the dashboard components.
+- `src/components/dashboard/dashboard.functions.ts` — dashboard read plus add/update/delete/mark-paid payment and Smart add, colocated with the dashboard components.
+- Smart add (`smart-add.server.ts`, `SmartAddPanel.tsx`): in the Add Payment form the user pastes a bill or uploads a photo/PDF (4 MB max, under Netlify's 6 MB request limit once base64-encoded), and `claude-sonnet-5-5` reads it through a forced `record_payment` tool call over plain `fetch` (no SDK). Sonnet, with an 8 s timeout, keeps the call inside Netlify's 10 s function limit. Claude's answer is validated with zod and invalid fields are dropped. Each request inserts an `ai_request` row first, and a user gets 20 per 24 hours, so a bad actor can't run up the API bill. A failing API call throws so it reaches Sentry; the document itself is never stored.
 
 ### Auth
 
@@ -111,7 +113,7 @@ Due dates are stored as UTC midnight. Formatting and comparison code in `dashboa
 
 ## Product copy and legal pages
 
-MoneyScope is an early-access product run by one person (Mir Sameer Irfan, Canada). Marketing copy must stay true: no user counts, testimonials, ratings, or features that don't exist. The public contact address is `CONTACT_EMAIL` in `src/lib/contact.ts` (info@money-scope.app); it is also the reply-to of every email the app sends. `/privacy` and `/terms` (`src/components/legal/`) describe what the app collects and which services receive data (Netlify, Supabase, Resend, Sentry): update the Privacy Policy and its effective date whenever that changes, for example when a new service starts receiving user data.
+MoneyScope is an early-access product run by one person (Mir Sameer Irfan, Canada). Marketing copy must stay true: no user counts, testimonials, ratings, or features that don't exist. The public contact address is `CONTACT_EMAIL` in `src/lib/contact.ts` (info@money-scope.app); it is also the reply-to of every email the app sends. `/privacy` and `/terms` (`src/components/legal/`) describe what the app collects and which services receive data (Netlify, Supabase, Resend, Sentry, Anthropic): update the Privacy Policy and its effective date whenever that changes, for example when a new service starts receiving user data.
 
 ## Conventions
 

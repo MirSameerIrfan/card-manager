@@ -42,6 +42,12 @@ export function TermsPage() {
         <li>give financial, investment, credit, legal, tax, or accounting advice.</li>
       </ul>
       <p>
+        Smart add ("Fill in from a bill") uses Claude, an AI model from Anthropic, to suggest
+        payment details from a bill you provide. AI suggestions can be incomplete or wrong, so
+        check every field against your bill before you save it. Only submit documents you are
+        allowed to share.
+      </p>
+      <p>
         Everything the Service shows, including due dates, statuses, totals, balances, and
         reminders, is for information only and is based on what you enter and on automated
         calculations that may be wrong. Consult a qualified professional before making financial
@@ -85,7 +91,7 @@ export function TermsPage() {
       <h2>7. Third-party services</h2>
       <p>
         The Service relies on third-party providers for hosting, data storage, email delivery,
-        and error monitoring. We are not responsible for their acts, omissions, or outages. Links
+        error monitoring, and AI processing. We are not responsible for their acts, omissions, or outages. Links
         to third-party websites are provided for convenience only.
       </p>
 

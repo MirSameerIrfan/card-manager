@@ -58,6 +58,18 @@ export const nextDueDate = (date: Date | string, frequency = 'monthly') => {
   return next
 }
 
+/** Files Smart add accepts: the image and PDF types Claude reads. */
+export const SMART_ADD_FILE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'application/pdf',
+] as const
+
+/** Under Netlify's 6 MB request limit once base64-encoded (4/3 larger). */
+export const SMART_ADD_MAX_FILE_BYTES = 4 * 1024 * 1024
+
 export const getTimeOfDayGreeting = () => {
   const hour = new Date().getHours()
   if (hour < 12) return 'Good morning'

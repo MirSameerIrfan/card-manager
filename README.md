@@ -315,6 +315,7 @@ Loader data is the source of truth: after a mutation, components call `router.in
 - [x] 🎨 Scroll animations and glassmorphism effects
 - [x] 💾 Cloud storage in PostgreSQL, synced across devices
 - [x] ✅ Mark payments as paid, with a payment history
+- [x] ✨ Smart add: Claude fills in a payment from a pasted bill, photo, or PDF
 - [x] 🔔 Daily email reminders for upcoming payments (opt-out in profile settings)
 - [ ] 📱 Mobile app (React Native)
 - [ ] 📊 Payment analytics

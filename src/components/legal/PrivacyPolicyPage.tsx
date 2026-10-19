@@ -28,6 +28,11 @@ export function PrivacyPolicyPage() {
           numbers; MoneyScope does not need them.
         </li>
         <li>
+          <strong>Smart add:</strong> if you use "Fill in from a bill", the text, photo, or PDF
+          you add is sent to Anthropic's Claude to read the payment details. MoneyScope does not
+          store it; we only record that you made a request, to limit daily use.
+        </li>
+        <li>
           <strong>Settings:</strong> whether you receive payment reminder emails.
         </li>
         <li>
@@ -65,6 +70,11 @@ export function PrivacyPolicyPage() {
         <li><strong>Supabase</strong> hosts the database that stores your account and payments.</li>
         <li><strong>Resend</strong> delivers our emails.</li>
         <li><strong>Sentry</strong> receives the error reports described above.</li>
+        <li>
+          <strong>Anthropic</strong> receives what you submit to Smart add, only when you use it,
+          and processes it under its commercial terms, which do not allow it to train its models
+          on that content.
+        </li>
       </ul>
       <p>
         We may also disclose information if the law requires it, or to protect the rights,

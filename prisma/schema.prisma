@@ -22,6 +22,7 @@ model User {
   loan             loan[]
   recurring_bill   recurring_bill[]
   payment_history  payment_history[]
+  ai_request       ai_request[]
   sessions         Session[]
 
   @@map("user")
@@ -148,4 +149,14 @@ model payment_history {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, paidOn])
+}
+
+// One row per Smart add request to Claude, to cap each user's daily usage.
+model ai_request {
+  id        String   @id @default(uuid())
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

@@ -28,8 +28,8 @@ const features = [
     },
     {
         icon: Zap,
-        title: 'Quick Add',
-        description: 'Add a credit card, loan, or recurring bill in a few seconds.',
+        title: 'Smart Add with Claude',
+        description: 'Paste a bill or upload a photo of it, and Claude fills in the payment for you to check.',
         color: 'from-blue-500 to-indigo-500'
     },
     {

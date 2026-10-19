@@ -27,7 +27,7 @@ export type DashboardSession =
   | null
   | undefined;
 
-const requireVerifiedUser = (session: DashboardSession) => {
+export const requireVerifiedUser = (session: DashboardSession) => {
   if (!session?.user || session.user.emailVerified !== true) {
     throw new Error("Unauthorized");
   }

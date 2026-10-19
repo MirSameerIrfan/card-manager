@@ -13,6 +13,7 @@ import {
   markPaymentPaid,
   updatePayment,
 } from "./dashboard.server";
+import { ExtractPaymentSchema, extractPayment } from "./smart-add.server";
 
 // The handlers stay thin: they read the session from the incoming request and
 // hand it to dashboard.server.ts, which rejects anything but a verified user
@@ -51,4 +52,10 @@ export const markPaymentPaidFn = createServerFn({ method: "POST" })
   .inputValidator(MarkPaidSchema)
   .handler(async ({ data }) =>
     markPaymentPaid(prisma, await getRequestSession(), data),
+  );
+
+export const extractPaymentFn = createServerFn({ method: "POST" })
+  .inputValidator(ExtractPaymentSchema)
+  .handler(async ({ data }) =>
+    extractPayment(prisma, await getRequestSession(), data),
   );

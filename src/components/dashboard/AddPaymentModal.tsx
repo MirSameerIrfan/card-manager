@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { addPaymentFn, updatePaymentFn } from "./dashboard.functions";
 import { toDateKey } from "./dashboard-utils";
+import { SmartAddPanel, type ExtractedPayment } from "./SmartAddPanel";
 
 type PaymentType = "credit_card" | "loan" | "recurring_bill";
 export type RecurringFrequency = "monthly" | "biweekly";
@@ -61,6 +62,19 @@ export function AddPaymentModal({
   const [autoPay, setAutoPay] = useState(false);
 
   const isEditing = paymentToEdit !== null;
+
+  // Only fields Claude found are filled in; the rest keep what was typed.
+  const fillFromBill = (payment: ExtractedPayment) => {
+    if (payment.type) setType(payment.type);
+    if (payment.name) setName(payment.name);
+    if (payment.provider) setProvider(payment.provider);
+    if (payment.amount !== undefined) setAmount(payment.amount.toString());
+    if (payment.dueDate) setDate(payment.dueDate);
+    if (payment.minimumPayment !== undefined) setMinimumPayment(payment.minimumPayment.toString());
+    if (payment.remainingBalance !== undefined) setRemainingBalance(payment.remainingBalance.toString());
+    if (payment.category) setCategory(payment.category);
+    if (payment.frequency) setFrequency(payment.frequency);
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -178,7 +192,7 @@ export function AddPaymentModal({
       />
 
       {/* Modal - Styled like the dashboard cards */}
-      <div className="relative z-10 w-full max-w-lg transform overflow-hidden rounded-2xl bg-white p-6 shadow-2xl shadow-emerald-900/20 transition-all sm:p-8">
+      <div className="relative z-10 max-h-[calc(100vh-2rem)] w-full max-w-lg transform overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl shadow-emerald-900/20 transition-all sm:p-8">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
@@ -200,6 +214,8 @@ export function AddPaymentModal({
         </div>
 
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
+          {isEditing ? null : <SmartAddPanel onFill={fillFromBill} />}
+
           {/* Type Selector */}
           <div className="grid grid-cols-3 gap-3">
             <button
