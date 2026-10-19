@@ -109,6 +109,10 @@ Due dates are stored as UTC midnight. Formatting and comparison code in `dashboa
 
 `@tanstack/react-start` is held at `~1.168` because 1.169 requires Vite 8. `@tanstack/react-router` is pinned to the exact version that release depends on; a different version installs a second copy of the router. Upgrade the two together.
 
+## Product copy and legal pages
+
+MoneyScope is an early-access product run by one person (Mir Sameer Irfan, Canada). Marketing copy must stay true: no user counts, testimonials, ratings, or features that don't exist. The public contact address is `CONTACT_EMAIL` in `src/lib/contact.ts` (info@money-scope.app); it is also the reply-to of every email the app sends. `/privacy` and `/terms` (`src/components/legal/`) describe what the app collects and which services receive data (Netlify, Supabase, Resend, Sentry): update the Privacy Policy and its effective date whenever that changes, for example when a new service starts receiving user data.
+
 ## Conventions
 
 - Import with the `@/` alias (maps to `src/`), not long relative paths.

@@ -8,7 +8,6 @@ import {
   Target,
   Sparkles,
   Github,
-  Linkedin,
 } from "lucide-react";
 import { useScrollReveal } from "@/utils/useScrollReveal";
 import { Footer } from "@/components/landing/Footer";
@@ -18,7 +17,7 @@ const values = [
     icon: Shield,
     title: "Privacy First",
     description:
-      "Your financial data stays yours. We use bank-level encryption and never sell your information to third parties.",
+      "Your financial data stays yours. It is encrypted in transit and at rest, and never sold or shared for advertising.",
     gradient: "from-emerald-500 to-teal-500",
   },
   {
@@ -32,7 +31,7 @@ const values = [
     icon: Heart,
     title: "Empathy",
     description:
-      "We've all been hit with late fees. MoneyScope is built by people who understand the frustration of missed payments.",
+      "Most of us have paid a late fee. MoneyScope is built by someone who understands the frustration of missed payments.",
     gradient: "from-cyan-500 to-sky-500",
   },
   {
@@ -53,7 +52,6 @@ const team = [
     bio: "Full-stack developer passionate about building tools that make everyday finances simpler.",
     links: {
       github: "https://github.com/MirSameerIrfan",
-      linkedin: "#",
     },
   },
 ];
@@ -79,9 +77,9 @@ const milestones = [
   },
   {
     year: "2026",
-    title: "Growing Community",
+    title: "Early Access",
     description:
-      "50K+ users trust MoneyScope to manage their payments every month.",
+      "Free while in early access, adding payment history and features shaped by its first users.",
   },
 ];
 
@@ -225,7 +223,7 @@ export function AboutPage() {
               Our journey
             </h2>
             <p className="text-xl text-gray-600">
-              From a simple idea to a tool trusted by thousands.
+              From a simple idea to a working product.
             </p>
           </div>
 
@@ -324,14 +322,6 @@ export function AboutPage() {
                   >
                     <Github className="w-5 h-5" />
                   </a>
-                  <a
-                    href={member.links.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-200 text-gray-600 hover:bg-blue-600 hover:text-white transition-all duration-300"
-                  >
-                    <Linkedin className="w-5 h-5" />
-                  </a>
                 </div>
               </div>
             ))}
@@ -370,7 +360,7 @@ export function AboutPage() {
                 : "opacity-0 translate-y-6"
             }`}
           >
-            Join thousands who never miss a payment. It's free to get started.
+            It's free while in early access. Questions? Write to info@money-scope.app.
           </p>
           <Link
             to="/auth/signup"

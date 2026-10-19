@@ -1,3 +1,5 @@
+import { CONTACT_EMAIL } from "@/lib/contact";
+
 // No user name in emails: anyone can sign up with someone else's address and
 // a "name" like "Your account is locked, call …", which we would then deliver.
 type EmailRecipient = { email: string };
@@ -45,6 +47,7 @@ function buildEmail({
 
   return {
     from: process.env.RESEND_FROM_EMAIL || "MoneyScope <onboarding@resend.dev>",
+    reply_to: CONTACT_EMAIL,
     to: [user.email],
     subject,
     html: `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(intro)}</p>${list}<p><a href="${escapeHtml(url)}">${escapeHtml(linkLabel)}</a></p><p>${escapeHtml(footer)}</p>`,

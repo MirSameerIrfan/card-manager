@@ -7,10 +7,10 @@ interface AuthLayoutProps {
 }
 
 const features = [
-    'Bank-level security',
+    'Free while in early access',
     'No credit card required',
-    '2-minute setup',
-    'Cancel anytime'
+    'Daily email reminders',
+    'Your data is never sold'
 ]
 
 export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
@@ -47,7 +47,7 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
                             Never miss a payment again
                         </h2>
                         <p className="text-xl text-gray-600">
-                            Join thousands who track bills effortlessly and save money every month.
+                            Track credit cards, loans, and bills in one place, and get reminded before each one is due.
                         </p>
                     </div>
 
@@ -65,21 +65,6 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
                         ))}
                     </div>
 
-                    {/* Stats */}
-                    <div className="mt-16 grid grid-cols-3 gap-8">
-                        <div>
-                            <div className="text-3xl font-black text-gray-900">50K+</div>
-                            <div className="text-sm text-gray-600">Active users</div>
-                        </div>
-                        <div>
-                            <div className="text-3xl font-black text-gray-900">$2.5M+</div>
-                            <div className="text-sm text-gray-600">Saved in fees</div>
-                        </div>
-                        <div>
-                            <div className="text-3xl font-black text-gray-900">99.9%</div>
-                            <div className="text-sm text-gray-600">Success rate</div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

@@ -26,7 +26,7 @@ export function Hero() {
                                 }`}
                         >
                             <Bell className="w-4 h-4" />
-                            Never miss a payment again
+                            Early access · Free while in beta
                         </div>
 
                         <h1
@@ -43,7 +43,7 @@ export function Hero() {
                             className={`text-xl text-gray-600 max-w-xl transition-all duration-700 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
                                 }`}
                         >
-                            Track credit cards, loans, and recurring bills in one place. Get smart reminders before due dates and never pay late fees again.
+                            Track credit cards, loans, and recurring bills in one place. Get an email before payments are due and stay ahead of late fees.
                         </p>
 
                         <div
@@ -57,9 +57,9 @@ export function Hero() {
                                 Get Started Free
                                 <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
                             </Link>
-                            <button className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-gray-50 text-gray-900 font-semibold rounded-xl border-2 border-gray-200 hover:border-gray-300 transition-all hover:shadow-md">
+                            <a href="#features" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-gray-50 text-gray-900 font-semibold rounded-xl border-2 border-gray-200 hover:border-gray-300 transition-all hover:shadow-md">
                                 See How It Works
-                            </button>
+                            </a>
                         </div>
 
                         {/* Stats */}
@@ -68,9 +68,9 @@ export function Hero() {
                                 }`}
                         >
                             {[
-                                { value: '$2.5M+', label: 'Late fees saved' },
-                                { value: '50K+', label: 'Active users' },
-                                { value: '99.9%', label: 'On-time rate' },
+                                { value: 'Free', label: 'During early access' },
+                                { value: '3', label: 'Payment types: cards, loans, bills' },
+                                { value: 'Daily', label: 'Email reminders' },
                             ].map((stat) => (
                                 <div key={stat.label}>
                                     <div className="text-3xl font-bold text-gray-900">{stat.value}</div>

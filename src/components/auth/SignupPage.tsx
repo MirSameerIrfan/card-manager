@@ -259,11 +259,11 @@ export function SignupPage() {
           />
           <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
             I agree to the{' '}
-            <a href="#" className="font-semibold text-emerald-600 hover:text-emerald-700">
+            <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-emerald-600 hover:text-emerald-700">
               Terms of Service
             </a>{' '}
             and{' '}
-            <a href="#" className="font-semibold text-emerald-600 hover:text-emerald-700">
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-emerald-600 hover:text-emerald-700">
               Privacy Policy
             </a>
           </label>

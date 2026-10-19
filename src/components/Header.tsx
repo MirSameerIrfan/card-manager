@@ -12,7 +12,6 @@ import {
   Settings,
   ChevronDown,
   Info,
-  BookOpen,
 } from 'lucide-react'
 import { useSession, signOut } from '@/lib/auth-client'
 
@@ -20,7 +19,6 @@ const navTabs = [
   { label: 'Home', to: '/', icon: Home },
   { label: 'Dashboard', to: '/dashboard', icon: BarChart3 },
   { label: 'About', to: '/about', icon: Info },
-  { label: 'Blog', to: '/blog', icon: BookOpen },
 ]
 
 export default function Header() {
@@ -106,6 +104,9 @@ export default function Header() {
             </div>
             <span className="font-black text-xl text-gray-900 hidden sm:inline">
               MoneyScope
+            </span>
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+              Early access
             </span>
           </Link>
 

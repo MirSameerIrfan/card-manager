@@ -4,8 +4,8 @@ import { useScrollReveal } from '@/utils/useScrollReveal'
 const features = [
     {
         icon: Bell,
-        title: 'Smart Reminders',
-        description: 'Get notifications days before due dates via email, SMS, or push notifications.',
+        title: 'Email Reminders',
+        description: 'A daily email lists what is due in the next 3 days, so nothing sneaks up on you.',
         color: 'from-emerald-500 to-teal-500'
     },
     {
@@ -16,20 +16,20 @@ const features = [
     },
     {
         icon: Shield,
-        title: 'Bank-Level Security',
-        description: 'Your financial data is encrypted and protected with industry-standard security.',
+        title: 'Private by Design',
+        description: 'Your data is encrypted in transit and at rest, never sold, and never shown to anyone else.',
         color: 'from-cyan-500 to-sky-500'
     },
     {
         icon: TrendingUp,
-        title: 'Spending Insights',
-        description: 'Track patterns, identify trends, and optimize your monthly cash flow.',
+        title: 'Payment History',
+        description: 'Mark a payment as paid and it moves to its next due date, with a record of what you paid.',
         color: 'from-sky-500 to-blue-500'
     },
     {
         icon: Zap,
         title: 'Quick Add',
-        description: 'Add new bills in seconds with smart detection and auto-fill features.',
+        description: 'Add a credit card, loan, or recurring bill in a few seconds.',
         color: 'from-blue-500 to-indigo-500'
     },
     {
@@ -44,7 +44,7 @@ export function Features() {
     const { ref: sectionRef, isVisible } = useScrollReveal({ threshold: 0.08 })
 
     return (
-        <section ref={sectionRef} className="py-24 bg-white">
+        <section id="features" ref={sectionRef} className="py-24 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div
                     className={`text-center mb-16 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'

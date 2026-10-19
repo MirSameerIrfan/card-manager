@@ -77,8 +77,8 @@ Tired of late fees and missed payment deadlines? **MoneyScope** consolidates bil
 
 **📝 Content Pages**
 - About page with mission, values, timeline & team
-- Blog with featured posts, category filters & newsletter
-- Full-width footer with social links
+- Privacy Policy and Terms of Service
+- Footer with contact email and legal links
 - Custom animated 404 page
 
 </td>
@@ -210,9 +210,9 @@ moneyscope/
 │   ├── components/
 │   │   ├── about/           # About page (mission, values, timeline, team)
 │   │   ├── auth/            # Auth layout, login, signup, password reset
-│   │   ├── blog/            # Blog page (posts, featured, newsletter)
 │   │   ├── dashboard/       # Dashboard, stats, payment cards, calendar, server functions
-│   │   ├── landing/         # Hero, Features, Testimonials, CTA, Footer
+│   │   ├── landing/         # Hero, Features, CTA, Footer
+│   │   ├── legal/           # Privacy Policy and Terms of Service pages
 │   │   ├── settings/        # Profile settings page
 │   │   ├── Header.tsx       # Glassmorphism header with scroll effect
 │   │   └── NotFound.tsx     # Animated 404 page
@@ -220,7 +220,8 @@ moneyscope/
 │   │   ├── __root.tsx       # Root layout (Header, devtools, route transitions)
 │   │   ├── index.tsx        # Landing page (/)
 │   │   ├── about.tsx        # About page (/about)
-│   │   ├── blog.tsx         # Blog page (/blog)
+│   │   ├── privacy.tsx      # Privacy Policy (/privacy)
+│   │   ├── terms.tsx        # Terms of Service (/terms)
 │   │   ├── dashboard.tsx    # Dashboard (/dashboard, authenticated)
 │   │   ├── auth/            # Auth routes (login, signup, verify-email, forgot/reset password)
 │   │   ├── settings/        # Settings routes (/settings/profile)
@@ -310,7 +311,7 @@ Loader data is the source of truth: after a mutation, components call `router.in
 - [x] ➕ Add/edit/delete payments (credit cards, loans, bills)
 - [x] 👤 Profile settings (name, email, password)
 - [x] 🔑 Forgot password flow
-- [x] 📝 About page and Blog
+- [x] 📝 About page, Privacy Policy and Terms of Service
 - [x] 🎨 Scroll animations and glassmorphism effects
 - [x] 💾 Cloud storage in PostgreSQL, synced across devices
 - [x] ✅ Mark payments as paid, with a payment history

@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Hero } from '@/components/landing/Hero'
 import { Features } from '@/components/landing/Features'
-import { Testimonials } from '@/components/landing/Testimonials'
 import { CTA } from '@/components/landing/CTA'
 import { Footer } from '@/components/landing/Footer'
 import { redirectIfAuthenticated } from '@/utils/route-guards'
@@ -16,7 +15,6 @@ function LandingPage() {
     <div className="min-h-screen">
       <Hero />
       <Features />
-      <Testimonials />
       <CTA />
       <Footer />
     </div>

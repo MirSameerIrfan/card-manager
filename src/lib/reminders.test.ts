@@ -121,6 +121,7 @@ describe('sendPaymentReminderEmails', () => {
     const bodies = fetch.mock.calls.map(([, init]) => JSON.parse(init.body as string))
     expect(bodies.map((body) => body.length)).toEqual([100, 1])
     expect(bodies[1][0].to).toEqual(['user100@example.com'])
+    expect(bodies[1][0].reply_to).toBe('info@money-scope.app')
   })
 
   it('escapes payment names in the HTML', async () => {
