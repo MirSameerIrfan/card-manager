@@ -114,37 +114,3 @@ export async function sendPasswordResetEmail({ user, url }: AuthEmailPayload) {
     devLabel: "Password reset link",
   });
 }
-
-export type PaymentReminder = { email: string; items: string[] };
-
-/**
- * One reminder email per user. Sent through Resend's batch endpoint (100
- * emails per request), since single sends would hit its 2-requests-per-second
- * limit with more than a few users.
- */
-export async function sendPaymentReminderEmails(reminders: PaymentReminder[]) {
-  const url = `${process.env.BETTER_AUTH_URL || "http://localhost:3000"}/dashboard`;
-  const emails = reminders.map(({ email, items }) =>
-    buildEmail({
-      user: { email },
-      subject: "Payments due soon on MoneyScope",
-      intro: "These payments are due in the next few days:",
-      items,
-      linkLabel: "Open your dashboard",
-      url,
-      footer: "You can turn these reminders off in your MoneyScope profile settings.",
-      devLabel: "Payment reminder",
-    }),
-  );
-
-  const resendApiKey = process.env.RESEND_API_KEY;
-  if (!resendApiKey) {
-    for (const email of emails) {
-      console.info(`[Reminders] Payment reminder for ${email.to[0]}:\n${email.text}`);
-    }
-    return;
-  }
-  for (let i = 0; i < emails.length; i += 100) {
-    await postToResend("/emails/batch", emails.slice(i, i + 100), resendApiKey);
-  }
-}

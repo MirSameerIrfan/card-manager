@@ -18,7 +18,6 @@ import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as AuthIndexRouteImport } from './routes/auth/index'
 import { Route as SettingsProfileRouteImport } from './routes/settings/profile'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as ApiCronRemindersRouteImport } from './routes/api/cron/reminders'
 import { Route as AuthForgotPasswordIndexRouteImport } from './routes/auth/forgot-password/index'
 import { Route as AuthLoginIndexRouteImport } from './routes/auth/login/index'
 import { Route as AuthResetPasswordIndexRouteImport } from './routes/auth/reset-password/index'
@@ -70,11 +69,6 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiCronRemindersRoute = ApiCronRemindersRouteImport.update({
-  id: '/api/cron/reminders',
-  path: '/api/cron/reminders',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthForgotPasswordIndexRoute = AuthForgotPasswordIndexRouteImport.update({
   id: '/auth/forgot-password/',
   path: '/auth/forgot-password/',
@@ -111,7 +105,6 @@ export interface FileRoutesByFullPath {
   '/settings/profile': typeof SettingsProfileRoute
   '/auth/': typeof AuthIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/cron/reminders': typeof ApiCronRemindersRoute
   '/auth/forgot-password/': typeof AuthForgotPasswordIndexRoute
   '/auth/login/': typeof AuthLoginIndexRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
@@ -128,7 +121,6 @@ export interface FileRoutesByTo {
   '/settings/profile': typeof SettingsProfileRoute
   '/auth': typeof AuthIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/cron/reminders': typeof ApiCronRemindersRoute
   '/auth/forgot-password': typeof AuthForgotPasswordIndexRoute
   '/auth/login': typeof AuthLoginIndexRoute
   '/auth/reset-password': typeof AuthResetPasswordIndexRoute
@@ -146,7 +138,6 @@ export interface FileRoutesById {
   '/settings/profile': typeof SettingsProfileRoute
   '/auth/': typeof AuthIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/cron/reminders': typeof ApiCronRemindersRoute
   '/auth/forgot-password/': typeof AuthForgotPasswordIndexRoute
   '/auth/login/': typeof AuthLoginIndexRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
@@ -165,7 +156,6 @@ export interface FileRouteTypes {
     | '/settings/profile'
     | '/auth/'
     | '/api/auth/$'
-    | '/api/cron/reminders'
     | '/auth/forgot-password/'
     | '/auth/login/'
     | '/auth/reset-password/'
@@ -182,7 +172,6 @@ export interface FileRouteTypes {
     | '/settings/profile'
     | '/auth'
     | '/api/auth/$'
-    | '/api/cron/reminders'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -199,7 +188,6 @@ export interface FileRouteTypes {
     | '/settings/profile'
     | '/auth/'
     | '/api/auth/$'
-    | '/api/cron/reminders'
     | '/auth/forgot-password/'
     | '/auth/login/'
     | '/auth/reset-password/'
@@ -217,7 +205,6 @@ export interface RootRouteChildren {
   SettingsProfileRoute: typeof SettingsProfileRoute
   AuthIndexRoute: typeof AuthIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
-  ApiCronRemindersRoute: typeof ApiCronRemindersRoute
   AuthForgotPasswordIndexRoute: typeof AuthForgotPasswordIndexRoute
   AuthLoginIndexRoute: typeof AuthLoginIndexRoute
   AuthResetPasswordIndexRoute: typeof AuthResetPasswordIndexRoute
@@ -290,13 +277,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/cron/reminders': {
-      id: '/api/cron/reminders'
-      path: '/api/cron/reminders'
-      fullPath: '/api/cron/reminders'
-      preLoaderRoute: typeof ApiCronRemindersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth/forgot-password/': {
       id: '/auth/forgot-password/'
       path: '/auth/forgot-password'
@@ -345,7 +325,6 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsProfileRoute: SettingsProfileRoute,
   AuthIndexRoute: AuthIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
-  ApiCronRemindersRoute: ApiCronRemindersRoute,
   AuthForgotPasswordIndexRoute: AuthForgotPasswordIndexRoute,
   AuthLoginIndexRoute: AuthLoginIndexRoute,
   AuthResetPasswordIndexRoute: AuthResetPasswordIndexRoute,
