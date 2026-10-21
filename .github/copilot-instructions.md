@@ -12,7 +12,7 @@
 
 ## Project Overview
 
-**MoneyScope** (repo `card-manager`), a bill & payment reminder: personal finance tracker for recurring payments (credit cards, loans, bills).  
+**MoneyScope** (repo `card-manager`), a bill & payment tracker: personal finance tracker for recurring payments (credit cards, loans, bills). It sends no reminder emails; the only emails are email verification and password reset.  
 **Stack**: React 19 + TanStack Start + Vite 7 + TypeScript + Tailwind CSS 4 + Nitro + Prisma 7 (PostgreSQL) + better-auth + Sentry
 
 ---
