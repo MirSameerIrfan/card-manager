@@ -6,7 +6,7 @@ import { LegalPage } from './LegalPage'
 // actually sends data to.
 export function PrivacyPolicyPage() {
   return (
-    <LegalPage title="Privacy Policy" effectiveDate="October 19, 2026">
+    <LegalPage title="Privacy Policy" effectiveDate="October 21, 2026">
       <p>
         MoneyScope ("MoneyScope", "we", "us") is a bill and payment tracker operated by Mir
         Sameer Irfan, an individual based in Ontario, Canada. This policy explains what personal
@@ -34,9 +34,6 @@ export function PrivacyPolicyPage() {
           store it; we only record that you made a request, to limit daily use.
         </li>
         <li>
-          <strong>Settings:</strong> whether you receive payment reminder emails.
-        </li>
-        <li>
           <strong>Technical information:</strong> the IP address and browser details of each
           signed-in session, short-lived counters keyed by IP address that limit repeated sign-in
           attempts, and server logs kept by our hosting provider. When the app hits an error, a
@@ -53,7 +50,7 @@ export function PrivacyPolicyPage() {
       <h2>How we use it</h2>
       <ul>
         <li>To provide the service: store your payments, show your dashboard, and keep you signed in.</li>
-        <li>To send account emails: email verification, password resets, and, unless you turn them off, payment reminders.</li>
+        <li>To send account emails: email verification and password resets only. We do not send marketing or reminder emails.</li>
         <li>To keep the service secure and working: prevent abuse, limit repeated sign-in attempts, and find and fix errors.</li>
       </ul>
       <p>
@@ -115,8 +112,8 @@ export function PrivacyPolicyPage() {
 
       <h2>Your choices and rights</h2>
       <p>
-        You can see and edit your payments and your name and email address in the app, and turn
-        reminder emails off in your profile settings. You can also ask us for access to, a copy
+        You can see and edit your payments and your name and email address in the app. You can
+        also ask us for access to, a copy
         of, correction of, or deletion of your personal information, or withdraw your consent,
         by emailing <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Withdrawing consent
         may mean we can no longer provide the service. If you are not satisfied with our answer,

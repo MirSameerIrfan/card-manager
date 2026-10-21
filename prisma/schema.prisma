@@ -13,7 +13,8 @@ model User {
   email            String            @unique
   emailVerified    Boolean           @default(false)
   image            String?
-  // Daily email about payments due soon (src/lib/reminders.ts); on by default
+  // Unused since payment reminder emails were removed (2026-10-21); dropping
+  // the column needs a production migration
   paymentReminders Boolean           @default(true)
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt

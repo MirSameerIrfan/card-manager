@@ -33,7 +33,7 @@ export function CTA() {
                     className={`text-xl text-emerald-50 mb-12 max-w-2xl mx-auto transition-all duration-700 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
                         }`}
                 >
-                    See every bill, card, and loan in one place, and get reminded before each one is due. Free while in early access.
+                    See every bill, card, and loan in one place, with what's due and what's overdue at a glance. Free while in early access.
                 </p>
 
                 <div

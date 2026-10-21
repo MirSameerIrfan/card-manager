@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, CreditCard, Bell, Clock } from 'lucide-react'
+import { ArrowRight, CreditCard, Bell, CheckCircle2, Clock } from 'lucide-react'
 import { useScrollReveal } from '@/utils/useScrollReveal'
 
 export function Hero() {
@@ -43,7 +43,7 @@ export function Hero() {
                             className={`text-xl text-gray-600 max-w-xl transition-all duration-700 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
                                 }`}
                         >
-                            Track credit cards, loans, and recurring bills in one place. Get an email before payments are due and stay ahead of late fees.
+                            Track credit cards, loans, and recurring bills in one place. See what's due, what's overdue, and what's on auto-pay, and stay ahead of late fees.
                         </p>
 
                         <div
@@ -70,7 +70,7 @@ export function Hero() {
                             {[
                                 { value: 'Free', label: 'During early access' },
                                 { value: '3', label: 'Payment types: cards, loans, bills' },
-                                { value: 'Daily', label: 'Email reminders' },
+                                { value: '0', label: 'Bank logins needed' },
                             ].map((stat) => (
                                 <div key={stat.label}>
                                     <div className="text-3xl font-bold text-gray-900">{stat.value}</div>
@@ -163,8 +163,8 @@ export function Hero() {
                             style={{ transitionDelay: '700ms', transition: 'opacity 0.7s ease' }}
                         >
                             <div className="flex items-center gap-2">
-                                <Bell className="w-5 h-5" />
-                                <span className="font-semibold">Reminder sent!</span>
+                                <CheckCircle2 className="w-5 h-5" />
+                                <span className="font-semibold">Marked as paid!</span>
                             </div>
                         </div>
                     </div>

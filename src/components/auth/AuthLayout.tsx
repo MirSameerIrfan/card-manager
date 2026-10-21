@@ -9,7 +9,7 @@ interface AuthLayoutProps {
 const features = [
     'Free while in early access',
     'No credit card required',
-    'Daily email reminders',
+    'No bank login needed',
     'Your data is never sold'
 ]
 
@@ -47,7 +47,7 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
                             Never miss a payment again
                         </h2>
                         <p className="text-xl text-gray-600">
-                            Track credit cards, loans, and bills in one place, and get reminded before each one is due.
+                            Track credit cards, loans, and bills in one place, and see what's due before it's late.
                         </p>
                     </div>
 

@@ -73,7 +73,7 @@ const milestones = [
     year: "2026",
     title: "Public Launch",
     description:
-      "MoneyScope goes live with recurring bills, payment calendar, and smart reminders.",
+      "MoneyScope goes live with credit cards, loans, recurring bills, and a payment calendar.",
   },
   {
     year: "2026",

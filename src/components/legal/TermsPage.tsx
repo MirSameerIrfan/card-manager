@@ -4,7 +4,7 @@ import { LegalPage } from './LegalPage'
 
 export function TermsPage() {
   return (
-    <LegalPage title="Terms of Service" effectiveDate="October 19, 2026">
+    <LegalPage title="Terms of Service" effectiveDate="October 21, 2026">
       <p>
         These Terms of Service ("Terms") are an agreement between you and Mir Sameer Irfan, an
         individual based in Ontario, Canada, who operates MoneyScope ("MoneyScope", "we", "us"). They
@@ -33,8 +33,8 @@ export function TermsPage() {
 
       <h2>3. What MoneyScope does and does not do</h2>
       <p>
-        MoneyScope is an organizational tool. It records the payments you enter, shows when they
-        are due, and can email you reminders. MoneyScope does <strong>not</strong>:
+        MoneyScope is an organizational tool. It records the payments you enter and shows when
+        they are due. MoneyScope does <strong>not</strong>:
       </p>
       <ul>
         <li>make, schedule, process, or guarantee any payment;</li>
@@ -48,8 +48,8 @@ export function TermsPage() {
         allowed to share.
       </p>
       <p>
-        Everything the Service shows, including due dates, statuses, totals, balances, and
-        reminders, is for information only and is based on what you enter and on automated
+        Everything the Service shows, including due dates, statuses, totals, and balances, is
+        for information only and is based on what you enter and on automated
         calculations that may be wrong. Consult a qualified professional before making financial
         decisions.
       </p>
@@ -58,9 +58,9 @@ export function TermsPage() {
       <p>
         You alone are responsible for the accuracy of the information you enter, for checking due
         dates and amounts against your actual statements, and for paying your bills in full and
-        on time. Do not rely on MoneyScope as your only record or reminder. Reminder emails may be
-        late, missing, filtered as spam, or wrong, and features that fill in or calculate
-        information automatically can make mistakes. MoneyScope is not responsible for any late
+        on time. Do not rely on MoneyScope as your only record or reminder. MoneyScope does not
+        send payment reminders, and features that fill in or calculate information automatically
+        can make mistakes. MoneyScope is not responsible for any late
         fees, interest, penalties, collection costs, service interruptions, damage to your credit
         score, or other consequences of a missed, late, incorrect, or duplicate payment.
       </p>
@@ -110,8 +110,8 @@ export function TermsPage() {
         available", with all faults and without warranties or conditions of any kind, whether
         express, implied, or statutory, including any implied warranties or conditions of
         merchantable quality, fitness for a particular purpose, accuracy, non-infringement, and
-        uninterrupted or error-free operation. We do not warrant that the Service, its reminders,
-        or its calculations will be accurate, timely, secure, or available, or that any data will
+        uninterrupted or error-free operation. We do not warrant that the Service or its
+        calculations will be accurate, timely, secure, or available, or that any data will
         be kept or delivered without loss or corruption.
       </p>
 

@@ -4,8 +4,8 @@ import { useScrollReveal } from '@/utils/useScrollReveal'
 const features = [
     {
         icon: Bell,
-        title: 'Email Reminders',
-        description: 'A daily email lists what is due in the next 3 days, so nothing sneaks up on you.',
+        title: 'Due Dates at a Glance',
+        description: 'See what is overdue, due soon, or on auto-pay, with totals for what is coming up.',
         color: 'from-emerald-500 to-teal-500'
     },
     {

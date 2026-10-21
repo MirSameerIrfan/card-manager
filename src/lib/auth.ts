@@ -62,10 +62,6 @@ export const auth = betterAuth({
       enabled: true,
       updateEmailWithoutVerification: false,
     },
-    // Exposed on session.user and settable through auth.api.updateUser.
-    additionalFields: {
-      paymentReminders: { type: "boolean", defaultValue: true, input: true },
-    },
   },
 
   // better-auth rate limits /api/auth/* in production (sign-in and the

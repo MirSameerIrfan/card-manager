@@ -1,9 +1,9 @@
 import { getRouteApi, useRouter } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
-import { Bell, Eye, EyeOff, Lock, Mail, User } from 'lucide-react'
+import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react'
 import { authClient, useSession } from '@/lib/auth-client'
 import { getAuthErrorMessage } from '@/utils/auth-errors'
-import { updatePaymentRemindersFn, updateProfileNameFn } from '@/utils/auth.functions'
+import { updateProfileNameFn } from '@/utils/auth.functions'
 
 const routeApi = getRouteApi('/settings/profile')
 
@@ -41,10 +41,6 @@ export function ProfileSettingsPage() {
   const [nameSuccessMessage, setNameSuccessMessage] = useState<string | null>(null)
   const [emailSuccessMessage, setEmailSuccessMessage] = useState<string | null>(null)
   const [passwordSuccessMessage, setPasswordSuccessMessage] = useState<string | null>(null)
-
-  const [remindersEnabled, setRemindersEnabled] = useState(data.user.paymentReminders)
-  const [isUpdatingReminders, setIsUpdatingReminders] = useState(false)
-  const [remindersMessage, setRemindersMessage] = useState<string | null>(null)
 
   useEffect(() => {
     setName(currentName)
@@ -116,22 +112,6 @@ export function ProfileSettingsPage() {
       setNameErrorMessage(error instanceof Error ? error.message : 'Unable to update your name.')
     } finally {
       setIsUpdatingName(false)
-    }
-  }
-
-  const handleRemindersChange = async (enabled: boolean) => {
-    setRemindersMessage(null)
-    setRemindersEnabled(enabled)
-    setIsUpdatingReminders(true)
-    try {
-      const result = await updatePaymentRemindersFn({ data: { enabled } })
-      if (!result.success) throw new Error(result.error ?? undefined)
-      setRemindersMessage(enabled ? 'Reminders are on.' : 'Reminders are off.')
-    } catch (_error) {
-      setRemindersEnabled(!enabled)
-      setRemindersMessage('Unable to update your reminders. Please try again.')
-    } finally {
-      setIsUpdatingReminders(false)
     }
   }
 
@@ -428,31 +408,6 @@ export function ProfileSettingsPage() {
               {isUpdatingPassword ? 'Saving...' : 'Update password'}
             </button>
           </form>
-        </section>
-
-        <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-black text-gray-900">Reminders</h2>
-          <p className="mt-1 text-sm text-gray-600">
-            A daily email when payments are due in the next 3 days. Auto-pay payments are left out.
-          </p>
-
-          <label className="mt-5 flex cursor-pointer items-center gap-3">
-            <input
-              type="checkbox"
-              checked={remindersEnabled}
-              disabled={isUpdatingReminders}
-              onChange={(event) => void handleRemindersChange(event.target.checked)}
-              className="h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-            />
-            <Bell className="h-5 w-5 text-gray-400" />
-            <span className="text-sm font-semibold text-gray-900">Email me about upcoming payments</span>
-          </label>
-
-          {remindersMessage ? (
-            <p role="status" className="mt-4 text-sm text-gray-600">
-              {remindersMessage}
-            </p>
-          ) : null}
         </section>
       </div>
     </main>

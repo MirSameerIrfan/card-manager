@@ -13,8 +13,6 @@ type EmailContent = {
   user: EmailRecipient;
   subject: string;
   intro: string;
-  /** Shown as a bulleted list after the intro. */
-  items?: string[];
   linkLabel: string;
   url: string;
   footer: string;
@@ -35,32 +33,19 @@ function buildEmail({
   user,
   subject,
   intro,
-  items = [],
   linkLabel,
   url,
   footer,
 }: EmailContent) {
   const greeting = "Hi there,";
-  const list = items.length
-    ? `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
-    : "";
 
   return {
     from: process.env.RESEND_FROM_EMAIL || "MoneyScope <onboarding@resend.dev>",
     reply_to: CONTACT_EMAIL,
     to: [user.email],
     subject,
-    html: `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(intro)}</p>${list}<p><a href="${escapeHtml(url)}">${escapeHtml(linkLabel)}</a></p><p>${escapeHtml(footer)}</p>`,
-    text: [
-      greeting,
-      "",
-      intro,
-      ...items.map((item) => `- ${item}`),
-      "",
-      `${linkLabel}: ${url}`,
-      "",
-      footer,
-    ].join("\n"),
+    html: `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(intro)}</p><p><a href="${escapeHtml(url)}">${escapeHtml(linkLabel)}</a></p><p>${escapeHtml(footer)}</p>`,
+    text: [greeting, "", intro, "", `${linkLabel}: ${url}`, "", footer].join("\n"),
   };
 }
 
