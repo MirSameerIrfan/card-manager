@@ -55,6 +55,7 @@ const createFakeDb = () => {
     findUnique: vi.fn().mockResolvedValue(null),
     create: vi.fn().mockResolvedValue({}),
     update: vi.fn().mockResolvedValue({}),
+    updateMany: vi.fn().mockResolvedValue({ count: 1 }),
     delete: vi.fn().mockResolvedValue({}),
   })
   const tables = {
@@ -63,8 +64,8 @@ const createFakeDb = () => {
     recurring_bill: table(),
     payment_history: table(),
   }
-  // The array form: every write was already started; this just awaits them
-  const $transaction = vi.fn((writes: unknown[]) => Promise.all(writes))
+  // An interactive transaction: the callback runs against the same tables
+  const $transaction = vi.fn((run: (tx: typeof tables) => Promise<unknown>) => run(tables))
   return {
     tables,
     $transaction,
@@ -730,13 +731,19 @@ describe('markPaymentPaid', () => {
     paidOn: '2026-05-12',
   })
 
-  it('records a credit card payment and moves it to next month, in one transaction', async () => {
+  it('moves a credit card to next month, then records the payment, in one transaction', async () => {
     const { tables, db, $transaction } = createFakeDb()
     tables.credit_card.findUnique.mockResolvedValue(cardRow({ id: 'payment-1' }))
 
     const result = await markPaymentPaid(db, verifiedSession, paid('credit_card'))
 
     expect(result).toEqual({ success: true })
+    expect($transaction).toHaveBeenCalledTimes(1)
+    // Guarded on the due date that was read, so a second request can't move it again
+    expect(tables.credit_card.updateMany).toHaveBeenCalledWith({
+      where: { id: 'payment-1', userId: USER_ID, dueDate: utc('2026-05-20') },
+      data: { dueDate: utc('2026-06-20'), updatedAt: NOW },
+    })
     expect(tables.payment_history.create).toHaveBeenCalledWith({
       data: {
         userId: USER_ID,
@@ -748,15 +755,29 @@ describe('markPaymentPaid', () => {
         paidOn: utc('2026-05-12'),
       },
     })
-    expect(tables.credit_card.update).toHaveBeenCalledWith({
-      where: { id: 'payment-1' },
-      data: { dueDate: utc('2026-06-20'), updatedAt: NOW },
-    })
-    expect($transaction).toHaveBeenCalledTimes(1)
-    expect($transaction.mock.calls[0][0]).toHaveLength(2)
   })
 
-  it("moves a loan a month and takes the payment off its balance, rounded to cents", async () => {
+  it.each(PAYMENT_TYPES)(
+    'records nothing when the %s was already moved on by another request',
+    async (type) => {
+      const { tables, db } = createFakeDb()
+      tables.credit_card.findUnique.mockResolvedValue(cardRow({ id: 'payment-1' }))
+      tables.loan.findUnique.mockResolvedValue(loanRow({ id: 'payment-1' }))
+      tables.recurring_bill.findUnique.mockResolvedValue(billRow({ id: 'payment-1' }))
+      tables[type].updateMany.mockResolvedValue({ count: 0 })
+
+      const result = await markPaymentPaid(db, verifiedSession, paid(type))
+
+      expect(result).toEqual({
+        success: false,
+        error: 'This payment was already marked as paid.',
+      })
+      expect(tables.payment_history.create).not.toHaveBeenCalled()
+      expect(console.error).not.toHaveBeenCalled()
+    },
+  )
+
+  it('moves a loan a month and takes the payment off its balance, rounded to cents', async () => {
     const { tables, db } = createFakeDb()
     tables.loan.findUnique.mockResolvedValue(
       loanRow({ id: 'payment-1', monthlyPayment: 300.1, remainingBalance: 9000 }),
@@ -767,8 +788,8 @@ describe('markPaymentPaid', () => {
     expect(tables.payment_history.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ amount: 300.1, dueDate: utc('2026-05-20') }),
     })
-    expect(tables.loan.update).toHaveBeenCalledWith({
-      where: { id: 'payment-1' },
+    expect(tables.loan.updateMany).toHaveBeenCalledWith({
+      where: { id: 'payment-1', userId: USER_ID, nextPayment: utc('2026-05-20') },
       data: {
         nextPayment: utc('2026-06-20'),
         remainingBalance: 8699.9,
@@ -777,7 +798,7 @@ describe('markPaymentPaid', () => {
     })
   })
 
-  it("doesn't take a loan's balance below 0", async () => {
+  it("records only what is left on a loan's final payment", async () => {
     const { tables, db } = createFakeDb()
     tables.loan.findUnique.mockResolvedValue(
       loanRow({ id: 'payment-1', monthlyPayment: 300, remainingBalance: 100 }),
@@ -785,9 +806,24 @@ describe('markPaymentPaid', () => {
 
     await markPaymentPaid(db, verifiedSession, paid('loan'))
 
-    expect(tables.loan.update).toHaveBeenCalledWith({
-      where: { id: 'payment-1' },
-      data: expect.objectContaining({ remainingBalance: 0 }),
+    expect(tables.payment_history.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ amount: 100 }),
+    })
+    expect(tables.loan.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ remainingBalance: 0 }) }),
+    )
+  })
+
+  it('records the full monthly payment when no balance was entered (0)', async () => {
+    const { tables, db } = createFakeDb()
+    tables.loan.findUnique.mockResolvedValue(
+      loanRow({ id: 'payment-1', monthlyPayment: 300, remainingBalance: 0 }),
+    )
+
+    await markPaymentPaid(db, verifiedSession, paid('loan'))
+
+    expect(tables.payment_history.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ amount: 300 }),
     })
   })
 
@@ -802,8 +838,8 @@ describe('markPaymentPaid', () => {
 
     await markPaymentPaid(db, verifiedSession, paid('recurring_bill'))
 
-    expect(tables.recurring_bill.update).toHaveBeenCalledWith({
-      where: { id: 'payment-1' },
+    expect(tables.recurring_bill.updateMany).toHaveBeenCalledWith({
+      where: { id: 'payment-1', userId: USER_ID, dueDate: utc('2026-05-20') },
       data: { dueDate: next, updatedAt: NOW },
     })
   })

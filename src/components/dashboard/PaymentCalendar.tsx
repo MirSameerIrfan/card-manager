@@ -2,7 +2,7 @@ import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import type { EventContentArg, EventInput } from '@fullcalendar/core'
 import { useMemo } from 'react'
-import { toDateKey } from './dashboard-utils'
+import { localDateKey, toDateKey } from './dashboard-utils'
 
 type PaymentCalendarItem = {
   date: Date | string
@@ -54,12 +54,7 @@ const renderEventContent = (eventInfo: EventContentArg) => {
 export function PaymentCalendar({ payments, className }: PaymentCalendarProps) {
   const events = useMemo<EventInput[]>(() => {
     // Due dates are UTC midnight, so compare calendar days rather than instants.
-    const now = new Date()
-    const todayKey = [
-      now.getFullYear(),
-      String(now.getMonth() + 1).padStart(2, '0'),
-      String(now.getDate()).padStart(2, '0'),
-    ].join('-')
+    const todayKey = localDateKey()
 
     const aggregates = payments.reduce<Record<string, DayAggregate>>((acc, item) => {
       const date = new Date(item.date)

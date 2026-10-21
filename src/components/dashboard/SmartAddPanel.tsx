@@ -1,12 +1,10 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { FileUp, Sparkles } from 'lucide-react'
 import { extractPaymentFn } from './dashboard.functions'
-import { SMART_ADD_FILE_TYPES, SMART_ADD_MAX_FILE_BYTES } from './dashboard-utils'
+import { SMART_ADD_FILE_TYPES, SMART_ADD_MAX_FILE_BYTES, localDateKey } from './dashboard-utils'
+import type { ExtractedPayment } from './smart-add.server'
 
 type FileType = (typeof SMART_ADD_FILE_TYPES)[number]
-export type ExtractedPayment = NonNullable<
-  Awaited<ReturnType<typeof extractPaymentFn>>['payment']
->
 
 const readAsBase64 = (file: File) =>
   new Promise<string>((resolve, reject) => {
@@ -30,6 +28,7 @@ type SmartAddPanelProps = {
 export function SmartAddPanel({ available, onFill }: SmartAddPanelProps) {
   const [text, setText] = useState('')
   const [file, setFile] = useState<File | null>(null)
+  const fileInput = useRef<HTMLInputElement>(null)
   const [isReading, setIsReading] = useState(false)
   const [message, setMessage] = useState<{ isError: boolean; text: string } | null>(null)
 
@@ -46,8 +45,8 @@ export function SmartAddPanel({ available, onFill }: SmartAddPanelProps) {
 
     setIsReading(true)
     try {
-      // The user's calendar day (YYYY-MM-DD), for due dates printed without a year
-      const today = new Date().toLocaleDateString('en-CA')
+      // The user's calendar day, for due dates printed without a year
+      const today = localDateKey()
       const res = await extractPaymentFn({
         data:
           file && isFileType(file.type)
@@ -108,6 +107,7 @@ export function SmartAddPanel({ available, onFill }: SmartAddPanelProps) {
           <FileUp className="h-4 w-4" />
           {file ? file.name : 'Or upload a photo or PDF'}
           <input
+            ref={fileInput}
             type="file"
             accept={SMART_ADD_FILE_TYPES.join(',')}
             className="sr-only"
@@ -117,7 +117,11 @@ export function SmartAddPanel({ available, onFill }: SmartAddPanelProps) {
         {file ? (
           <button
             type="button"
-            onClick={() => setFile(null)}
+            onClick={() => {
+              setFile(null)
+              // Otherwise picking the same file again fires no change event
+              if (fileInput.current) fileInput.current.value = ''
+            }}
             className="text-sm font-semibold text-gray-500 hover:text-gray-700"
           >
             Remove

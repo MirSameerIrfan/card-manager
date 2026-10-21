@@ -5,7 +5,7 @@
 // function handlers: TanStack Start refuses to bundle `*.server.*` files for
 // the client.
 import { z } from "zod";
-import type { prisma } from "@/lib/prisma";
+import type { Prisma, prisma } from "@/lib/prisma";
 import { nextDueDate, parseDueDate } from "./dashboard-utils";
 
 /** The payment tables these functions read and write. */
@@ -280,38 +280,48 @@ export async function markPaymentPaid(
 ) {
   const userId = requireVerifiedUser(session).id;
   const paidOn = parseDueDate(data.paidOn) ?? new Date(data.paidOn);
-  const record = (name: string, amount: number, dueDate: Date) =>
-    db.payment_history.create({
-      data: {
-        userId,
-        paymentType: data.type,
-        paymentId: data.id,
-        name,
-        amount,
-        dueDate,
-        paidOn,
-      },
+  const notFound = { success: false, error: "Payment not found" } as const;
+  const alreadyPaid = new Error("already marked as paid");
+
+  // The move only applies if the due date is still the one that was read, and
+  // the history row is written only if it did: a second click, tab or retry
+  // can't record the same payment twice.
+  const recordPayment = (
+    name: string,
+    amount: number,
+    dueDate: Date,
+    move: (tx: Prisma.TransactionClient) => Promise<{ count: number }>,
+  ) =>
+    db.$transaction(async (tx) => {
+      if ((await move(tx)).count !== 1) throw alreadyPaid;
+      await tx.payment_history.create({
+        data: { userId, paymentType: data.type, paymentId: data.id, name, amount, dueDate, paidOn },
+      });
     });
 
   try {
     if (data.type === "credit_card") {
       const existing = await db.credit_card.findUnique({ where: { id: data.id } });
-      if (!existing || existing.userId !== userId) return { success: false, error: "Payment not found" };
-      await db.$transaction([
-        record(existing.name, existing.amountDue, existing.dueDate),
-        db.credit_card.update({
-          where: { id: data.id },
+      if (!existing || existing.userId !== userId) return notFound;
+      await recordPayment(existing.name, existing.amountDue, existing.dueDate, (tx) =>
+        tx.credit_card.updateMany({
+          where: { id: data.id, userId, dueDate: existing.dueDate },
           data: { dueDate: nextDueDate(existing.dueDate), updatedAt: new Date() },
         }),
-      ]);
+      );
     } else if (data.type === "loan") {
       const existing = await db.loan.findUnique({ where: { id: data.id } });
-      if (!existing || existing.userId !== userId) return { success: false, error: "Payment not found" };
-      const balance = existing.remainingBalance - existing.monthlyPayment;
-      await db.$transaction([
-        record(existing.name, existing.monthlyPayment, existing.nextPayment),
-        db.loan.update({
-          where: { id: data.id },
+      if (!existing || existing.userId !== userId) return notFound;
+      // The last payment is only what is still owed. A balance of 0 means
+      // none was entered, so the full monthly payment is recorded.
+      const amount =
+        existing.remainingBalance > 0
+          ? Math.min(existing.monthlyPayment, existing.remainingBalance)
+          : existing.monthlyPayment;
+      const balance = existing.remainingBalance - amount;
+      await recordPayment(existing.name, amount, existing.nextPayment, (tx) =>
+        tx.loan.updateMany({
+          where: { id: data.id, userId, nextPayment: existing.nextPayment },
           data: {
             nextPayment: nextDueDate(existing.nextPayment),
             // Rounded to cents so repeated payments don't drift (9000 - 300.1)
@@ -319,23 +329,25 @@ export async function markPaymentPaid(
             updatedAt: new Date(),
           },
         }),
-      ]);
+      );
     } else if (data.type === "recurring_bill") {
       const existing = await db.recurring_bill.findUnique({ where: { id: data.id } });
-      if (!existing || existing.userId !== userId) return { success: false, error: "Payment not found" };
-      await db.$transaction([
-        record(existing.name, existing.amount, existing.dueDate),
-        db.recurring_bill.update({
-          where: { id: data.id },
+      if (!existing || existing.userId !== userId) return notFound;
+      await recordPayment(existing.name, existing.amount, existing.dueDate, (tx) =>
+        tx.recurring_bill.updateMany({
+          where: { id: data.id, userId, dueDate: existing.dueDate },
           data: {
             dueDate: nextDueDate(existing.dueDate, existing.frequency),
             updatedAt: new Date(),
           },
         }),
-      ]);
+      );
     }
     return { success: true };
   } catch (e) {
+    if (e === alreadyPaid) {
+      return { success: false, error: "This payment was already marked as paid." };
+    }
     console.error("Failed to mark payment as paid", e);
     return { success: false, error: "Failed to mark payment as paid" };
   }

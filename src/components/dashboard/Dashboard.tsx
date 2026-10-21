@@ -31,6 +31,7 @@ import {
   getPaymentStatus,
   getTimeOfDayGreeting,
   getUpcomingStats,
+  localDateKey,
 } from "./dashboard-utils";
 import type { StatCardProps } from "./StatCard";
 
@@ -131,8 +132,8 @@ export function Dashboard() {
 
     setMarkingPaidId(id);
     try {
-      // The user's calendar day (YYYY-MM-DD); the server only knows UTC.
-      const paidOn = new Date().toLocaleDateString("en-CA");
+      // The user's calendar day; the server only knows UTC.
+      const paidOn = localDateKey();
       const res = await markPaymentPaidFn({ data: { id, type, paidOn } });
       if (!res.success) throw new Error(res.error || "Failed");
       await router.invalidate();

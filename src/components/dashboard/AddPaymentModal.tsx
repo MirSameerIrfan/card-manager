@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 import { addPaymentFn, updatePaymentFn } from "./dashboard.functions";
 import { toDateKey } from "./dashboard-utils";
-import { SmartAddPanel, type ExtractedPayment } from "./SmartAddPanel";
+import { SmartAddPanel } from "./SmartAddPanel";
+import type { ExtractedPayment } from "./smart-add.server";
 
 type PaymentType = "credit_card" | "loan" | "recurring_bill";
 export type RecurringFrequency = "monthly" | "biweekly";

@@ -28,50 +28,42 @@ function escapeHtml(value: string) {
     .replace(/"/g, "&quot;");
 }
 
-/** The Resend request body for one email. */
-function buildEmail({
+async function sendAuthEmail({
   user,
   subject,
   intro,
   linkLabel,
   url,
   footer,
+  devLabel,
 }: EmailContent) {
+  const resendApiKey = process.env.RESEND_API_KEY;
+  if (!resendApiKey) {
+    console.info(`[Auth] ${devLabel} for ${user.email}: ${url}`);
+    return;
+  }
+
   const greeting = "Hi there,";
-
-  return {
-    from: process.env.RESEND_FROM_EMAIL || "MoneyScope <onboarding@resend.dev>",
-    reply_to: CONTACT_EMAIL,
-    to: [user.email],
-    subject,
-    html: `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(intro)}</p><p><a href="${escapeHtml(url)}">${escapeHtml(linkLabel)}</a></p><p>${escapeHtml(footer)}</p>`,
-    text: [greeting, "", intro, "", `${linkLabel}: ${url}`, "", footer].join("\n"),
-  };
-}
-
-async function postToResend(path: string, body: unknown, apiKey: string) {
-  const response = await fetch(`https://api.resend.com${path}`, {
+  const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${resendApiKey}`,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      from: process.env.RESEND_FROM_EMAIL || "MoneyScope <onboarding@resend.dev>",
+      reply_to: CONTACT_EMAIL,
+      to: [user.email],
+      subject,
+      html: `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(intro)}</p><p><a href="${escapeHtml(url)}">${escapeHtml(linkLabel)}</a></p><p>${escapeHtml(footer)}</p>`,
+      text: [greeting, "", intro, "", `${linkLabel}: ${url}`, "", footer].join("\n"),
+    }),
   });
 
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Failed to send email: ${response.status} ${text}`);
+    const body = await response.text();
+    throw new Error(`Failed to send email: ${response.status} ${body}`);
   }
-}
-
-async function sendAuthEmail(content: EmailContent) {
-  const resendApiKey = process.env.RESEND_API_KEY;
-  if (!resendApiKey) {
-    console.info(`[Auth] ${content.devLabel} for ${content.user.email}: ${content.url}`);
-    return;
-  }
-  await postToResend("/emails", buildEmail(content), resendApiKey);
 }
 
 export async function sendVerificationEmail({ user, url }: AuthEmailPayload) {

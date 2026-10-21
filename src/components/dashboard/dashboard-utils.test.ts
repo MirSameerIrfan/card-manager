@@ -4,6 +4,7 @@ import {
   countDueThisWeekMonday,
   getPaymentStatus,
   getUpcomingStats,
+  localDateKey,
   nextDueDate,
   parseDueDate,
   toDateKey,
@@ -226,6 +227,25 @@ describe('getUpcomingStats', () => {
           { date: new Date('2026-05-13T00:00:00.000Z'), amount: 100, autoPay: false },
         ]),
       ).toEqual({ totalDue: 110, upcomingPaymentsCount: 2, autoPayCount: 1 })
+    })
+  })
+})
+
+describe('localDateKey', () => {
+  describe('east of UTC (Kiritimati, UTC+14)', () => {
+    useTimezone('Pacific/Kiritimati')
+    it('is already the next day while UTC is still on the 12th', () => {
+      expect(localDateKey(new Date('2026-05-12T11:00:00.000Z'))).toBe('2026-05-13')
+    })
+  })
+
+  describe('west of UTC (Los Angeles)', () => {
+    useTimezone('America/Los_Angeles')
+    it('is still the previous day after UTC midnight', () => {
+      expect(localDateKey(new Date('2026-05-13T03:00:00.000Z'))).toBe('2026-05-12')
+    })
+    it('pads single-digit months and days', () => {
+      expect(localDateKey(new Date('2026-01-05T20:00:00.000Z'))).toBe('2026-01-05')
     })
   })
 })

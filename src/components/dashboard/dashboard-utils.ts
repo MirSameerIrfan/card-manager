@@ -21,6 +21,18 @@ export const formatDate = (date: Date | string) => {
 }
 
 /**
+ * The user's calendar day ("YYYY-MM-DD") in the browser's timezone. Built from
+ * the date parts: toLocaleDateString('en-CA') isn't guaranteed to give this
+ * format in every browser.
+ */
+export const localDateKey = (date = new Date()) =>
+  [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-')
+
+/**
  * Calendar day ("YYYY-MM-DD") of a stored due date, read from its UTC parts.
  */
 export const toDateKey = (date: Date | string) =>

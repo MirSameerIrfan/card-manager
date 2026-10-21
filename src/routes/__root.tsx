@@ -24,7 +24,7 @@ export const Route = createRootRoute({
       {
         name: 'description',
         content:
-          'MoneyScope tracks your credit cards, loans, and recurring bills in one place and emails you before payments are due. Free in early access.',
+          'MoneyScope tracks your credit cards, loans, and recurring bills in one place and shows what is due before it is late. Free in early access.',
       },
     ],
     links: [
